@@ -1,4 +1,41 @@
 {
   "schema": 1,
-  "models": []
+  "default_model": "irodori-v4.1-small",
+  "models": [
+    {
+      "id": "irodori-v4.1-small",
+      "display_name": "Irodori-TTS v4.1 Small",
+      "hf_repo": "Aratako/Irodori-TTS-v4.1-Small",
+      "hf_revision": "2b28324dc263ed5e6638b3cf3dd94c82ead07b4b",
+      "codec_repo": "Aratako/Semantic-DACVAE-Japanese-32dim",
+      "codec_revision": "47376ee24834d7a05a48ebabfe3cde29b3c5e214",
+      "size_bytes_approx": 3500000000,
+      "tier": "default",
+      "capabilities": {
+        "caption": true,
+        "speaker_reference": true,
+        "speaker_embedding": true,
+        "lora": true,
+        "duration_predictor": true,
+        "max_ref_seconds": 120,
+        "max_output_seconds": 30,
+        "sampling": "rf",
+        "ignores": []
+      },
+      "requirements": {
+        "cuda_vram_fp32_gb": 6.0,
+        "cuda_vram_bf16_gb": 5.0,
+        "mps_unified_memory_gb": 8
+      }
+    }
+  ],
+  "shared_assets": [
+    {
+      "id": "silentcipher",
+      "hf_repo": "sony/silentcipher",
+      "hf_revision": "main",
+      "expected_commit": "a1c4d021905e0dc5b24be5f68db5fc4dba410ee1",
+      "purpose": "watermark"
+    }
+  ]
 }

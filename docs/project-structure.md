@@ -41,7 +41,8 @@ irodori-studio/
 │  │  ├─ library/                 history, presets, projects
 │  │  ├─ api-server/              config, status, request log
 │  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
-│  ├─ components/                 AudioPlayer, CandidateGrid, EmojiPalette, WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
+│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error/Ready screens, ErrorNotice, LanguageSwitcher;
+│  │                              later AudioPlayer, CandidateGrid, EmojiPalette, WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
 │  │  ├─ config.ts                supported locales; source locale `ja`
@@ -53,8 +54,9 @@ irodori-studio/
 │  │  ├─ api.ts                   ALL internal-API calls
 │  │  ├─ sse.ts                   job streams
 │  │  ├─ tauri.ts                 typed invoke wrappers
-│  │  ├─ types.ts                 mirrors api-spec.md
-│  │  └─ errors.ts                error code → i18n key
+│  │  ├─ types.ts                 mirrors api-spec.md (+ Tauri IPC types)
+│  │  ├─ errors.ts                error code → i18n key
+│  │  └─ format.ts                Intl formatting (bytes, memory, percent)
 │  └─ store/                      zustand: sidecar, model, jobs, queue, settings, voices, narration, script
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", mic usage string
@@ -64,7 +66,8 @@ irodori-studio/
 │     ├─ layout.rs                dev vs installed paths
 │     ├─ paths.rs
 │     ├─ config.rs                settings.json
-│     ├─ platform/{mod.rs, windows.rs, macos.rs}
+│     ├─ error.rs                 error codes returned to the frontend (D17)
+│     ├─ platform/{mod.rs, policy.rs, windows.rs, macos.rs}   probe, device policy, process trees, free space
 │     ├─ bootstrap.rs             idempotent first-run steps + progress events
 │     ├─ sidecar.rs               port, spawn, health, teardown guard
 │     ├─ update_check.rs          GitHub Releases latest
@@ -72,9 +75,14 @@ irodori-studio/
 └─ sidecar/
    ├─ pyproject.toml              NO torch (D2); upstream non-torch deps pinned
    ├─ .python-version, uv.lock    3.10 (upstream); the lock contains no torch family
-   ├─ models.json                 model registry (D5)
+   ├─ models.json                 model registry (D5) + shared assets (SilentCipher)
+   ├─ upstream.json               pinned upstream commit + torch install recipe (D2/D3)
    ├─ app/
    │  ├─ main.py                  starts internal (+ optional external) uvicorn
+   │  ├─ config.py                runtime config from env set by Rust
+   │  ├─ lifecycle.py             UTF-8, exit with the parent app
+   │  ├─ assets.py                where downloaded model files live
+   │  ├─ provision/               run by the Rust bootstrap: download.py (resumable), selfcheck.py, events.py
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
    │  ├─ routers/                 system, models, tts, jobs, text, voices, narration, script, export, history, presets, projects, api_server

@@ -2,8 +2,16 @@
   "appName": "irodori-studio",
   "tagline": "Eine inoffizielle Desktop-App für Irodori-TTS",
   "japaneseOnlyNotice": "Irodori-TTS kann nur japanischen Text vorlesen.",
+  "desktopOnly": "Bitte öffnen Sie diese Ansicht in der Desktop-App.",
   "language": {
     "label": "Anzeigesprache",
     "name": "Deutsch"
+  },
+  "actions": {
+    "next": "Weiter",
+    "back": "Zurück",
+    "retry": "Erneut versuchen",
+    "showDetails": "Details anzeigen",
+    "hideDetails": "Details ausblenden"
   }
 }

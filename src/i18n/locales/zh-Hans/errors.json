@@ -1,0 +1,30 @@
+{
+  "title": "发生错误",
+  "logsAt": "日志保存位置：{{path}}",
+  "codes": {
+    "internal": "发生了意外错误。",
+    "settings_io": "无法保存设置。",
+    "invalid_locale": "不支持该语言。",
+    "platform_unsupported": "不支持此计算机。",
+    "data_root_invalid": "存储文件夹无效。",
+    "data_root_not_writable": "无法写入存储文件夹。请选择其他位置。",
+    "disk_space_insufficient": "可用空间不足。请释放空间或选择其他位置。",
+    "setup_already_running": "设置已在进行中。",
+    "sidecar_source_missing": "缺少应用文件。请重新安装本应用。",
+    "uv_missing": "找不到安装工具（uv）。请重新安装本应用。",
+    "python_install_failed": "无法准备 Python。请检查网络连接后重试。",
+    "venv_failed": "无法创建运行环境。",
+    "deps_install_failed": "无法安装所需的软件包。请检查网络连接后重试。",
+    "torch_install_failed": "无法安装 PyTorch。请检查网络连接后重试。",
+    "network_error": "无法连接到互联网。请检查网络连接后重试。",
+    "download_failed": "无法下载模型。重试后将从中断处继续。",
+    "selfcheck_failed": "已安装运行环境的检查未通过。",
+    "cuda_unavailable": "无法使用 GPU（CUDA）。请更新 NVIDIA 驱动程序，或尝试 CPU 模式。",
+    "mps_unavailable": "无法使用 Apple Silicon 的 GPU（MPS）。",
+    "torch_unavailable": "无法加载 PyTorch。",
+    "sidecar_spawn_failed": "无法启动语音合成引擎。",
+    "sidecar_exited": "语音合成引擎已停止。",
+    "sidecar_health_timeout": "语音合成引擎没有响应。",
+    "sidecar_not_ready": "语音合成引擎尚未就绪。"
+  }
+}

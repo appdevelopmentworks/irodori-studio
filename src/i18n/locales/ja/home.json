@@ -1,6 +1,19 @@
 {
-  "placeholder": {
-    "title": "準備中の画面です",
-    "body": "音声合成エンジンはまだ接続されていません。初回セットアップと各画面は今後のバージョンで追加されます。"
+  "starting": "音声合成エンジンを起動しています…",
+  "ready": {
+    "heading": "準備が整いました",
+    "body": "音声合成エンジンが起動しました。各画面は今後のバージョンで追加されます。"
+  },
+  "system": {
+    "heading": "システム情報",
+    "device": "推論デバイス",
+    "memory": "メモリ",
+    "memoryUsage": "{{used}} / {{total}}",
+    "torch": "PyTorch",
+    "cuda": "CUDA",
+    "python": "Python",
+    "upstream": "Irodori-TTS",
+    "loading": "読み込んでいます…",
+    "failed": "システム情報を取得できませんでした。"
   }
 }

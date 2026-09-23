@@ -126,42 +126,47 @@ Adding Large = one entry + submodule bump. A MeanFlow model would declare `"samp
 
 ## Process model & port selection
 
-- Rust selects a free port on `127.0.0.1`, spawns `<venv-python> -m app.main --port <port> --data-root <dir> ...`, polls `GET /health`, exposes status `setup → starting → loading_model → ready → error`.
-- Teardown guard kills the process tree on window close, app quit, panic, and forced quit (Windows Job Object; macOS process group).
-- Environment passed to the sidecar: `HF_HOME=<data-root>/models`, `IRODORI_DATA_ROOT`, `IRODORI_FFMPEG`, `IRODORI_LOG_DIR`, `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, `HF_HUB_DISABLE_SYMLINKS_WARNING=1`.
+- Rust selects a free port on `127.0.0.1`, spawns `<venv-python> -m app.main --port <port>` (cwd = sidecar dir), polls `GET /health` (retrying on a new port if the sidecar exits early), and exposes status `setup → starting → ready → error` to the frontend (`app://status`); Session 2 adds `loading_model` between `starting` and `ready`.
+- Teardown guard kills the process tree on window close, app quit, panic, and forced quit: every child (uv, provisioning scripts, sidecar) runs in its own kill-on-close Job Object (Windows) or process group (macOS); the sidecar also exits when the app's pid (`IRODORI_PARENT_PID`) disappears, which covers a forced quit on macOS. Children get a null stdin.
+- Environment passed to the sidecar: `PYTHONPATH=<sidecar dir>[;<upstream dir>]`, `HF_HOME=<data-root>/models`, `HF_HUB_OFFLINE=1`, `HF_HUB_DISABLE_TELEMETRY=1`, `HF_HUB_DISABLE_SYMLINKS_WARNING=1`, `IRODORI_DATA_ROOT`, `IRODORI_LOG_DIR`, `IRODORI_DEVICE`, `IRODORI_PRECISION`, `IRODORI_APP_VERSION`, `IRODORI_PARENT_PID`, `IRODORI_ALLOWED_ORIGINS`, `IRODORI_FFMPEG` (when bundled), `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, `PYTHONPYCACHEPREFIX=<data-root>/runtime/pycache`; plus `CUDA_DEVICE_ORDER`/`CUDA_VISIBLE_DEVICES` with several GPUs and `PYTORCH_ENABLE_MPS_FALLBACK=1` on macOS. Inherited `UV_*`, `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, `CONDA_PREFIX` and relocated HF cache variables are removed first.
 
 ## First-run setup (bootstrap)
 
-Idempotent; each step reports progress via Tauri events and is retryable with visible logs.
+Idempotent; each step reports progress via Tauri events (`setup://progress` snapshots, `setup://log` lines, `<data-root>/logs/setup.log`) and is retryable. Implemented in `src-tauri/src/bootstrap.rs` + `sidecar/app/provision/`.
 
-1. **Language + terms** (frontend only; stored in settings).
-2. **Platform probe** (no torch yet):
-   - Windows: `nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader`. Map to `cuda` (cu128) or `cpu` (D2, D7, D9).
-   - macOS: `sysctl -n machdep.cpu.brand_string`, `sw_vers -productVersion`, `sysctl -n hw.memsize`. M2+ → `mps`; M1 → `mps` + warning; Intel → unsupported (D8).
-   - Free disk space at the chosen data root.
-3. **Data root** chosen by the user (D16).
-4. **Python + venv**: bundled `uv` → `uv python install <ver>` → `uv venv <data-root>/runtime/venv`.
-5. **Base deps**: install the sidecar's locked dependencies (`sidecar/uv.lock`, no torch). `irodori_tts` itself is not pip-installed (its metadata requires torch); the sidecar process gets the pinned source on `PYTHONPATH`.
-6. **Torch**: platform-specific index (D2).
-7. **Models**: download the active model, codec, tokenizer assets, and SilentCipher files into `HF_HOME` via `huggingface_hub` with resume. Show bytes/total.
-8. **Smoke test**: load model, synthesize a short sentence, play it.
+Wizard (frontend, `src/features/setup/`):
+1. **Language** (preselected from the OS; saved to settings).
+2. **Terms** incl. upstream's ethical restrictions (D13; `TERMS_VERSION` in settings).
+3. **Platform probe** (no torch yet, `platform/`):
+   - Windows: `nvidia-smi --query-gpu=index,name,compute_cap,memory.total,driver_version --format=csv,noheader,nounits`. Policy (`platform/policy.rs`, D2/D7/D9): usable NVIDIA (compute capability ≥ 7.0, VRAM ≥ ~6 GB) → `cuda` (cu128, fp32 or bf16); otherwise `cpu` with a notice. The user may choose CPU mode explicitly.
+   - macOS: `sysctl -n machdep.cpu.brand_string`, `sysctl -n hw.optional.arm64`, `sysctl -n hw.memsize`, `sw_vers -productVersion`. Apple Silicon → `mps` fp32 (M1 warns); Intel → blocked (D8).
+4. **Data root** chosen by the user (D16), checked for writability and free space.
+5. **Install**, the steps below.
 
-On later launches, completed steps are detected (marker file with versions: app, upstream sha, torch variant) and skipped. An app update that bumps the upstream sha re-runs step 5 only.
+Steps (each skipped when the marker shows it is current):
+1. **Python**: bundled `uv` → `uv python install <.python-version> --no-bin --no-registry` into `<data-root>/runtime/python`.
+2. **Venv**: `uv venv <data-root>/runtime/venv --managed-python --clear`.
+3. **Deps**: `uv sync --frozen --no-dev --inexact` with `UV_PROJECT_ENVIRONMENT=<venv>` (locked, no torch). `irodori_tts` itself is not pip-installed (its metadata requires torch); processes get the pinned source on `PYTHONPATH`.
+4. **Torch**: the recipe in `sidecar/upstream.json` for the plan's variant (cu128 / cpu index, or PyPI on macOS), then torchcodec from PyPI (D2).
+5. **Models**: `python -m app.provision.download` — model + codec at their pinned commits into `<models>/pinned/...` with byte-level resume and hash verification; SilentCipher into the HF cache by branch. Bytes/total are reported.
+6. **Verify**: `python -m app.provision.selfcheck --device <d>` — torch on the chosen device with a real kernel launch, and the upstream import through the adapter.
+
+The smoke test (load the model, synthesize and play a sentence) joins in Session 2. The marker (`<data-root>/runtime/setup.json`) records each finished step with the hashes of its inputs (`.python-version`, `uv.lock`, the torch recipe, `models.json`) and the device choice, so later launches skip setup entirely, an app update re-runs only the steps whose inputs changed, and switching CPU ⇄ GPU re-runs only the torch step.
 
 ## Storage layout
 
 | Purpose | Location | Notes |
 | --- | --- | --- |
 | Settings | Tauri app config dir / `settings.json` | Rust only |
-| Data root | user-selected | default `<app-data>/data` |
-| Runtime venv | `<data-root>/runtime/venv` | recreated if broken |
-| Models (HF cache) | `<data-root>/models` | `HF_HOME` |
+| Data root | user-selected | default `<local-app-data>/data` (not roaming) |
+| Runtime | `<data-root>/runtime/` | `venv/` (recreated if broken), `python/` (uv-managed), `uv-cache/`, `pycache/`, `setup.json` marker |
+| Models | `<data-root>/models` | `HF_HOME`; pinned repos in `pinned/<owner>--<name>/<commit>/`, SilentCipher in `hub/` |
 | Database | `<data-root>/irodori-studio.db` | SQLite, sidecar-owned |
 | Voices | `<data-root>/voices/<voice-id>/` | clips (flac), cached latents per model id, optional embedding |
 | History audio | `<data-root>/history/` | pruned by D23 |
 | Projects | `<data-root>/projects/` | `.iroproj` |
 | Exports | user-selected default | |
-| Logs | `<data-root>/logs/` | sidecar + bootstrap logs, rotated |
+| Logs | `<data-root>/logs/` | `sidecar.log`, `setup.log`; rotated at 5 MB |
 
 ## Data flows
 

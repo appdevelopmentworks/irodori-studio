@@ -9,3 +9,14 @@ export const SOURCE_LOCALE: Locale = 'ja';
 export function isLocale(value: string): value is Locale {
   return (SUPPORTED_LOCALES as readonly string[]).includes(value);
 }
+
+/** Best supported locale for the OS preference list (first-run default). */
+export function matchLocale(preferred: readonly string[]): Locale {
+  for (const tag of preferred) {
+    const language = tag.toLowerCase().split('-')[0];
+    if (language === 'ja' || language === 'en' || language === 'de') return language;
+    // Every Chinese variant falls back to Simplified Chinese, the one we ship (D17).
+    if (language === 'zh') return 'zh-Hans';
+  }
+  return SOURCE_LOCALE;
+}

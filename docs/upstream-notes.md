@@ -65,6 +65,17 @@ runtime.unload()
 - Audio I/O (verify in Session 1/2): `inference_runtime._load_audio` and `DACVAECodec.encode_file` call `torchaudio.load` and fall back to `soundfile` only on `RuntimeError`; `save_wav` does the same for `torchaudio.save`. torchaudio ≥ 2.9 routes `load`/`save` through TorchCodec, so check what torchaudio 2.10 raises without `torchcodec` (or without the FFmpeg libraries it needs). Either install `torchcodec` with torch, or have the adapter pass decoded waveforms or latents instead of file paths.
 - Our sidecar venv without torch: ≈ 560 MB on Windows (Python 3.10.19, 122 locked packages).
 
+## Runtime environment (verified S1 on Windows 11 + RTX 5090, driver 610.88)
+
+- First-run setup installed Python 3.10.21 (uv-managed), torch/torchaudio `2.10.0+cu128`, torchcodec `0.10.0`; `torch.cuda.get_arch_list()` = `sm_70, sm_75, sm_80, sm_86, sm_90, sm_100, sm_120` → the cu128 wheel supports Volta and newer (D2). CUDA kernels run on sm_120 (Blackwell).
+- Downloads (fast connection): whole setup ≈ 3 min; model + codec + SilentCipher = 22 files, 3.57 GB. Switching CPU ⇄ CUDA re-installs torch from the uv cache in ≈ 20 s.
+- **Audio I/O:** without FFmpeg shared libraries, `torchaudio.load` raises `RuntimeError: Could not load libtorchcodec…`, which is exactly the type upstream's `_load_audio` / `DACVAECodec.encode_file` catch → they fall back to `soundfile` (WAV/FLAC/OGG only). Sessions 2/4: convert other formats (mp3, m4a, webm from the recorder) to WAV with the bundled ffmpeg before handing paths to upstream.
+- **Local paths for upstream** (Session 2 adapter): pass `RuntimeKey.checkpoint = <models>/pinned/Aratako--Irodori-TTS-v4.1-Small/<commit>/model.safetensors` — the bundled tokenizer is found in the sibling `tokenizer/` — and `codec_repo = <…>/Aratako--Semantic-DACVAE-Japanese-32dim/<commit>/weights.pth` (`DACVAECodec.load` accepts an existing path). No network needed.
+- **SilentCipher:** `SilentCipherWatermarker` calls `silentcipher.get_model(model_type="44.1k", device=…)`, whose default checkpoint paths are relative and missing, so it runs `snapshot_download(repo_id="sony/silentcipher")` (branch `main`). Offline, that resolves through `refs/main` in the HF cache, which setup writes. If loading fails, upstream only logs a warning and **generates without a watermark** — Session 2 must check `runtime.watermarker.ready` so D12's default-ON cannot silently lapse.
+- **huggingface_hub 1.23** does not resume interrupted downloads (each attempt writes a uniquely named `*.incomplete`; a hard kill orphans it), and hf_xet kept no chunk cache here. On Windows without the symlink privilege, cached files live directly in `snapshots/` (not `blobs/`). Hence our own resumable downloader for pinned repos (decisions.md, S1).
+- **Windows venv:** `<venv>/Scripts/python.exe` is a launcher that starts the base interpreter as a child, so every sidecar is two processes — always kill the tree (job object), never just the launcher.
+- **Threading pitfall:** on Windows, a thread blocked reading a piped stdin makes `import torch` in another thread hang forever.
+
 ## Parameter table (parity target = Space; D26)
 
 | Parameter | Space UI | Default | Range / choices | Notes |

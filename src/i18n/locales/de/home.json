@@ -1,6 +1,19 @@
 {
-  "placeholder": {
-    "title": "Platzhalterseite",
-    "body": "Die Sprachsynthese-Engine ist noch nicht verbunden. Die Ersteinrichtung und die App-Bildschirme folgen in kommenden Versionen."
+  "starting": "Die Sprachsynthese-Engine wird gestartet…",
+  "ready": {
+    "heading": "Alles bereit",
+    "body": "Die Sprachsynthese-Engine läuft. Die App-Bildschirme folgen in kommenden Versionen."
+  },
+  "system": {
+    "heading": "Systeminformationen",
+    "device": "Inferenzgerät",
+    "memory": "Speicher",
+    "memoryUsage": "{{used}} / {{total}}",
+    "torch": "PyTorch",
+    "cuda": "CUDA",
+    "python": "Python",
+    "upstream": "Irodori-TTS",
+    "loading": "Wird geladen…",
+    "failed": "Die Systeminformationen konnten nicht geladen werden."
   }
 }

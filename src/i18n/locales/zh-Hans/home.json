@@ -1,6 +1,19 @@
 {
-  "placeholder": {
-    "title": "占位页面",
-    "body": "语音合成引擎尚未连接。首次设置向导和各功能页面将在后续版本中加入。"
+  "starting": "正在启动语音合成引擎…",
+  "ready": {
+    "heading": "准备就绪",
+    "body": "语音合成引擎已启动。各功能页面将在后续版本中加入。"
+  },
+  "system": {
+    "heading": "系统信息",
+    "device": "推理设备",
+    "memory": "内存",
+    "memoryUsage": "{{used}} / {{total}}",
+    "torch": "PyTorch",
+    "cuda": "CUDA",
+    "python": "Python",
+    "upstream": "Irodori-TTS",
+    "loading": "正在加载…",
+    "failed": "无法获取系统信息。"
   }
 }

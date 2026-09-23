@@ -1,6 +1,19 @@
 {
-  "placeholder": {
-    "title": "Placeholder screen",
-    "body": "The speech engine is not connected yet. First-run setup and the app screens will be added in upcoming versions."
+  "starting": "Starting the speech engine…",
+  "ready": {
+    "heading": "All set",
+    "body": "The speech engine is running. The app screens will be added in upcoming versions."
+  },
+  "system": {
+    "heading": "System information",
+    "device": "Inference device",
+    "memory": "Memory",
+    "memoryUsage": "{{used}} / {{total}}",
+    "torch": "PyTorch",
+    "cuda": "CUDA",
+    "python": "Python",
+    "upstream": "Irodori-TTS",
+    "loading": "Loading…",
+    "failed": "Could not load the system information."
   }
 }

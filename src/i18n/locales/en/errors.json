@@ -1,0 +1,30 @@
+{
+  "title": "Something went wrong",
+  "logsAt": "Logs are saved in: {{path}}",
+  "codes": {
+    "internal": "An unexpected error occurred.",
+    "settings_io": "The settings could not be saved.",
+    "invalid_locale": "This language is not supported.",
+    "platform_unsupported": "This computer is not supported.",
+    "data_root_invalid": "The storage folder is not valid.",
+    "data_root_not_writable": "The storage folder is not writable. Please choose another location.",
+    "disk_space_insufficient": "Not enough free space. Free up space or choose another location.",
+    "setup_already_running": "Setup is already running.",
+    "sidecar_source_missing": "App files are missing. Please reinstall the app.",
+    "uv_missing": "The setup tool (uv) is missing. Please reinstall the app.",
+    "python_install_failed": "Python could not be prepared. Check your internet connection and retry.",
+    "venv_failed": "The runtime environment could not be created.",
+    "deps_install_failed": "The required packages could not be installed. Check your internet connection and retry.",
+    "torch_install_failed": "PyTorch could not be installed. Check your internet connection and retry.",
+    "network_error": "Could not connect to the internet. Check your connection and retry.",
+    "download_failed": "The model could not be downloaded. Retrying continues where it stopped.",
+    "selfcheck_failed": "The installed runtime failed its check.",
+    "cuda_unavailable": "The GPU (CUDA) could not be used. Update the NVIDIA driver or try CPU mode.",
+    "mps_unavailable": "The Apple Silicon GPU (MPS) could not be used.",
+    "torch_unavailable": "PyTorch could not be loaded.",
+    "sidecar_spawn_failed": "The speech engine could not be started.",
+    "sidecar_exited": "The speech engine stopped.",
+    "sidecar_health_timeout": "The speech engine is not responding.",
+    "sidecar_not_ready": "The speech engine is not ready yet."
+  }
+}

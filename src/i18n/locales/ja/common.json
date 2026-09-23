@@ -2,8 +2,16 @@
   "appName": "irodori-studio",
   "tagline": "Irodori-TTS のための非公式デスクトップアプリ",
   "japaneseOnlyNotice": "Irodori-TTS が読み上げられるのは日本語のテキストのみです。",
+  "desktopOnly": "この画面はデスクトップアプリの中で表示してください。",
   "language": {
     "label": "表示言語",
     "name": "日本語"
+  },
+  "actions": {
+    "next": "次へ",
+    "back": "戻る",
+    "retry": "再試行",
+    "showDetails": "詳細を表示",
+    "hideDetails": "詳細を隠す"
   }
 }

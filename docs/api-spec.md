@@ -77,9 +77,36 @@ type Timings = Record<string, number>; // ms per stage, e.g. predict_duration, s
 ### System & lifecycle
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/health` | `{status: "ok"}`; does not require a loaded model |
-| GET | `/system` | device, memory (VRAM or unified), torch/CUDA/MPS versions, active model id, upstream sha, queue length, watermark available |
+| GET | `/health` | `{status: "ok"}`; does not require a loaded model (S1) |
+| GET | `/system` | `SystemInfo` below (S1) |
 | POST | `/system/cache/clear` | free accelerator cache |
+
+CORS: only the app's own WebView origins may read the internal API (`tauri://localhost`, `http(s)://tauri.localhost`, plus the dev server origin in debug builds), passed by Rust as `IRODORI_ALLOWED_ORIGINS`.
+
+```ts
+type SystemInfo = {
+  app_version: string;
+  python_version: string;
+  platform: "windows" | "macos" | "linux" | "other";
+  device: {
+    kind: "cuda" | "mps" | "cpu";      // configured device (setup marker)
+    precision: "fp32" | "bf16";
+    available: boolean;                // usable by torch right now
+    name: string | null;               // GPU name, or CPU/processor string
+    compute_capability: string | null; // CUDA only, e.g. "12.0"
+    memory_total_mb: number | null;    // VRAM (CUDA) or system/unified memory, MiB
+    memory_used_mb: number | null;
+  };
+  torch: { version: string; cuda_version: string | null; cuda_available: boolean; mps_available: boolean } | null;
+  upstream_commit: string | null;      // sidecar/upstream.json
+  active_model: string | null;         // Session 2
+  queue_length: number;                // Session 2
+  watermark_available: boolean | null; // known after model load (Session 2)
+  issues: ("torch_unavailable" | "cuda_unavailable" | "mps_unavailable")[];
+};
+```
+
+The first `/system` call imports torch (seconds); later calls are fast.
 
 ### Models
 | Method | Path | Notes |

@@ -1,0 +1,102 @@
+{
+  "title": "First-time setup",
+  "steps": {
+    "language": "Language",
+    "terms": "Terms",
+    "environment": "System",
+    "storage": "Storage",
+    "install": "Install"
+  },
+  "language": {
+    "heading": "Choose your display language",
+    "hint": "You can change it later."
+  },
+  "terms": {
+    "heading": "Terms of use",
+    "intro": "Please read the following before using this app.",
+    "unofficial": "This is an unofficial app built on Irodori-TTS, the speech synthesis model published by Aratako under the MIT license.",
+    "ethicsHeading": "Ethical restrictions of Irodori-TTS",
+    "ethics": {
+      "impersonation": "Do not clone or impersonate the voice of a real person without their explicit consent.",
+      "misinformation": "Do not use it to spread misinformation or to create deceptive deepfakes.",
+      "resemblance": "Voices created from a text description (caption) alone may coincidentally resemble real people.",
+      "liability": "The developers accept no liability for the consequences of use. You are responsible for complying with the law."
+    },
+    "consent": "Creating a voice from reference audio requires the consent of the person whose voice it is. The consent is recorded with the voice.",
+    "watermark": "Generated audio carries an inaudible SilentCipher watermark by default.",
+    "privacy": "This app sends no usage data (no telemetry). It connects to the internet only for the setup downloads, update checks, and the API server if you enable it.",
+    "license": "This app is provided as is, without warranty of any kind.",
+    "agree": "I have read and agree to the above"
+  },
+  "environment": {
+    "heading": "System check",
+    "detecting": "Checking your system…",
+    "gpu": "GPU",
+    "gpuSpec": "{{name}} (VRAM {{vram}}, driver {{driver}})",
+    "noGpu": "No supported NVIDIA GPU was found",
+    "chip": "Chip",
+    "chipSpec": "{{chip}} (memory {{memory}}, macOS {{version}})",
+    "mode": "Inference mode",
+    "modes": {
+      "cuda": "GPU (CUDA)",
+      "mps": "Apple Silicon (MPS)",
+      "cpu": "CPU"
+    },
+    "precision": "Precision: {{precision}}",
+    "useCpu": "Use CPU mode (slow)",
+    "notices": {
+      "cpu_mode_slow": "The app will run in CPU mode. Generation takes far longer than on a GPU (minutes per sentence).",
+      "no_nvidia_gpu": "No supported NVIDIA GPU was found, so the app will use CPU mode.",
+      "gpu_too_old": "The GPU is too old (older than Volta), so the app will use CPU mode.",
+      "vram_too_low": "The GPU has less than 6 GB of memory, so the app will use CPU mode.",
+      "low_vram_bf16": "The GPU has less than 8 GB of memory, so the app will use bf16 precision to save memory.",
+      "low_vram_fp32": "The GPU has less than 8 GB of memory. Long texts may run out of memory.",
+      "driver_update_recommended": "The NVIDIA driver may be outdated. Updating to the latest version is recommended.",
+      "m1_unsupported": "M1 is not officially supported. The app may not work, or may be slow.",
+      "low_memory": "Less than 16 GB of memory. The app may be slow.",
+      "macos_old": "macOS 14 or later is recommended."
+    },
+    "blockers": {
+      "intel_mac": "Macs with Intel processors are not supported. An Apple Silicon Mac is required.",
+      "unsupported_os": "This operating system is not supported."
+    }
+  },
+  "storage": {
+    "heading": "Storage folder",
+    "description": "The runtime (Python, PyTorch) and the model are stored here. About {{size}} of free space is needed. You can change this later.",
+    "change": "Change…",
+    "useDefault": "Use the default location",
+    "pickerTitle": "Choose the storage folder",
+    "free": "Free space: {{size}}",
+    "checking": "Checking…"
+  },
+  "install": {
+    "heading": "Setup",
+    "description": "The required files are downloaded and installed. Several gigabytes are downloaded, so this can take a while.",
+    "keepOpen": "Please keep the app open until setup finishes. If it is closed, setup continues where it stopped on the next launch.",
+    "steps": {
+      "python": "Prepare Python",
+      "venv": "Create the runtime environment",
+      "deps": "Install the required packages",
+      "torch": "Install PyTorch",
+      "models": "Download the model",
+      "verify": "Check the installation"
+    },
+    "torchVariants": {
+      "cu128": "CUDA 12.8",
+      "cpu": "CPU",
+      "pypi": "Apple Silicon"
+    },
+    "states": {
+      "pending": "Waiting",
+      "running": "Running",
+      "done": "Done",
+      "skipped": "Already done",
+      "failed": "Failed"
+    },
+    "bytes": "{{done}} / {{total}} ({{percent}})",
+    "log": "Detailed log",
+    "failed": "Setup could not be completed",
+    "completed": "Setup is complete"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "title": "初回セットアップ",
+  "steps": {
+    "language": "言語",
+    "terms": "利用条件",
+    "environment": "動作環境",
+    "storage": "保存先",
+    "install": "インストール"
+  },
+  "language": {
+    "heading": "表示言語を選んでください",
+    "hint": "あとから変更できます。"
+  },
+  "terms": {
+    "heading": "利用条件",
+    "intro": "このアプリを使う前に、以下の内容を確認してください。",
+    "unofficial": "このアプリは、Aratako 氏が MIT ライセンスで公開している音声合成モデル Irodori-TTS を利用する非公式アプリです。",
+    "ethicsHeading": "Irodori-TTS の倫理的な利用制限",
+    "ethics": {
+      "impersonation": "本人の明確な同意なく、実在の人物の声を複製したり、なりすましに使ったりしないでください。",
+      "misinformation": "誤情報の拡散や、人を欺くディープフェイクの作成に使わないでください。",
+      "resemblance": "説明文（キャプション）だけで作った声が、偶然に実在の人物と似る場合があります。",
+      "liability": "開発者は、利用によって生じた結果について責任を負いません。法令の遵守は利用者の責任です。"
+    },
+    "consent": "参照音声から声を作るときは、その声の本人の同意が必要です。同意の記録は声データとともに保存されます。",
+    "watermark": "生成した音声には、既定で聞き取れない電子透かし（SilentCipher）が埋め込まれます。",
+    "privacy": "このアプリは利用状況を送信しません（テレメトリなし）。インターネットに接続するのは、初回セットアップのダウンロード、更新の確認、有効にした API サーバーのみです。",
+    "license": "このアプリは現状のまま提供され、いかなる保証もありません。",
+    "agree": "上記の内容を理解し、同意します"
+  },
+  "environment": {
+    "heading": "動作環境の確認",
+    "detecting": "動作環境を確認しています…",
+    "gpu": "GPU",
+    "gpuSpec": "{{name}}（VRAM {{vram}}、ドライバー {{driver}}）",
+    "noGpu": "対応する NVIDIA GPU は見つかりませんでした",
+    "chip": "チップ",
+    "chipSpec": "{{chip}}（メモリ {{memory}}、macOS {{version}}）",
+    "mode": "推論モード",
+    "modes": {
+      "cuda": "GPU（CUDA）",
+      "mps": "Apple Silicon（MPS）",
+      "cpu": "CPU"
+    },
+    "precision": "精度: {{precision}}",
+    "useCpu": "CPU モードを使う（低速）",
+    "notices": {
+      "cpu_mode_slow": "CPU モードで動作します。生成には GPU よりはるかに長い時間（1 文に数分程度）がかかります。",
+      "no_nvidia_gpu": "対応する NVIDIA GPU が見つからないため、CPU モードになります。",
+      "gpu_too_old": "GPU が古い（Volta 世代より前の）ため、CPU モードになります。",
+      "vram_too_low": "GPU のメモリが 6 GB 未満のため、CPU モードになります。",
+      "low_vram_bf16": "GPU のメモリが 8 GB 未満のため、メモリ消費の少ない bf16 精度で動作します。",
+      "low_vram_fp32": "GPU のメモリが 8 GB 未満です。長い文章ではメモリが足りなくなる場合があります。",
+      "driver_update_recommended": "NVIDIA ドライバーが古い可能性があります。最新版への更新をおすすめします。",
+      "m1_unsupported": "M1 は動作保証の対象外です。動作しない、または遅い場合があります。",
+      "low_memory": "メモリが 16 GB 未満です。動作が遅くなる場合があります。",
+      "macos_old": "macOS 14 以降をおすすめします。"
+    },
+    "blockers": {
+      "intel_mac": "Intel プロセッサー搭載の Mac には対応していません。Apple Silicon の Mac が必要です。",
+      "unsupported_os": "この OS には対応していません。"
+    }
+  },
+  "storage": {
+    "heading": "保存先フォルダー",
+    "description": "実行環境（Python・PyTorch）とモデルをここに保存します。約 {{size}} の空き容量が必要です。あとから変更することもできます。",
+    "change": "変更…",
+    "useDefault": "既定の場所に戻す",
+    "pickerTitle": "保存先フォルダーを選択",
+    "free": "空き容量: {{size}}",
+    "checking": "確認しています…"
+  },
+  "install": {
+    "heading": "セットアップ",
+    "description": "必要なファイルをダウンロードしてインストールします。数 GB のダウンロードがあるため、完了まで時間がかかる場合があります。",
+    "keepOpen": "完了するまでアプリを閉じないでください。途中で閉じても、次回の起動時に続きから再開します。",
+    "steps": {
+      "python": "Python の準備",
+      "venv": "実行環境の作成",
+      "deps": "必要なパッケージのインストール",
+      "torch": "PyTorch のインストール",
+      "models": "モデルのダウンロード",
+      "verify": "動作確認"
+    },
+    "torchVariants": {
+      "cu128": "CUDA 12.8",
+      "cpu": "CPU",
+      "pypi": "Apple Silicon"
+    },
+    "states": {
+      "pending": "待機中",
+      "running": "実行中",
+      "done": "完了",
+      "skipped": "済み",
+      "failed": "失敗"
+    },
+    "bytes": "{{done}} / {{total}}（{{percent}}）",
+    "log": "詳細ログ",
+    "failed": "セットアップを完了できませんでした",
+    "completed": "セットアップが完了しました"
+  }
+}

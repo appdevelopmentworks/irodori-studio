@@ -1,0 +1,102 @@
+{
+  "title": "Ersteinrichtung",
+  "steps": {
+    "language": "Sprache",
+    "terms": "Bedingungen",
+    "environment": "System",
+    "storage": "Speicherort",
+    "install": "Installation"
+  },
+  "language": {
+    "heading": "Wählen Sie Ihre Anzeigesprache",
+    "hint": "Sie können sie später ändern."
+  },
+  "terms": {
+    "heading": "Nutzungsbedingungen",
+    "intro": "Bitte lesen Sie Folgendes, bevor Sie die App verwenden.",
+    "unofficial": "Dies ist eine inoffizielle App auf Basis von Irodori-TTS, dem von Aratako unter der MIT-Lizenz veröffentlichten Sprachsynthesemodell.",
+    "ethicsHeading": "Ethische Nutzungsbeschränkungen von Irodori-TTS",
+    "ethics": {
+      "impersonation": "Klonen oder imitieren Sie die Stimme einer realen Person nicht ohne deren ausdrückliche Zustimmung.",
+      "misinformation": "Verwenden Sie die App nicht, um Falschinformationen zu verbreiten oder täuschende Deepfakes zu erstellen.",
+      "resemblance": "Stimmen, die nur aus einer Textbeschreibung (Caption) erzeugt werden, können zufällig realen Personen ähneln.",
+      "liability": "Die Entwickler übernehmen keine Haftung für die Folgen der Nutzung. Sie sind selbst für die Einhaltung der Gesetze verantwortlich."
+    },
+    "consent": "Um eine Stimme aus Referenzaudio zu erstellen, ist die Zustimmung der Person erforderlich, der die Stimme gehört. Die Zustimmung wird mit der Stimme gespeichert.",
+    "watermark": "Erzeugtes Audio enthält standardmäßig ein unhörbares SilentCipher-Wasserzeichen.",
+    "privacy": "Diese App sendet keine Nutzungsdaten (keine Telemetrie). Sie verbindet sich nur für die Downloads der Einrichtung, die Suche nach Updates und den API-Server (falls aktiviert) mit dem Internet.",
+    "license": "Diese App wird ohne Mängelgewähr und ohne jegliche Garantie bereitgestellt.",
+    "agree": "Ich habe die obigen Bedingungen gelesen und stimme ihnen zu"
+  },
+  "environment": {
+    "heading": "Systemprüfung",
+    "detecting": "Ihr System wird geprüft…",
+    "gpu": "GPU",
+    "gpuSpec": "{{name}} (VRAM {{vram}}, Treiber {{driver}})",
+    "noGpu": "Keine unterstützte NVIDIA-GPU gefunden",
+    "chip": "Chip",
+    "chipSpec": "{{chip}} (Speicher {{memory}}, macOS {{version}})",
+    "mode": "Inferenzmodus",
+    "modes": {
+      "cuda": "GPU (CUDA)",
+      "mps": "Apple Silicon (MPS)",
+      "cpu": "CPU"
+    },
+    "precision": "Genauigkeit: {{precision}}",
+    "useCpu": "CPU-Modus verwenden (langsam)",
+    "notices": {
+      "cpu_mode_slow": "Die App läuft im CPU-Modus. Die Erzeugung dauert deutlich länger als auf einer GPU (Minuten pro Satz).",
+      "no_nvidia_gpu": "Keine unterstützte NVIDIA-GPU gefunden, daher wird der CPU-Modus verwendet.",
+      "gpu_too_old": "Die GPU ist zu alt (älter als Volta), daher wird der CPU-Modus verwendet.",
+      "vram_too_low": "Die GPU hat weniger als 6 GB Speicher, daher wird der CPU-Modus verwendet.",
+      "low_vram_bf16": "Die GPU hat weniger als 8 GB Speicher, daher wird die speichersparende bf16-Genauigkeit verwendet.",
+      "low_vram_fp32": "Die GPU hat weniger als 8 GB Speicher. Bei langen Texten kann der Speicher knapp werden.",
+      "driver_update_recommended": "Der NVIDIA-Treiber ist möglicherweise veraltet. Ein Update auf die neueste Version wird empfohlen.",
+      "m1_unsupported": "M1 wird nicht offiziell unterstützt. Die App funktioniert möglicherweise nicht oder ist langsam.",
+      "low_memory": "Weniger als 16 GB Arbeitsspeicher. Die App kann langsam sein.",
+      "macos_old": "macOS 14 oder neuer wird empfohlen."
+    },
+    "blockers": {
+      "intel_mac": "Macs mit Intel-Prozessor werden nicht unterstützt. Ein Mac mit Apple Silicon ist erforderlich.",
+      "unsupported_os": "Dieses Betriebssystem wird nicht unterstützt."
+    }
+  },
+  "storage": {
+    "heading": "Speicherordner",
+    "description": "Hier werden die Laufzeitumgebung (Python, PyTorch) und das Modell gespeichert. Es werden etwa {{size}} freier Speicherplatz benötigt. Sie können den Ort später ändern.",
+    "change": "Ändern…",
+    "useDefault": "Standardort verwenden",
+    "pickerTitle": "Speicherordner auswählen",
+    "free": "Freier Speicherplatz: {{size}}",
+    "checking": "Wird geprüft…"
+  },
+  "install": {
+    "heading": "Einrichtung",
+    "description": "Die benötigten Dateien werden heruntergeladen und installiert. Es werden mehrere Gigabyte übertragen, daher kann dies eine Weile dauern.",
+    "keepOpen": "Bitte lassen Sie die App geöffnet, bis die Einrichtung abgeschlossen ist. Wird sie geschlossen, setzt die Einrichtung beim nächsten Start an der unterbrochenen Stelle fort.",
+    "steps": {
+      "python": "Python vorbereiten",
+      "venv": "Laufzeitumgebung erstellen",
+      "deps": "Benötigte Pakete installieren",
+      "torch": "PyTorch installieren",
+      "models": "Modell herunterladen",
+      "verify": "Installation prüfen"
+    },
+    "torchVariants": {
+      "cu128": "CUDA 12.8",
+      "cpu": "CPU",
+      "pypi": "Apple Silicon"
+    },
+    "states": {
+      "pending": "Wartet",
+      "running": "Läuft",
+      "done": "Fertig",
+      "skipped": "Bereits erledigt",
+      "failed": "Fehlgeschlagen"
+    },
+    "bytes": "{{done}} / {{total}} ({{percent}})",
+    "log": "Ausführliches Protokoll",
+    "failed": "Die Einrichtung konnte nicht abgeschlossen werden",
+    "completed": "Die Einrichtung ist abgeschlossen"
+  }
+}

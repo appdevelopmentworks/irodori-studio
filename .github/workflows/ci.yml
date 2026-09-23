@@ -50,7 +50,7 @@ jobs:
       - run: uv run --locked pytest -m "not gpu"
 
   tauri:
-    name: Tauri (fmt, clippy) on ${{ matrix.os }}
+    name: Tauri (fmt, clippy, tests) on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -59,6 +59,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # layout.rs tests resolve the dev layout, which includes the submodule.
+          submodules: recursive
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -74,3 +77,4 @@ jobs:
       - run: npm run build
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path src-tauri/Cargo.toml

@@ -1,0 +1,30 @@
+{
+  "title": "Ein Fehler ist aufgetreten",
+  "logsAt": "Protokolle werden hier gespeichert: {{path}}",
+  "codes": {
+    "internal": "Ein unerwarteter Fehler ist aufgetreten.",
+    "settings_io": "Die Einstellungen konnten nicht gespeichert werden.",
+    "invalid_locale": "Diese Sprache wird nicht unterstützt.",
+    "platform_unsupported": "Dieser Computer wird nicht unterstützt.",
+    "data_root_invalid": "Der Speicherordner ist ungültig.",
+    "data_root_not_writable": "In den Speicherordner kann nicht geschrieben werden. Bitte wählen Sie einen anderen Ort.",
+    "disk_space_insufficient": "Nicht genügend freier Speicherplatz. Schaffen Sie Platz oder wählen Sie einen anderen Ort.",
+    "setup_already_running": "Die Einrichtung läuft bereits.",
+    "sidecar_source_missing": "App-Dateien fehlen. Bitte installieren Sie die App neu.",
+    "uv_missing": "Das Einrichtungswerkzeug (uv) fehlt. Bitte installieren Sie die App neu.",
+    "python_install_failed": "Python konnte nicht vorbereitet werden. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    "venv_failed": "Die Laufzeitumgebung konnte nicht erstellt werden.",
+    "deps_install_failed": "Die benötigten Pakete konnten nicht installiert werden. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    "torch_install_failed": "PyTorch konnte nicht installiert werden. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    "network_error": "Keine Verbindung zum Internet. Prüfen Sie die Verbindung und versuchen Sie es erneut.",
+    "download_failed": "Das Modell konnte nicht heruntergeladen werden. Ein erneuter Versuch setzt an der unterbrochenen Stelle fort.",
+    "selfcheck_failed": "Die Prüfung der installierten Laufzeitumgebung ist fehlgeschlagen.",
+    "cuda_unavailable": "Die GPU (CUDA) konnte nicht verwendet werden. Aktualisieren Sie den NVIDIA-Treiber oder verwenden Sie den CPU-Modus.",
+    "mps_unavailable": "Die GPU von Apple Silicon (MPS) konnte nicht verwendet werden.",
+    "torch_unavailable": "PyTorch konnte nicht geladen werden.",
+    "sidecar_spawn_failed": "Die Sprachsynthese-Engine konnte nicht gestartet werden.",
+    "sidecar_exited": "Die Sprachsynthese-Engine wurde beendet.",
+    "sidecar_health_timeout": "Die Sprachsynthese-Engine antwortet nicht.",
+    "sidecar_not_ready": "Die Sprachsynthese-Engine ist noch nicht bereit."
+  }
+}

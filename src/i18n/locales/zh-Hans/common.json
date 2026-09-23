@@ -2,8 +2,16 @@
   "appName": "irodori-studio",
   "tagline": "Irodori-TTS 的非官方桌面应用",
   "japaneseOnlyNotice": "Irodori-TTS 只能朗读日语文本。",
+  "desktopOnly": "请在桌面应用中打开此页面。",
   "language": {
     "label": "显示语言",
     "name": "简体中文"
+  },
+  "actions": {
+    "next": "下一步",
+    "back": "返回",
+    "retry": "重试",
+    "showDetails": "显示详情",
+    "hideDetails": "隐藏详情"
   }
 }

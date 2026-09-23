@@ -1,0 +1,102 @@
+{
+  "title": "首次设置",
+  "steps": {
+    "language": "语言",
+    "terms": "使用条款",
+    "environment": "运行环境",
+    "storage": "存储位置",
+    "install": "安装"
+  },
+  "language": {
+    "heading": "请选择显示语言",
+    "hint": "之后可以更改。"
+  },
+  "terms": {
+    "heading": "使用条款",
+    "intro": "使用本应用前，请阅读以下内容。",
+    "unofficial": "本应用是基于 Irodori-TTS 的非官方应用。Irodori-TTS 是 Aratako 以 MIT 许可证发布的语音合成模型。",
+    "ethicsHeading": "Irodori-TTS 的伦理使用限制",
+    "ethics": {
+      "impersonation": "未经本人明确同意，不得复制真实人物的声音或将其用于冒充。",
+      "misinformation": "不得用于传播虚假信息或制作欺骗性的深度伪造内容。",
+      "resemblance": "仅通过文字描述（标题）生成的声音，可能会偶然与真实人物相似。",
+      "liability": "开发者不对使用所产生的后果承担责任。遵守法律法规是用户的责任。"
+    },
+    "consent": "使用参考音频创建声音时，需要获得该声音本人的同意。同意记录将与声音数据一起保存。",
+    "watermark": "生成的音频默认嵌入无法听见的 SilentCipher 数字水印。",
+    "privacy": "本应用不发送任何使用数据（无遥测）。仅在首次设置的下载、检查更新以及您启用的 API 服务器中连接互联网。",
+    "license": "本应用按原样提供，不附带任何形式的保证。",
+    "agree": "我已阅读并同意以上内容"
+  },
+  "environment": {
+    "heading": "检查运行环境",
+    "detecting": "正在检查运行环境…",
+    "gpu": "GPU",
+    "gpuSpec": "{{name}}（显存 {{vram}}，驱动程序 {{driver}}）",
+    "noGpu": "未找到受支持的 NVIDIA GPU",
+    "chip": "芯片",
+    "chipSpec": "{{chip}}（内存 {{memory}}，macOS {{version}}）",
+    "mode": "推理模式",
+    "modes": {
+      "cuda": "GPU（CUDA）",
+      "mps": "Apple Silicon（MPS）",
+      "cpu": "CPU"
+    },
+    "precision": "精度：{{precision}}",
+    "useCpu": "使用 CPU 模式（较慢）",
+    "notices": {
+      "cpu_mode_slow": "将以 CPU 模式运行。生成所需时间远长于 GPU（每句约需数分钟）。",
+      "no_nvidia_gpu": "未找到受支持的 NVIDIA GPU，因此将使用 CPU 模式。",
+      "gpu_too_old": "GPU 较旧（早于 Volta 架构），因此将使用 CPU 模式。",
+      "vram_too_low": "GPU 显存不足 6 GB，因此将使用 CPU 模式。",
+      "low_vram_bf16": "GPU 显存不足 8 GB，因此将使用占用更少显存的 bf16 精度。",
+      "low_vram_fp32": "GPU 显存不足 8 GB。长文本可能会出现显存不足。",
+      "driver_update_recommended": "NVIDIA 驱动程序可能已过时。建议更新到最新版本。",
+      "m1_unsupported": "M1 不在官方支持范围内，可能无法运行或运行较慢。",
+      "low_memory": "内存不足 16 GB，运行可能较慢。",
+      "macos_old": "建议使用 macOS 14 或更高版本。"
+    },
+    "blockers": {
+      "intel_mac": "不支持搭载 Intel 处理器的 Mac。需要 Apple Silicon Mac。",
+      "unsupported_os": "不支持此操作系统。"
+    }
+  },
+  "storage": {
+    "heading": "存储文件夹",
+    "description": "运行环境（Python、PyTorch）和模型将保存在这里，需要约 {{size}} 的可用空间。之后也可以更改。",
+    "change": "更改…",
+    "useDefault": "恢复默认位置",
+    "pickerTitle": "选择存储文件夹",
+    "free": "可用空间：{{size}}",
+    "checking": "正在检查…"
+  },
+  "install": {
+    "heading": "设置",
+    "description": "正在下载并安装所需文件。需要下载数 GB 的数据，可能需要一些时间。",
+    "keepOpen": "设置完成前请不要关闭应用。即使中途关闭，下次启动时也会从中断处继续。",
+    "steps": {
+      "python": "准备 Python",
+      "venv": "创建运行环境",
+      "deps": "安装所需软件包",
+      "torch": "安装 PyTorch",
+      "models": "下载模型",
+      "verify": "检查安装"
+    },
+    "torchVariants": {
+      "cu128": "CUDA 12.8",
+      "cpu": "CPU",
+      "pypi": "Apple Silicon"
+    },
+    "states": {
+      "pending": "等待中",
+      "running": "进行中",
+      "done": "完成",
+      "skipped": "已完成",
+      "failed": "失败"
+    },
+    "bytes": "{{done}} / {{total}}（{{percent}}）",
+    "log": "详细日志",
+    "failed": "设置未能完成",
+    "completed": "设置已完成"
+  }
+}

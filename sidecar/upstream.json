@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "repo": "https://github.com/Aratako/Irodori-TTS",
+  "commit": "89f9d8fbd4d51ea019867ee1197725ede1df13c5",
+  "torch": {
+    "packages": ["torch==2.10.*", "torchaudio==2.10.*"],
+    "pypi_packages": ["torchcodec==0.10.*"],
+    "index": {
+      "cuda": "https://download.pytorch.org/whl/cu128",
+      "cpu": "https://download.pytorch.org/whl/cpu"
+    }
+  }
+}
