@@ -1,0 +1,9 @@
+{
+  "appName": "irodori-studio",
+  "tagline": "Irodori-TTS のための非公式デスクトップアプリ",
+  "japaneseOnlyNotice": "Irodori-TTS が読み上げられるのは日本語のテキストのみです。",
+  "language": {
+    "label": "表示言語",
+    "name": "日本語"
+  }
+}

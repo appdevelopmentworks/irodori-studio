@@ -1,0 +1,136 @@
+# Architecture decision records
+
+Locked decisions and their rationale. **Do not re-litigate these while coding.** If you believe one is wrong, flag it for the owner rather than changing course silently.
+
+Status legend: `LOCKED` (decided by the owner), `CONFIRM` (default chosen, owner may still override — build it so the override is cheap), `OPEN` (resolve during implementation and record the outcome under "Resolved during implementation").
+
+---
+
+### D1 — Sidecar is a uv-managed child process, not a frozen binary  `LOCKED`
+Same model as `qwen-tts-desktop`. Rust spawns the venv's uvicorn as a child process. Installed builds bundle the sidecar **source** + a platform `uv` binary + a platform `ffmpeg` binary as Tauri resources; the venv is created under `<app-data>/runtime/venv` (writable) on first run. Dev vs installed layout is auto-detected in `src-tauri/src/layout.rs`.
+**Why:** reproducible, fast to iterate, identical on Windows and macOS, and avoids PyInstaller + CUDA packaging pain. Torch and models are downloaded at first run anyway (they exceed the 2 GB GitHub Release asset limit).
+
+### D2 — `torch` is not pinned; installed per platform at first run  `LOCKED`
+`sidecar/pyproject.toml` pins everything except `torch` / `torchaudio` (and `torchvision` if pulled in). First-run setup installs:
+- Windows + NVIDIA → CUDA 12.8 wheels (`https://download.pytorch.org/whl/cu128`). Upstream Irodori-TTS also standardizes on cu128.
+- Windows without a usable NVIDIA GPU → CPU wheels (`/whl/cpu`).
+- macOS arm64 → default PyPI wheels (include MPS).
+**Why:** the correct wheel depends on the machine; a static pin cannot express this. RTX 50 (Blackwell, sm_120) requires cu128.
+**Sub-item `OPEN`:** confirm the minimum compute capability covered by the cu128 wheels of the pinned torch version (expected Turing sm_75+). Anything below → CPU mode with a notice.
+
+### D3 — Upstream is a commit-pinned git submodule, never edited  `LOCKED`
+`third_party/Irodori-TTS` is a git submodule pinned to a specific commit. The sidecar imports `irodori_tts` from it (path dependency or `PYTHONPATH`). Release builds copy the pinned `irodori_tts/` package into the bundled sidecar resources, so end users never need git.
+All app behavior lives in `sidecar/app/`; upstream is reached only through `sidecar/app/engine/irodori_adapter.py`.
+**Why:** owner chose "commit-pinned git dependency + adapter layer". Upgrading (e.g. for Large) = bump the submodule commit + re-run the adapter tests. If a capability is not exposed by upstream, raise it; do not patch upstream.
+**Sub-item `OPEN` (Session 0):** inspect upstream `pyproject.toml`. If `torch` is a base dependency there, install upstream's non-torch deps explicitly in our pyproject rather than letting the resolver pull a generic torch.
+
+### D4 — Model residency: load once, stay resident  `LOCKED`
+After setup completes, the sidecar loads the active model at startup (~16 s cold load) and keeps it resident. Manual unload / reload from Settings. Switching model or runtime-level settings (device, precision, compile) triggers a reload.
+**Why:** per-request loading would dominate latency (load ≈ 16 s vs generation ≈ 1 s on a 4090).
+
+### D5 — Model policy: top model only, driven by a capability registry  `LOCKED` (sub-items `CONFIRM`)
+Only the top official checkpoint is offered (today: `Aratako/Irodori-TTS-v4.1-Small`). Models are declared in `sidecar/models.json` with capabilities (see `architecture.md` → Model registry). The UI renders parameters from capabilities, never from hardcoded model names.
+- `CONFIRM`: when Large ships, keep Small selectable as the low-spec option (default Large where hardware allows).
+- `CONFIRM`: MF (MeanFlow) and quantized variants are **not** offered. Low-memory handling = bf16 + fewer steps. The registry format must still be able to express them (e.g. `ignores: ["cfg", "sway"]`) so adding one later is data-only.
+**Why:** owner answer "最上位のモデルのみ" + maintainability for the forthcoming Large.
+
+### D6 — Inference backend interface with an MLX slot  `LOCKED`
+`sidecar/app/engine/base.py` defines a `TtsBackend` protocol (load / unload / synthesize / encode_reference / capabilities / device_info). v1 ships one implementation, `TorchBackend` (devices: `cuda` / `mps` / `cpu`), wrapping upstream `InferenceRuntime`. `MlxBackend` is a reserved name only — no code in v1.
+**Why:** owner wants MLX swappable later without touching routers or UI.
+
+### D7 — Windows device policy: NVIDIA GPU, else explicit CPU mode  `LOCKED`
+Probe with `nvidia-smi` before torch exists. Usable NVIDIA → CUDA. Otherwise → CPU mode, shown clearly in the setup wizard and status bar ("CPU mode: generation is slow"). Never fall back silently.
+**Why:** owner chose "NVIDIA + CPU fallback" (differs from qwen-tts-desktop, which rejected CPU).
+
+### D8 — macOS policy: Apple Silicon M2+, PyTorch MPS fp32  `LOCKED` (M1 handling `CONFIRM`)
+arm64-only build. Target M2 and newer. `CONFIRM`: M1 is allowed with an "unsupported" warning rather than blocked. Intel Macs are unsupported (arm64 bundle will not run).
+MPS uses fp32 for model and codec (upstream guidance; bf16 on MPS was measured slower by community reports). If a component misbehaves on MPS, fall back per component (upstream supports separate `codec_device`), recorded in the registry/device policy — not with ad-hoc code.
+
+### D9 — Minimum requirements and precision policy  `CONFIRM`
+- Windows NVIDIA: VRAM ≥ 8 GB → fp32 (upstream default); 6–8 GB → bf16 automatically (Ampere+ only); < 6 GB → CPU mode.
+- macOS: 16 GB unified memory recommended; 8 GB allowed with a warning.
+- Precision and device are user-overridable in Settings (advanced).
+**Why:** measured ≈ 5.4 GB VRAM at fp32 and ≈ 4.9 GB at bf16 on a 4090 for short text.
+
+### D10 — Transport: HTTP + SSE on a random localhost port; job-based work  `LOCKED`
+Same as qwen-tts-desktop: Rust picks a free port on `127.0.0.1`, spawns the sidecar, frontend obtains it via `get_sidecar_port` and calls the sidecar directly (Rust does not proxy). Long-running work returns `job_id`; progress via `GET /jobs/{id}/events` (SSE); cancel via `POST /jobs/{id}/cancel`.
+
+### D11 — Next.js static export; no browser storage  `LOCKED`
+`output: 'export'`. No `localStorage` / `sessionStorage` / IndexedDB for app state. Settings through Tauri commands; data through the sidecar.
+
+### D12 — Watermark: default ON, user can turn it OFF  `LOCKED` (scope of OFF `OPEN`)
+SilentCipher watermarking is applied by default. A Settings toggle can disable it.
+`OPEN` (owner to decide): whether the toggle is ignored (watermark forced ON) when the generation uses reference audio or a speaker embedding (i.e. voice cloning). Implement the rule in exactly one function, `watermark_policy(request, settings) -> bool`, so either answer is a one-line change.
+**Sub-item `OPEN` (Session 2):** find how upstream applies the watermark (inside `InferenceRuntime.synthesize` when the dependency/model files are present). Determine the cleanest supported way to skip it without editing upstream (runtime flag, constructor option, or calling a lower-level API). Record the finding here.
+
+### D13 — Consent gating and first-run terms  `LOCKED`
+First run requires accepting terms that include upstream's ethical restrictions. Creating a voice from imported or recorded audio requires a consent confirmation that is stored with the voice (`consent: {confirmed_at, statement}`) and exported inside voice packages.
+
+### D14 — Distribution: GitHub Releases, unsigned  `LOCKED`
+Windows: NSIS installer. macOS: `.dmg`, arm64, **ad-hoc signed** (`signingIdentity: "-"`; Apple Silicon refuses to run unsigned arm64 code) but not notarized. README documents first-launch approval: macOS `xattr -dr com.apple.quarantine "/Applications/<App>.app"`; Windows SmartScreen "More info → Run anyway". Bundled `uv` / `ffmpeg` binaries are ad-hoc signed too.
+**Sub-item `OPEN` (Session 10):** verify files downloaded by the app at first run (venv, torch, models) are not quarantined and need no extra steps.
+
+### D15 — Updates: notification only  `CONFIRM`
+On startup (if online and enabled), query the GitHub Releases API for the latest tag; if newer, show a non-blocking notice linking to the Releases page. No Tauri updater in v1.
+
+### D16 — Storage  `LOCKED`
+- `settings.json` owned by Rust (Tauri app config dir).
+- Data root chosen by the user at first run; subdirs: `models/` (HF cache, `HF_HOME`), `runtime/` (venv), `voices/`, `history/`, `projects/`, `exports/`, `logs/`.
+- Metadata in SQLite (`<data-root>/irodori-studio.db`) owned by the sidecar. Audio lives as files; the DB stores relative paths.
+- "Move data root" in Settings copies, verifies, then switches.
+
+### D17 — i18n: react-i18next, four locales  `LOCKED` (Chinese variant `CONFIRM`)
+Locales: `ja` (source of truth), `en`, `zh-Hans` (`CONFIRM`: simplified), `de`. Keys are English identifiers; every visible string goes through `t()`. Missing-key check runs in CI. Emoji palette labels and error messages from the sidecar are localized too (sidecar returns error **codes**, the frontend maps them to text).
+Note: the TTS model itself accepts Japanese text only; the UI says so in every locale.
+
+### D18 — Long-text chunking and voice consistency  `CONFIRM`
+Split on sentence punctuation / newlines with a target of 80–150 characters per chunk (configurable), never exceeding the ~30 s per-generation limit (upstream trained max ≈ 750 latent frames at 25 fps). Pauses: separate silence lengths after sentences and paragraphs.
+Voice consistency: without a reference, each chunk may produce a different voice. Therefore narration requires a voice with reference audio or a speaker embedding; for caption-only voices the UI offers **Voice lock** = synthesize chunk 1, then reuse its audio as the reference for all following chunks.
+
+### D19 — Reading dictionary and reading preview  `CONFIRM` (library `OPEN`)
+User dictionary (surface → reading) is applied before sending text to upstream (upstream then applies its own normalization). Reading preview shows analyzer-estimated kana; it is a hint, not a guarantee of what the model will say.
+`OPEN`: choose the analyzer (candidate: `pyopenjtalk-plus` for prebuilt Win/macOS wheels; alternative: `fugashi` + `unidic-lite`). Check license and wheel availability.
+
+### D20 — Output formats and post-processing via bundled ffmpeg  `CONFIRM`
+wav written natively (48 kHz); mp3 / flac / opus / aac and 44.1 kHz resampling via bundled ffmpeg. Loudness presets via `loudnorm` (-14 / -16 / -23 LUFS). Speed: model `duration_scale` by default; optional post time-stretch (`atempo`) for exact timing. Gain. No pitch shifting in v1.
+Use an **LGPL** ffmpeg build for public distribution and ship its license + source pointer in third-party notices.
+
+### D21 — External API: one configurable port, OpenAI + VOICEVOX compatible  `CONFIRM`
+A second listener inside the same sidecar process, enabled from the API Server screen. Default port `50221` (avoids VOICEVOX 50021 and AivisSpeech 10101), bound to `127.0.0.1`; LAN binding requires an API key. Serves OpenAI-compatible routes under `/v1/...` and VOICEVOX-compatible routes at the root. Shares the single resident model and the synthesis queue (D24). Gradio compatibility is out of v1.
+
+### D22 — Voice package format  `CONFIRM`
+`.irovoice` = zip containing `voice.json` (name, defaults, consent, source type, model id it was made with) + reference clips (flac) + optional `.speaker.safetensors`. Cached latents are **not** exported (recomputed on import, model-specific).
+
+### D23 — History and projects  `CONFIRM`
+History: every generation stores audio + full request + used seed + timings. Pruning by count and size (defaults 500 entries / 5 GB). Projects: `.iroproj` = zip with `project.json` (narration or script, settings, chunk/line state, adopted take ids) + adopted audio.
+
+### D24 — Single synthesis queue  `LOCKED`
+One synthesis at a time across the UI and the external API (FIFO). Queue position is reported to both. UI jobs and API requests are cancellable while queued.
+
+### D25 — Naming and license  `OPEN` / `CONFIRM`
+Working name `irodori-studio` for folder and identifiers. Public display name `OPEN` — must not imply it is the official Irodori-TTS app (e.g. "<Name> for Irodori-TTS"). App license `CONFIRM`: MIT.
+
+### D26 — Default parameter values follow the HF Space  `CONFIRM`
+Where the Space and the CLI defaults differ, use the Space (the owner's parity target). Known difference: `cfg_scale_caption` is 4.0 in the Space vs 3.0 in the CLI docs. Full table in `upstream-notes.md`.
+
+### D27 — Progress and cancellation granularity  `OPEN`
+Upstream `InferenceRuntime.synthesize` exposes a `log_fn` but no per-step progress or cancel hook (verify at the pinned commit). v1 reports progress per request / per chunk / per line and cancels cooperatively between units. Mid-sampling cancel is `OPEN`; do not patch upstream for it.
+
+---
+
+## Resolved during implementation
+
+### S0 — D3: upstream pin
+`third_party/Irodori-TTS` is pinned to `89f9d8fbd4d51ea019867ee1197725ede1df13c5` (upstream `main`, 2026-09-12, "Add MeanFlow distillation and v4-Large support"). Bump it only in its own commit (`chore(upstream): bump Irodori-TTS to <sha>`) and update `upstream-notes.md`.
+
+### S0 — D3 sub-item: upstream dependencies
+Upstream `pyproject.toml` declares `torch>=2.10.0`, `torchaudio>=2.10.0`, `torchcodec>=0.10.0,<0.11.0` and `torchdata>=0.11.0` as **base** dependencies (its `cpu`/`cu128`/`rocm`/`xpu` extras pin torch 2.10.x + torchao 0.16.x). Upstream `.python-version` is `3.10`. Outcome:
+- `sidecar/pyproject.toml` lists upstream's non-torch runtime deps explicitly, pinned to the versions in upstream's `uv.lock` at the pinned commit: `dacvae` (commit `414c207…`), `silentcipher` (commit `d46d7d0…`), `huggingface-hub==1.23.0`, `llvmlite==0.46.0`, `numba==0.63.1`, `peft==0.18.1`, `pyyaml==6.0.3`, `safetensors==0.7.0`, `sentencepiece==0.1.99`, `soundfile==0.13.1`, `tqdm==4.67.3`, `transformers==5.12.1`; plus `fastapi`, `uvicorn`, `python-multipart` (pinned). Python `>=3.10,<3.11`.
+- Not installed: `datasets`, `wandb`, `torchdata` (training only; the `irodori_tts` package never imports them) and `gradio` (imported only by `irodori_tts/gradio_emoji_palette.py`). Consequence for Session 3: read the palette constant `EMOJI_PALETTE_ITEMS` without importing that module (e.g. parse it with `ast` in the adapter) or add `gradio` then.
+- The torch family (`torch`, `torchaudio`, `torchcodec`, `torchvision`, `torchao`, `torchdata`) is removed from resolution with never-true `override-dependencies` — needed because `dacvae`, `silentcipher`, `peft`/`accelerate`, `descript-audiotools`, `julius` and `torch-stoi` all require torch — and `[tool.uv] environments` is limited to win32/darwin/linux so `uv.lock` records no torch version at all. `sidecar/tests/test_dependency_policy.py` enforces this and D3's single import site.
+- Upstream is **not installed as a distribution** (its metadata requires torch). The sidecar is a uv virtual project (`package = false`); `irodori_tts` is imported from the submodule via `PYTHONPATH` (pytest `pythonpath` now; Rust `layout.rs` from Session 1; installed builds copy `irodori_tts/` next to `app/`).
+- `dacvae` and `silentcipher` are fetched as GitHub commit **archives** (`/archive/<sha>.tar.gz`) instead of `git+` URLs: first-run setup on an end-user machine cannot assume a `git` executable. Risk: if GitHub ever regenerates archive bytes, the lock hash check fails — Session 10 can stage the two sdists/wheels into `resources/` to remove the network dependency.
+
+### S0 — Implementation notes
+- Bundle identifier `com.aileap.irodori-studio` (follows qwen-tts-desktop); `productName` is the working name. Settle the identifier before the first public release: it determines the app-data and config paths, so changing it later strands users' settings.
+- Frontend toolchain pins: TypeScript 6.0.x (typescript-eslint supports `<6.1`) and ESLint 9.x (eslint-plugin-react, pulled in by eslint-config-next, does not support ESLint 10 yet). Revisit when those ranges widen.

@@ -1,0 +1,93 @@
+# Project structure
+
+Target tree. Create directories when the session that needs them starts (Session 0 creates the skeleton with stubs only).
+
+```
+irodori-studio/
+├─ CLAUDE.md                      Claude Code operating context
+├─ AGENTS.md                      Codex operating context (same rules)
+├─ README.md                      user-facing install + first-launch approval steps
+├─ LICENSE                        MIT (D25, confirm)
+├─ THIRD_PARTY_NOTICES.md         upstream, ffmpeg (LGPL), uv, SilentCipher, analyzer, fonts
+├─ assets/
+│  ├─ icon.png                    app icon SOURCE (1024×1024, transparent, no wordmark) → `tauri icon`
+│  ├─ icon-with-text.png          alternative with the "Irodori-TTS" wordmark (not used by default)
+│  └─ icon.jpg                    original artwork (2048×2048, framed mockup) — keep as the master
+├─ docs/                          specs (.md only)
+├─ .github/workflows/
+│  ├─ ci.yml                      lint + typecheck + i18n missing-key check + sidecar unit tests
+│  └─ release.yml                 Windows NSIS + macOS arm64 dmg (ad-hoc signed)
+├─ scripts/
+│  ├─ stage-runtime.ps1           stage uv.exe + ffmpeg.exe + sidecar + irodori_tts into resources (Windows)
+│  ├─ stage-runtime.sh            same for macOS arm64
+│  └─ check-i18n.mjs              fails on missing/unused keys
+├─ third_party/
+│  └─ Irodori-TTS/                git submodule, pinned commit, NEVER edited (D3)
+├─ resources/                     staged at build time (gitignored contents)
+│  ├─ uv/                         uv binary per platform
+│  ├─ ffmpeg/                     LGPL ffmpeg per platform
+│  └─ sidecar/                    copied sidecar + irodori_tts package
+├─ src/                           Next.js (App Router, static export)
+│  ├─ app/
+│  │  ├─ layout.tsx
+│  │  └─ page.tsx                 app shell: sidebar nav + active screen
+│  ├─ features/
+│  │  ├─ setup/                   first-run wizard (language, terms, probe, data root, install, download, smoke test)
+│  │  ├─ quick/                   QuickScreen (simple generation)
+│  │  ├─ params/                  capability-driven ParamPanel (simple + advanced tiers)
+│  │  ├─ voice-studio/            design, import, record, waveform edit, consent, package import/export
+│  │  ├─ narration/               editor, reading preview, chunk list, render, assemble
+│  │  ├─ script/                  table editor, parser, speaker map, takes, export
+│  │  ├─ library/                 history, presets, projects
+│  │  ├─ api-server/              config, status, request log
+│  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
+│  ├─ components/                 AudioPlayer, CandidateGrid, EmojiPalette, WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
+│  ├─ i18n/
+│  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
+│  │  ├─ config.ts                supported locales; source locale `ja`
+│  │  ├─ resources.ts             registers every locales/<locale>/<feature>.json
+│  │  ├─ I18nProvider.tsx         provider; syncs <html lang>, document and window title
+│  │  ├─ i18next.d.ts             typed keys (checked against `ja`)
+│  │  └─ locales/{ja,en,zh-Hans,de}/*.json   one file per feature; file name = first key segment
+│  ├─ lib/
+│  │  ├─ api.ts                   ALL internal-API calls
+│  │  ├─ sse.ts                   job streams
+│  │  ├─ tauri.ts                 typed invoke wrappers
+│  │  ├─ types.ts                 mirrors api-spec.md
+│  │  └─ errors.ts                error code → i18n key
+│  └─ store/                      zustand: sidecar, model, jobs, queue, settings, voices, narration, script
+├─ src-tauri/
+│  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", mic usage string
+│  ├─ icons/                      generated
+│  └─ src/
+│     ├─ main.rs / lib.rs
+│     ├─ layout.rs                dev vs installed paths
+│     ├─ paths.rs
+│     ├─ config.rs                settings.json
+│     ├─ platform/{mod.rs, windows.rs, macos.rs}
+│     ├─ bootstrap.rs             idempotent first-run steps + progress events
+│     ├─ sidecar.rs               port, spawn, health, teardown guard
+│     ├─ update_check.rs          GitHub Releases latest
+│     └─ commands.rs
+└─ sidecar/
+   ├─ pyproject.toml              NO torch (D2); upstream non-torch deps pinned
+   ├─ .python-version, uv.lock    3.10 (upstream); the lock contains no torch family
+   ├─ models.json                 model registry (D5)
+   ├─ app/
+   │  ├─ main.py                  starts internal (+ optional external) uvicorn
+   │  ├─ schemas.py               pydantic, mirrors api-spec.md
+   │  ├─ errors.py                stable error codes
+   │  ├─ routers/                 system, models, tts, jobs, text, voices, narration, script, export, history, presets, projects, api_server
+   │  ├─ compat/                  openai.py, voicevox.py (external API)
+   │  ├─ engine/
+   │  │  ├─ base.py               TtsBackend protocol (D6)
+   │  │  ├─ registry.py           models.json loader + capabilities
+   │  │  ├─ params.py             single parameter table (D26)
+   │  │  ├─ irodori_adapter.py    TorchBackend → upstream InferenceRuntime (ONLY upstream import site)
+   │  │  └─ host.py               resident EngineHost singleton
+   │  ├─ services/                job_manager, queue, policy (watermark), voices, narration, script, history, presets, projects
+   │  ├─ text/                    dictionary.py, reading.py, chunker.py, srt.py, script_parser.py
+   │  ├─ audio/                   io.py, concat.py, export.py (ffmpeg), post.py (loudnorm/atempo/gain)
+   │  └─ storage/                 db.py (SQLite + migrations), files.py
+   └─ tests/                      unit tests that do not need torch (chunker, parser, srt, policy, registry, schemas) + marked GPU tests
+```

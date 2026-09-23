@@ -1,0 +1,15 @@
+# Normalize line endings: text files are stored and checked out with LF on every
+# platform (shell scripts must stay LF for macOS; tools on Windows handle LF fine).
+* text=auto eol=lf
+
+# Binary assets — never touch line endings.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.icns binary
+*.wav binary
+*.flac binary
+*.mp3 binary
+*.exe binary
+*.safetensors binary

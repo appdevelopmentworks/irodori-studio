@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light dark;
+}
+
+/*
+ * Han unification: Japanese and Simplified Chinese share code points but not glyph
+ * shapes. <html lang> follows the UI locale (I18nProvider), so Chinese UI text must
+ * prefer a Chinese font; everything else uses the Japanese-first default stack.
+ */
+@theme {
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
+}
+
+html:lang(zh-Hans) {
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
+    sans-serif;
+}
+
+body {
+  @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100;
+}

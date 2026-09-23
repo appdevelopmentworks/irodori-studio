@@ -1,0 +1,34 @@
+{
+  "name": "irodori-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unofficial cross-platform desktop app for the Japanese TTS model Irodori-TTS.",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "lint": "eslint . && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.11.1",
+    "i18next": "26.4.2",
+    "next": "16.3.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-i18next": "17.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@tauri-apps/cli": "2.11.5",
+    "@types/node": "24.13.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.6",
+    "eslint-plugin-i18next": "6.1.5",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  }
+}

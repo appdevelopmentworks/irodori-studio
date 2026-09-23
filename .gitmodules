@@ -1,0 +1,3 @@
+[submodule "third_party/Irodori-TTS"]
+	path = third_party/Irodori-TTS
+	url = https://github.com/Aratako/Irodori-TTS

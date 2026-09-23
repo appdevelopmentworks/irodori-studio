@@ -1,0 +1,90 @@
+[project]
+name = "irodori-studio-sidecar"
+version = "0.1.0"
+description = "FastAPI sidecar for irodori-studio; wraps the pinned upstream irodori_tts package."
+# Upstream's .python-version (third_party/Irodori-TTS) is 3.10.
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    # --- API layer (our code) ---
+    "fastapi==0.141.1",
+    "uvicorn==0.53.0",
+    "python-multipart==0.0.32",
+
+    # --- Runtime deps of upstream irodori_tts (third_party/Irodori-TTS/pyproject.toml),
+    # pinned to upstream's uv.lock at the submodule commit. Deliberately left out
+    # (docs/decisions.md, "Resolved during implementation", S0):
+    #   torch, torchaudio, torchcodec -> installed per platform at first run (D2)
+    #   torchdata, datasets, wandb    -> training only
+    #   gradio                        -> only irodori_tts/gradio_emoji_palette.py
+    "dacvae",
+    "huggingface-hub==1.23.0",
+    "llvmlite==0.46.0",
+    "numba==0.63.1",
+    "peft==0.18.1",
+    "pyyaml==6.0.3",
+    "safetensors==0.7.0",
+    "sentencepiece==0.1.99",
+    "silentcipher",
+    "soundfile==0.13.1",
+    "tqdm==4.67.3",
+    "transformers==5.12.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.16.8",
+    # tomllib is stdlib only from Python 3.11.
+    "tomli==2.4.1",
+]
+
+[tool.uv]
+# Not an installable package: the sidecar runs from its source dir (`python -m
+# app.main`) and imports `irodori_tts` from the submodule via PYTHONPATH (D3).
+package = false
+# Resolve only for the platforms we run on (Linux = CI). Besides a smaller lock, this
+# makes the torch override marker below unsatisfiable, so no torch version is
+# resolved or recorded in uv.lock at all.
+environments = [
+    "sys_platform == 'win32'",
+    "sys_platform == 'darwin'",
+    "sys_platform == 'linux'",
+]
+# D2: the torch family is never resolved here. Upstream deps (dacvae, silentcipher,
+# peft, audiotools, ...) require torch; overriding them with a never-true marker
+# drops those requirements. First-run setup installs the right wheels per platform
+# with `uv pip install` into the same venv. A later plain `uv sync` would prune them
+# again — use `uv sync --inexact` in a venv that has torch.
+override-dependencies = [
+    "torch ; sys_platform == 'torch-installed-at-first-run'",
+    "torchaudio ; sys_platform == 'torch-installed-at-first-run'",
+    "torchcodec ; sys_platform == 'torch-installed-at-first-run'",
+    "torchvision ; sys_platform == 'torch-installed-at-first-run'",
+    "torchao ; sys_platform == 'torch-installed-at-first-run'",
+    "torchdata ; sys_platform == 'torch-installed-at-first-run'",
+]
+
+[tool.uv.sources]
+# Same commits as upstream's git sources, fetched as archives: first-run setup on
+# an end-user machine must not require a git executable.
+dacvae = { url = "https://github.com/facebookresearch/dacvae/archive/414c20785fc3a28373073ea8ef7a1316eeeaca6e.tar.gz" }
+silentcipher = { url = "https://github.com/SesameAILabs/silentcipher/archive/d46d7d0893a583d8968ab3a6626e2289faec9152.tar.gz" }
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+# Same rule set as upstream.
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `app` from this directory, `irodori_tts` from the pinned submodule (D3).
+pythonpath = [".", "../third_party/Irodori-TTS"]
+markers = [
+    "gpu: needs torch and an accelerator (CUDA/MPS); run manually, excluded in CI",
+]

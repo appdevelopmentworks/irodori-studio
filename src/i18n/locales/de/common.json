@@ -1,0 +1,9 @@
+{
+  "appName": "irodori-studio",
+  "tagline": "Eine inoffizielle Desktop-App für Irodori-TTS",
+  "japaneseOnlyNotice": "Irodori-TTS kann nur japanischen Text vorlesen.",
+  "language": {
+    "label": "Anzeigesprache",
+    "name": "Deutsch"
+  }
+}

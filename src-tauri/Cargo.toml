@@ -1,0 +1,16 @@
+[package]
+name = "irodori-studio"
+version = "0.1.0"
+description = "Unofficial cross-platform desktop app for the Japanese TTS model Irodori-TTS."
+edition = "2021"
+publish = false
+
+[lib]
+# Differs from the binary name to avoid an output-filename (PDB) collision on Windows.
+name = "irodori_studio_lib"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }

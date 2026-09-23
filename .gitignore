@@ -1,0 +1,47 @@
+# ---- Node / Next.js (frontend) ----
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
+
+# ---- Tauri / Rust ----
+src-tauri/target/
+src-tauri/gen/
+# `tauri icon` also emits mobile icons; this app is desktop-only (Windows + macOS).
+src-tauri/icons/android/
+src-tauri/icons/ios/
+
+# ---- Python sidecar (uv-managed) ----
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+
+# ---- Staged bundle resources (scripts/stage-runtime.*, Session 10) ----
+# Keep the placeholder dirs so resource paths resolve in dev builds, but never
+# commit the staged contents (uv, LGPL ffmpeg, sidecar copy + irodori_tts).
+/resources/*/*
+!/resources/*/.gitkeep
+
+# ---- Model weights / caches / runtime data ----
+# Models and the runtime venv live under the user-selected data root at runtime
+# (outside this repo). These guard against accidental local copies.
+*.safetensors
+*.pth
+*.ckpt
+.cache/
+
+# ---- Logs ----
+# Anchored so a future source folder named `logs` is not swallowed.
+/logs/
+*.log
+
+# ---- OS / editor noise ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
