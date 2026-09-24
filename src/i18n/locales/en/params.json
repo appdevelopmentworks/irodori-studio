@@ -1,0 +1,194 @@
+{
+  "num_steps": {
+    "label": "Steps",
+    "help": "Number of sampling steps. More steps improve quality but take longer."
+  },
+  "num_candidates": {
+    "label": "Candidates",
+    "help": "How many variations of the same text to generate at once. More candidates use more VRAM."
+  },
+  "seed": {
+    "label": "Seed",
+    "help": "The same seed with the same settings reproduces the same audio. Leave empty for a random seed.",
+    "null": "Random"
+  },
+  "t_schedule_mode": {
+    "label": "Time schedule",
+    "help": "How sampling steps are spaced. Sway keeps quality up when you use fewer steps.",
+    "choices": {
+      "linear": "Linear",
+      "sway": "Sway"
+    }
+  },
+  "sway_coeff": {
+    "label": "Sway coefficient",
+    "help": "Negative values put more steps on the noise side (the early steps)."
+  },
+  "truncation_factor": {
+    "label": "Truncation factor",
+    "help": "Scales the initial noise. 0.8–0.9 reduces variation but can flatten expression.",
+    "null": "Off"
+  },
+  "rescale_k": {
+    "label": "Rescale k",
+    "help": "Temporal score rescaling. Set it together with sigma.",
+    "null": "Off"
+  },
+  "rescale_sigma": {
+    "label": "Rescale sigma",
+    "help": "Temporal score rescaling. Set it together with k.",
+    "null": "Off"
+  },
+  "context_kv_cache": {
+    "label": "Context KV cache",
+    "help": "Precomputes the conditioning for faster sampling."
+  },
+  "seconds": {
+    "label": "Duration (s)",
+    "help": "Fixes the output length. Leave empty to let the duration predictor decide (recommended).",
+    "null": "Auto"
+  },
+  "duration_scale": {
+    "label": "Duration scale",
+    "help": "Multiplies the predicted length. Above 1 is slower and longer; below 1 is faster and shorter."
+  },
+  "cfg_guidance_mode": {
+    "label": "CFG mode",
+    "help": "Independent gives each condition its own strength; joint needs all enabled strengths to be equal.",
+    "choices": {
+      "independent": "Independent",
+      "joint": "Joint",
+      "alternating": "Alternating"
+    }
+  },
+  "cfg_scale_text": {
+    "label": "CFG: text",
+    "help": "How strongly to follow the text. Raise it a little if pronunciation is weak."
+  },
+  "cfg_scale_caption": {
+    "label": "CFG: caption",
+    "help": "How strongly to follow the caption (voice and style)."
+  },
+  "cfg_scale_speaker": {
+    "label": "CFG: speaker",
+    "help": "How closely to match the reference speaker."
+  },
+  "cfg_scale": {
+    "label": "CFG override (deprecated)",
+    "help": "Overrides every enabled CFG strength with this value. Normally leave it empty.",
+    "null": "Off"
+  },
+  "cfg_min_t": {
+    "label": "CFG min t",
+    "help": "CFG is applied only while t is at or above this value."
+  },
+  "cfg_max_t": {
+    "label": "CFG max t",
+    "help": "CFG is applied only while t is at or below this value."
+  },
+  "speaker_kv_scale": {
+    "label": "Speaker K/V scale",
+    "help": "Values above 1 strengthen the reference speaker's identity (experimental).",
+    "null": "Off"
+  },
+  "speaker_kv_min_t": {
+    "label": "Speaker K/V min t",
+    "help": "Speaker K/V scaling applies only while t is at or above this value.",
+    "null": "Default (0.9)"
+  },
+  "speaker_kv_max_layers": {
+    "label": "Speaker K/V layers",
+    "help": "Limits the scaling to the first N layers.",
+    "null": "All layers"
+  },
+  "speaker_uncond_mode": {
+    "label": "Speaker uncond mode",
+    "help": "How the unconditional speaker branch is formed when a speaker embedding is used.",
+    "choices": {
+      "mask": "Mask",
+      "noise": "Noise"
+    }
+  },
+  "ref_normalize_db": {
+    "label": "Reference loudness (dB)",
+    "help": "Normalizes the reference loudness before encoding. The default of -16 dB is recommended.",
+    "null": "Off"
+  },
+  "ref_ensure_max": {
+    "label": "Reference peak guard",
+    "help": "When normalization is off, turns down references whose peaks exceed 1.0."
+  },
+  "max_ref_seconds": {
+    "label": "Reference limit (s)",
+    "help": "Maximum length of reference audio to use. Empty uses the model's recommendation.",
+    "null": "Model default"
+  },
+  "max_text_len": {
+    "label": "Max text tokens",
+    "help": "Longer text is truncated. Normally leave it empty (the model default).",
+    "null": "Model default"
+  },
+  "max_caption_len": {
+    "label": "Max caption tokens",
+    "help": "Longer captions are truncated. Normally leave it empty (the model default).",
+    "null": "Model default"
+  },
+  "decode_mode": {
+    "label": "Decode mode",
+    "help": "Sequential decodes one candidate at a time and saves VRAM; batch decodes them together and is faster.",
+    "choices": {
+      "sequential": "Sequential",
+      "batch": "Batch"
+    }
+  },
+  "trim_tail": {
+    "label": "Trim tail",
+    "help": "Cuts the flat (silent) tail off the generated audio."
+  },
+  "tail_window_size": {
+    "label": "Tail window",
+    "help": "Window length, in latent frames, used to detect the flat tail."
+  },
+  "tail_std_threshold": {
+    "label": "Tail std threshold",
+    "help": "Stretches that vary less than this count as flat."
+  },
+  "tail_mean_threshold": {
+    "label": "Tail mean threshold",
+    "help": "Stretches whose mean is within this distance of zero count as flat."
+  },
+  "groups": {
+    "sampling": "Sampling",
+    "duration": "Duration",
+    "cfg": "CFG (guidance)",
+    "speaker": "Speaker",
+    "reference": "Reference audio",
+    "advanced": "Advanced",
+    "runtime": "Runtime"
+  },
+  "runtime": {
+    "device": "Model device",
+    "modelPrecision": "Model precision",
+    "codecDevice": "Codec device",
+    "codecPrecision": "Codec precision",
+    "compile": "torch.compile",
+    "on": "On",
+    "off": "Off",
+    "hint": "Changing these reloads the model; the Settings screen will offer it in an upcoming version."
+  },
+  "reset": "Reset",
+  "defaultValue": "Default: {{value}}",
+  "errors": {
+    "type": "Enter a number",
+    "integer": "Enter a whole number",
+    "required": "Enter a value",
+    "below_minimum": "Must be at least {{min}}",
+    "above_maximum": "Must be at most {{max}}",
+    "choice": "Pick one of the options",
+    "requires_pair": "Set both k and sigma",
+    "above_cfg_max_t": "The minimum must not exceed the maximum",
+    "joint_requires_equal_scales": "Joint mode needs all enabled CFG strengths to be equal",
+    "unknown": "This setting is not available for this model",
+    "upstream": "The model rejected this combination"
+  }
+}

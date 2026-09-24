@@ -56,6 +56,9 @@
     "audio_not_found": "Das Audio wurde nicht gefunden.",
     "history_not_found": "Der Verlaufseintrag wurde nicht gefunden.",
     "synthesis_failed": "Das Audio konnte nicht erzeugt werden.",
-    "out_of_memory": "Nicht genügend Speicher. Verringern Sie die Anzahl der Kandidaten oder kürzen Sie den Text und versuchen Sie es erneut."
+    "out_of_memory": "Nicht genügend Speicher. Verringern Sie die Anzahl der Kandidaten oder kürzen Sie den Text und versuchen Sie es erneut.",
+    "save_path_invalid": "Der Speicherort ist ungültig. Bitte einen anderen wählen.",
+    "save_failed": "Die Datei konnte nicht gespeichert werden.",
+    "ffmpeg_unavailable": "Zum Speichern in diesem Format wird ffmpeg benötigt. Bitte WAV wählen."
   }
 }

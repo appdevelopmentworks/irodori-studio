@@ -1,0 +1,182 @@
+{
+  "u1f442": {
+    "label": "囁き",
+    "description": "囁き、耳元の音"
+  },
+  "u1f62e_200d_1f4a8": {
+    "label": "吐息",
+    "description": "吐息、溜息、寝息"
+  },
+  "u23f8_fe0f": {
+    "label": "間",
+    "description": "間、沈黙"
+  },
+  "u1f92d": {
+    "label": "笑い",
+    "description": "笑い（くすくす、含み笑いなど）"
+  },
+  "u1f975": {
+    "label": "喘ぎ",
+    "description": "喘ぎ、うめき声、唸り声"
+  },
+  "u1f4e2": {
+    "label": "エコー",
+    "description": "エコー、リバーブ"
+  },
+  "u1f60f": {
+    "label": "からかう",
+    "description": "からかうように、甘えるように"
+  },
+  "u1f97a": {
+    "label": "震え声",
+    "description": "声を震わせながら、自信なさげに"
+  },
+  "u1f32c_fe0f": {
+    "label": "息切れ",
+    "description": "息切れ、荒い息遣い、呼吸音"
+  },
+  "u1f62e": {
+    "label": "息をのむ",
+    "description": "息をのむ"
+  },
+  "u1f445": {
+    "label": "舐める音",
+    "description": "舐める音、咀嚼音、水音"
+  },
+  "u1f48b": {
+    "label": "リップノイズ",
+    "description": "リップノイズ"
+  },
+  "u1faf6": {
+    "label": "優しく",
+    "description": "優しく"
+  },
+  "u1f62d": {
+    "label": "泣き声",
+    "description": "嗚咽、泣き声、悲しみ"
+  },
+  "u1f631": {
+    "label": "悲鳴",
+    "description": "悲鳴、叫び、絶叫"
+  },
+  "u1f62a": {
+    "label": "眠そう",
+    "description": "眠そうに、気だるげに"
+  },
+  "u1f634": {
+    "label": "寝言",
+    "description": "寝言、いびき"
+  },
+  "u23e9": {
+    "label": "早口",
+    "description": "早口、一気にまくしたてる、急いで"
+  },
+  "u1f4de": {
+    "label": "電話越し",
+    "description": "電話越し、スピーカー越しのような音"
+  },
+  "u1f422": {
+    "label": "ゆっくり",
+    "description": "ゆっくりと"
+  },
+  "u1f964": {
+    "label": "飲み込む",
+    "description": "唾を飲み込む音"
+  },
+  "u1f927": {
+    "label": "咳・鼻",
+    "description": "咳き込み、鼻をすする、くしゃみ、咳払い"
+  },
+  "u1f612": {
+    "label": "舌打ち",
+    "description": "舌打ち"
+  },
+  "u1f630": {
+    "label": "慌てる",
+    "description": "慌てて、動揺、緊張、どもり"
+  },
+  "u1f606": {
+    "label": "喜び",
+    "description": "喜びながら"
+  },
+  "u1f4a5": {
+    "label": "勢いよく",
+    "description": "勢いよく、勢いに任せて"
+  },
+  "u1f620": {
+    "label": "怒り",
+    "description": "怒り、不満げに、拗ねながら"
+  },
+  "u1f632": {
+    "label": "驚き",
+    "description": "驚き、感嘆"
+  },
+  "u1f971": {
+    "label": "あくび",
+    "description": "あくび"
+  },
+  "u1f616": {
+    "label": "苦しげ",
+    "description": "苦しげに"
+  },
+  "u1f61f": {
+    "label": "心配",
+    "description": "心配そうに"
+  },
+  "u1fae3": {
+    "label": "照れ",
+    "description": "恥ずかしそうに、照れながら"
+  },
+  "u1f644": {
+    "label": "呆れ",
+    "description": "呆れたように"
+  },
+  "u1f60a": {
+    "label": "楽しげ",
+    "description": "楽しげに、嬉しそうに"
+  },
+  "u1f60e": {
+    "label": "得意げ",
+    "description": "得意げに、自信ありげに"
+  },
+  "u1f44c": {
+    "label": "相槌",
+    "description": "相槌、頷く音"
+  },
+  "u1f64f": {
+    "label": "懇願",
+    "description": "懇願するように"
+  },
+  "u1f974": {
+    "label": "酔う",
+    "description": "酔っ払って"
+  },
+  "u1f3b5": {
+    "label": "鼻歌",
+    "description": "鼻歌"
+  },
+  "u1f910": {
+    "label": "口を塞ぐ",
+    "description": "口を塞がれて"
+  },
+  "u1f60c": {
+    "label": "安堵",
+    "description": "安堵、満足げに"
+  },
+  "u1f914": {
+    "label": "疑問",
+    "description": "疑問の声"
+  },
+  "u1f4aa": {
+    "label": "力強く",
+    "description": "力を込めて、力強く"
+  },
+  "u1f443": {
+    "label": "嗅ぐ音",
+    "description": "匂いを嗅ぐ音"
+  },
+  "u1f4d6": {
+    "label": "朗読",
+    "description": "ナレーション、独白、モノローグ"
+  }
+}

@@ -56,6 +56,9 @@
     "audio_not_found": "The audio was not found.",
     "history_not_found": "The history entry was not found.",
     "synthesis_failed": "The audio could not be generated.",
-    "out_of_memory": "Out of memory. Reduce the number of candidates or shorten the text, then try again."
+    "out_of_memory": "Out of memory. Reduce the number of candidates or shorten the text, then try again.",
+    "save_path_invalid": "The destination is invalid. Choose another location.",
+    "save_failed": "The file could not be saved.",
+    "ffmpeg_unavailable": "Saving in this format needs ffmpeg. Choose WAV instead."
   }
 }

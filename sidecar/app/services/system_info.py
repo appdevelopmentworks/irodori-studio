@@ -59,6 +59,7 @@ def build_system_info(config: SidecarConfig) -> SystemInfo:
         device=device,
         torch=torch_info,
         upstream_commit=upstream_commit(),
+        ffmpeg_available=config.ffmpeg is not None and config.ffmpeg.is_file(),
         issues=issues,
     )
 

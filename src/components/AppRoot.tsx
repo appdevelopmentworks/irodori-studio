@@ -15,8 +15,8 @@ import {
 } from '@/lib/tauri';
 import { useAppStore } from '@/store/app';
 
+import { AppShell } from './AppShell';
 import { ErrorScreen } from './ErrorScreen';
-import { ReadyScreen } from './ReadyScreen';
 import { Screen, Splash } from './Screen';
 import { StartupScreen } from './StartupScreen';
 
@@ -76,7 +76,7 @@ export function AppRoot() {
     case 'loading_model':
       return <StartupScreen />;
     case 'ready':
-      return <ReadyScreen />;
+      return <AppShell />;
     case 'error':
       return <ErrorScreen />;
   }

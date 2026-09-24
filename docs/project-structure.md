@@ -33,17 +33,18 @@ irodori-studio/
 │  │  └─ page.tsx                 app shell: sidebar nav + active screen
 │  ├─ features/
 │  │  ├─ setup/                   first-run wizard (language, terms, probe, data root, install, download, smoke test)
-│  │  ├─ quick/                   QuickScreen (simple generation)
-│  │  ├─ params/                  capability-driven ParamPanel (simple + advanced tiers)
+│  │  ├─ quick/                   QuickScreen + sections (text, voice, caption, generate, run log), request building,
+│  │  │                           generation (job stream), style presets, LoRA picker
+│  │  ├─ params/                  capability-driven ParamPanel / ParamField (schema helpers, texts, read-only Runtime group)
 │  │  ├─ voice-studio/            design, import, record, waveform edit, consent, package import/export
 │  │  ├─ narration/               editor, reading preview, chunk list, render, assemble
 │  │  ├─ script/                  table editor, parser, speaker map, takes, export
 │  │  ├─ library/                 history, presets, projects
 │  │  ├─ api-server/              config, status, request log
 │  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
-│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error/Ready screens, ErrorNotice, LanguageSwitcher,
-│  │                              SmokeTest (setup step 7 on the ready screen until the Quick screen);
-│  │                              later AudioPlayer, CandidateGrid, EmojiPalette, WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
+│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error screens, AppShell (Sidebar + screen + StatusBar),
+│  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid;
+│  │                              later WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
 │  │  ├─ config.ts                supported locales; source locale `ja`
@@ -58,7 +59,7 @@ irodori-studio/
 │  │  ├─ types.ts                 mirrors api-spec.md (+ Tauri IPC types)
 │  │  ├─ errors.ts                error code → i18n key
 │  │  └─ format.ts                Intl formatting (bytes, memory, percent)
-│  └─ store/                      zustand: sidecar, model, jobs, queue, settings, voices, narration, script
+│  └─ store/                      zustand: app, nav, sidecar, quick; later voices, narration, script
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", mic usage string
 │  ├─ icons/                      generated

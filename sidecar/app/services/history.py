@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 
 from app.audio.io import write_wav
+from app.errors import ApiError, ErrorCode
 from app.schemas import AudioOutput, HistoryEntry, HistoryPage, HistorySummary, Preferences
 from app.services.job_manager import now_iso
 from app.storage.db import Database
@@ -118,6 +119,21 @@ class HistoryStore:
             precision=row["precision"],
         )
 
+    def set_adopted(self, history_id: str, audio_id: str | None) -> HistoryEntry | None:
+        """Mark one of the entry's candidates as adopted (None clears it)."""
+        entry = self.get(history_id)
+        if entry is None:
+            return None
+        if audio_id is not None and audio_id not in {o.audio_id for o in entry.outputs}:
+            raise ApiError(
+                ErrorCode.AUDIO_NOT_FOUND, "audio is not a candidate of this entry", status_code=404
+            )
+        with self._db.transaction() as conn:
+            conn.execute(
+                "UPDATE history SET adopted_audio_id = ? WHERE id = ?", (audio_id, history_id)
+            )
+        return self.get(history_id)
+
     def delete(self, history_id: str) -> bool:
         if not is_id(history_id):
             return False
@@ -181,6 +197,7 @@ def _summary(row: Any, outputs: dict[str, list[AudioOutput]]) -> HistorySummary:
         used_seed=row["used_seed"],
         watermarked=bool(row["watermarked"]),
         outputs=outputs.get(row["id"], []),
+        adopted_audio_id=row["adopted_audio_id"],
     )
 
 

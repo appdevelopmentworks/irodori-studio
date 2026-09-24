@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "label": "画面",
+    "quick": "かんたん生成",
+    "voices": "ボイススタジオ",
+    "narration": "ナレーション",
+    "script": "台本",
+    "library": "ライブラリ・履歴",
+    "apiServer": "API サーバー",
+    "settings": "設定"
+  },
+  "comingSoon": {
+    "title": "この画面は準備中です",
+    "body": "今後のバージョンで追加されます。"
+  },
+  "status": {
+    "engine": {
+      "idle": "モデル未読み込み",
+      "loading": "モデルを読み込み中",
+      "ready": "準備完了",
+      "error": "モデルのエラー"
+    },
+    "queueIdle": "キュー: 空き",
+    "queueCount_other": "キュー: {{count}} 件",
+    "memory": "メモリ {{used}} / {{total}}",
+    "watermarkOn": "透かし: オン",
+    "watermarkOff": "透かし: オフ",
+    "cpuMode": "CPU モード（生成に時間がかかります）",
+    "disconnected": "音声合成エンジンに接続できません"
+  }
+}

@@ -58,6 +58,9 @@ class ErrorCode(str, Enum):
     HISTORY_NOT_FOUND = "history_not_found"
     SYNTHESIS_FAILED = "synthesis_failed"
     OUT_OF_MEMORY = "out_of_memory"
+    SAVE_PATH_INVALID = "save_path_invalid"
+    SAVE_FAILED = "save_failed"
+    FFMPEG_UNAVAILABLE = "ffmpeg_unavailable"
 
     @classmethod
     def parse(cls, value: str) -> ErrorCode:

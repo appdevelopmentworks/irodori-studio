@@ -1,0 +1,140 @@
+{
+  "title": "Quick generation",
+  "sampleText": "こんにちは。これは音声合成の動作確認です。",
+  "text": {
+    "label": "Text to speak",
+    "placeholder": "Enter Japanese text here",
+    "count": "{{length}} / {{max}} characters",
+    "shortcut": "Ctrl / ⌘ + Enter to generate"
+  },
+  "emoji": {
+    "title": "Emoji palette",
+    "hint": "Click to insert at the cursor. Repeating an emoji strengthens its effect.",
+    "tooltip": "{{label}}: {{description}}"
+  },
+  "caption": {
+    "label": "Caption (voice, emotion, manner)",
+    "placeholder": "Japanese, e.g. 落ち着いた、近い距離感の女性話者",
+    "presets": "Style presets",
+    "clear": "Clear",
+    "conflictHint": "With reference audio, describe emotion and manner rather than the voice itself for stable results."
+  },
+  "stylePresets": {
+    "calm": "Calm",
+    "bright": "Bright",
+    "gentle": "Gentle",
+    "whisper": "Whisper",
+    "sad": "Sad",
+    "angry": "Angry",
+    "excited": "Excited",
+    "sleepy": "Sleepy",
+    "narration": "Narration",
+    "announcer": "Announcer"
+  },
+  "voice": {
+    "label": "Voice",
+    "kinds": {
+      "none": "None",
+      "clips": "Reference audio",
+      "embedding": "Speaker embedding",
+      "library": "Library voice"
+    },
+    "libraryLater": "Available once the Voice Studio arrives.",
+    "noneHint": "No reference audio: the caption (or nothing) decides the voice.",
+    "addClips": "Add audio files",
+    "clipsHint": "Several clean short clips of one speaker work best. They are joined from top to bottom (up to {{max}} s in total).",
+    "clipsTotal": "Total {{seconds}} s",
+    "clipsOver": "Anything beyond {{max}} s is not used.",
+    "clipDuration": "{{seconds}} s",
+    "uploading": "Uploading…",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "remove": "Remove",
+    "chooseEmbedding": "Choose file",
+    "embeddingTitle": "Choose a speaker embedding file",
+    "embeddingFilter": "Speaker embedding",
+    "embeddingHint": "A .speaker.safetensors made with Speaker Inversion for the same base model.",
+    "clear": "Clear",
+    "embeddingNone": "None selected"
+  },
+  "simple": {
+    "title": "Generation"
+  },
+  "advanced": {
+    "title": "Advanced settings",
+    "reset": "Reset to defaults",
+    "changed_one": "{{count}} setting changed",
+    "changed_other": "{{count}} settings changed"
+  },
+  "lora": {
+    "label": "LoRA adapter",
+    "help": "Folder of a trained LoRA adapter (with adapter_config.json). It is applied to this generation only, not merged into the model.",
+    "choose": "Choose folder",
+    "chooseTitle": "Choose the LoRA adapter folder",
+    "none": "Not used",
+    "clear": "Clear"
+  },
+  "generate": {
+    "button": "Generate",
+    "cancel": "Cancel",
+    "submitting": "Sending…",
+    "queued": "Waiting in the queue ({{position}} ahead)",
+    "preparing": "Preparing…",
+    "sampling": "Generating… step {{done}} of {{total}}",
+    "finishing": "Finishing…",
+    "cancelled": "Cancelled.",
+    "needText": "Enter some text.",
+    "needClips": "Add reference audio.",
+    "needEmbedding": "Choose a speaker embedding file.",
+    "invalidParams": "Some advanced settings are invalid.",
+    "uploading": "Waiting for reference uploads to finish.",
+    "paramError": "{{param}}: {{reason}}"
+  },
+  "candidates": {
+    "title": "Results",
+    "empty": "Nothing generated yet. Enter some text and press Generate.",
+    "item": "Candidate {{index}}",
+    "duration": "{{seconds}} s",
+    "adopt": "Adopt",
+    "adopted": "Adopted",
+    "save": "Save…",
+    "saveTitle": "Save audio",
+    "saved": "Saved: {{path}}",
+    "format": "Save as",
+    "formats": {
+      "wav": "WAV (uncompressed)",
+      "mp3": "MP3",
+      "m4a": "M4A (AAC)",
+      "flac": "FLAC (lossless)",
+      "opus": "Opus"
+    },
+    "needFfmpeg": "Formats other than WAV need ffmpeg."
+  },
+  "runLog": {
+    "title": "Run log",
+    "seed": "Seed",
+    "useSeed": "Use this seed",
+    "watermarked": "Watermarked",
+    "notWatermarked": "No watermark",
+    "elapsed": "Took {{seconds}} s",
+    "timings": "Timing breakdown",
+    "ms": "{{ms}} ms",
+    "log": "Log",
+    "empty": "No log yet.",
+    "stages": {
+      "prepare_lora": "Prepare LoRA",
+      "tokenize_text": "Tokenize text",
+      "encode_reference": "Encode reference",
+      "prepare_reference": "Prepare reference",
+      "predict_duration": "Predict duration",
+      "sample_rf": "Sampling",
+      "sample_meanflow": "Sampling (MeanFlow)",
+      "unpatchify_latent": "Unpatchify latent",
+      "decode_latent": "Decode audio",
+      "silentcipher_watermark": "Watermark",
+      "total_to_decode": "Inference total",
+      "synthesize": "Generation total",
+      "write_audio": "Write files"
+    }
+  }
+}

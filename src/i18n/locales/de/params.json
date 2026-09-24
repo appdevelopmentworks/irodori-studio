@@ -1,0 +1,194 @@
+{
+  "num_steps": {
+    "label": "Schritte",
+    "help": "Anzahl der Sampling-Schritte. Mehr Schritte verbessern die Qualität, dauern aber länger."
+  },
+  "num_candidates": {
+    "label": "Kandidaten",
+    "help": "Wie viele Varianten desselben Textes auf einmal erzeugt werden. Mehr Kandidaten brauchen mehr VRAM."
+  },
+  "seed": {
+    "label": "Seed",
+    "help": "Derselbe Seed mit denselben Einstellungen erzeugt dasselbe Audio. Leer lassen für einen zufälligen Seed.",
+    "null": "Zufällig"
+  },
+  "t_schedule_mode": {
+    "label": "Zeitplan",
+    "help": "Wie die Sampling-Schritte verteilt werden. Sway hält die Qualität bei weniger Schritten hoch.",
+    "choices": {
+      "linear": "Linear",
+      "sway": "Sway"
+    }
+  },
+  "sway_coeff": {
+    "label": "Sway-Koeffizient",
+    "help": "Negative Werte legen mehr Schritte auf die Rauschseite (frühe Schritte)."
+  },
+  "truncation_factor": {
+    "label": "Trunkierungsfaktor",
+    "help": "Skaliert das Anfangsrauschen. 0,8–0,9 verringert Schwankungen, kann aber den Ausdruck abflachen.",
+    "null": "Aus"
+  },
+  "rescale_k": {
+    "label": "Rescale k",
+    "help": "Zeitliche Score-Neuskalierung. Zusammen mit Sigma festlegen.",
+    "null": "Aus"
+  },
+  "rescale_sigma": {
+    "label": "Rescale Sigma",
+    "help": "Zeitliche Score-Neuskalierung. Zusammen mit k festlegen.",
+    "null": "Aus"
+  },
+  "context_kv_cache": {
+    "label": "Kontext-KV-Cache",
+    "help": "Berechnet die Konditionierung vorab für schnelleres Sampling."
+  },
+  "seconds": {
+    "label": "Dauer (s)",
+    "help": "Legt die Ausgabelänge fest. Leer lassen, damit die Längenvorhersage entscheidet (empfohlen).",
+    "null": "Automatisch"
+  },
+  "duration_scale": {
+    "label": "Längenfaktor",
+    "help": "Multipliziert die vorhergesagte Länge. Über 1 langsamer und länger, unter 1 schneller und kürzer."
+  },
+  "cfg_guidance_mode": {
+    "label": "CFG-Modus",
+    "help": "Independent erlaubt je Bedingung eine eigene Stärke; Joint verlangt gleiche aktive Stärken.",
+    "choices": {
+      "independent": "Unabhängig",
+      "joint": "Gemeinsam",
+      "alternating": "Abwechselnd"
+    }
+  },
+  "cfg_scale_text": {
+    "label": "CFG: Text",
+    "help": "Wie stark dem Text gefolgt wird. Leicht erhöhen, wenn die Aussprache schwach ist."
+  },
+  "cfg_scale_caption": {
+    "label": "CFG: Stilbeschreibung",
+    "help": "Wie stark der Stilbeschreibung (Stimme und Stil) gefolgt wird."
+  },
+  "cfg_scale_speaker": {
+    "label": "CFG: Sprecher",
+    "help": "Wie genau der Referenzsprecher getroffen wird."
+  },
+  "cfg_scale": {
+    "label": "CFG-Überschreibung (veraltet)",
+    "help": "Überschreibt jede aktive CFG-Stärke mit diesem Wert. Normalerweise leer lassen.",
+    "null": "Aus"
+  },
+  "cfg_min_t": {
+    "label": "CFG min. t",
+    "help": "CFG wird nur angewendet, solange t mindestens diesen Wert hat."
+  },
+  "cfg_max_t": {
+    "label": "CFG max. t",
+    "help": "CFG wird nur angewendet, solange t höchstens diesen Wert hat."
+  },
+  "speaker_kv_scale": {
+    "label": "Sprecher-K/V-Skalierung",
+    "help": "Werte über 1 verstärken die Identität des Referenzsprechers (experimentell).",
+    "null": "Aus"
+  },
+  "speaker_kv_min_t": {
+    "label": "Sprecher-K/V min. t",
+    "help": "Die Sprecher-K/V-Skalierung gilt nur, solange t mindestens diesen Wert hat.",
+    "null": "Standard (0,9)"
+  },
+  "speaker_kv_max_layers": {
+    "label": "Sprecher-K/V-Schichten",
+    "help": "Beschränkt die Skalierung auf die ersten N Schichten.",
+    "null": "Alle Schichten"
+  },
+  "speaker_uncond_mode": {
+    "label": "Sprecher-Uncond-Modus",
+    "help": "Wie der unbedingte Sprecherzweig bei einem Sprecher-Embedding gebildet wird.",
+    "choices": {
+      "mask": "Maske",
+      "noise": "Rauschen"
+    }
+  },
+  "ref_normalize_db": {
+    "label": "Referenzlautheit (dB)",
+    "help": "Gleicht die Lautheit der Referenz vor dem Kodieren an. Der Standardwert -16 dB wird empfohlen.",
+    "null": "Aus"
+  },
+  "ref_ensure_max": {
+    "label": "Referenz-Spitzenschutz",
+    "help": "Senkt bei ausgeschalteter Normalisierung nur Referenzen ab, deren Spitzen 1,0 überschreiten."
+  },
+  "max_ref_seconds": {
+    "label": "Referenzlimit (s)",
+    "help": "Maximal verwendete Länge des Referenzaudios. Leer nutzt die Empfehlung des Modells.",
+    "null": "Modellstandard"
+  },
+  "max_text_len": {
+    "label": "Max. Text-Tokens",
+    "help": "Längerer Text wird abgeschnitten. Normalerweise leer lassen (Modellstandard).",
+    "null": "Modellstandard"
+  },
+  "max_caption_len": {
+    "label": "Max. Beschreibungs-Tokens",
+    "help": "Längere Stilbeschreibungen werden abgeschnitten. Normalerweise leer lassen (Modellstandard).",
+    "null": "Modellstandard"
+  },
+  "decode_mode": {
+    "label": "Dekodiermodus",
+    "help": "Sequenziell dekodiert einen Kandidaten nach dem anderen und spart VRAM; Batch dekodiert alle zusammen und ist schneller.",
+    "choices": {
+      "sequential": "Sequenziell",
+      "batch": "Batch"
+    }
+  },
+  "trim_tail": {
+    "label": "Ende kürzen",
+    "help": "Schneidet das flache (stille) Ende des erzeugten Audios ab."
+  },
+  "tail_window_size": {
+    "label": "Endfenster",
+    "help": "Fensterlänge in Latent-Frames zur Erkennung des flachen Endes."
+  },
+  "tail_std_threshold": {
+    "label": "Schwellwert Standardabw.",
+    "help": "Abschnitte mit weniger Schwankung als dieser Wert gelten als flach."
+  },
+  "tail_mean_threshold": {
+    "label": "Schwellwert Mittelwert",
+    "help": "Abschnitte, deren Mittelwert höchstens so weit von null entfernt ist, gelten als flach."
+  },
+  "groups": {
+    "sampling": "Sampling",
+    "duration": "Dauer",
+    "cfg": "CFG (Führung)",
+    "speaker": "Sprecher",
+    "reference": "Referenzaudio",
+    "advanced": "Erweitert",
+    "runtime": "Laufzeit"
+  },
+  "runtime": {
+    "device": "Modellgerät",
+    "modelPrecision": "Modellpräzision",
+    "codecDevice": "Codec-Gerät",
+    "codecPrecision": "Codec-Präzision",
+    "compile": "torch.compile",
+    "on": "An",
+    "off": "Aus",
+    "hint": "Eine Änderung lädt das Modell neu; der Einstellungsbereich bietet das in einer der nächsten Versionen an."
+  },
+  "reset": "Zurücksetzen",
+  "defaultValue": "Standard: {{value}}",
+  "errors": {
+    "type": "Bitte eine Zahl eingeben",
+    "integer": "Bitte eine ganze Zahl eingeben",
+    "required": "Bitte einen Wert eingeben",
+    "below_minimum": "Mindestens {{min}}",
+    "above_maximum": "Höchstens {{max}}",
+    "choice": "Bitte eine der Optionen wählen",
+    "requires_pair": "Bitte k und Sigma beide festlegen",
+    "above_cfg_max_t": "Das Minimum darf das Maximum nicht überschreiten",
+    "joint_requires_equal_scales": "Im Joint-Modus müssen alle aktiven CFG-Stärken gleich sein",
+    "unknown": "Diese Einstellung gibt es für dieses Modell nicht",
+    "upstream": "Das Modell hat diese Kombination abgelehnt"
+  }
+}

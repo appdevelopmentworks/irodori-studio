@@ -56,6 +56,9 @@
     "audio_not_found": "音声が見つかりません。",
     "history_not_found": "履歴が見つかりません。",
     "synthesis_failed": "音声を生成できませんでした。",
-    "out_of_memory": "メモリが足りません。候補数を減らすか、テキストを短くして再試行してください。"
+    "out_of_memory": "メモリが足りません。候補数を減らすか、テキストを短くして再試行してください。",
+    "save_path_invalid": "保存先が正しくありません。別の場所を選んでください。",
+    "save_failed": "ファイルを保存できませんでした。",
+    "ffmpeg_unavailable": "この形式で保存するには ffmpeg が必要です。WAV を選んでください。"
   }
 }

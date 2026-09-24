@@ -1,6 +1,7 @@
 // ALL internal-API (sidecar) calls go through this module. The port comes from the
 // `get_sidecar_port` Tauri command via the app store (D10); never write a port literal.
 import type {
+  AudioFormat,
   CancelResponse,
   ClipInfo,
   EmojiItem,
@@ -8,12 +9,14 @@ import type {
   HealthResponse,
   HistoryEntry,
   HistoryPage,
+  HistoryPatch,
   JobAccepted,
   JobInfo,
   ModelCapabilities,
   ModelInfo,
   Preferences,
   QueueSnapshot,
+  SavedFile,
   SynthesisRequest,
   SystemInfo,
 } from './types';
@@ -65,6 +68,10 @@ export function createApi(port: number) {
     jobEventsUrl: (jobId: string) => `${base}/jobs/${jobId}/events`,
     /** Playable WAV URL for `<audio src>`. */
     audioUrl: (audioId: string) => `${base}/audio/${audioId}`,
+    /** Saves a copy at an absolute path (from the native save dialog); formats other
+     * than WAV need ffmpeg. */
+    saveAudio: (audioId: string, path: string, format: AudioFormat) =>
+      send<SavedFile>(`${base}/audio/${audioId}/save`, json('POST', { path, format })),
 
     uploadClip: (file: Blob, filename: string) => {
       const form = new FormData();
@@ -82,6 +89,8 @@ export function createApi(port: number) {
       return send<HistoryPage>(`${base}/history?${query}`);
     },
     getHistoryEntry: (id: string) => send<HistoryEntry>(`${base}/history/${id}`),
+    updateHistoryEntry: (id: string, patch: HistoryPatch) =>
+      send<HistoryEntry>(`${base}/history/${id}`, json('PATCH', patch)),
     deleteHistoryEntry: (id: string) => send<void>(`${base}/history/${id}`, { method: 'DELETE' }),
 
     getPreferences: () => send<Preferences>(`${base}/preferences`),

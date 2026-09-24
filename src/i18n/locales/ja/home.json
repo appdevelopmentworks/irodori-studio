@@ -1,35 +1,4 @@
 {
   "starting": "音声合成エンジンを起動しています…",
-  "loadingModel": "音声合成モデルを読み込んでいます…（1 分ほどかかることがあります）",
-  "ready": {
-    "heading": "準備が整いました",
-    "body": "音声合成エンジンが起動しました。各画面は今後のバージョンで追加されます。"
-  },
-  "system": {
-    "heading": "システム情報",
-    "device": "推論デバイス",
-    "memory": "メモリ",
-    "memoryUsage": "{{used}} / {{total}}",
-    "torch": "PyTorch",
-    "cuda": "CUDA",
-    "python": "Python",
-    "upstream": "Irodori-TTS",
-    "loading": "読み込んでいます…",
-    "failed": "システム情報を取得できませんでした。"
-  },
-  "smokeTest": {
-    "heading": "動作確認",
-    "body": "短い文を生成して再生し、音声合成が動くことを確かめます。",
-    "sampleLabel": "読み上げる文",
-    "sampleText": "こんにちは。これは音声合成の動作確認です。",
-    "generate": "生成して再生",
-    "cancel": "キャンセル",
-    "queued": "順番待ちです（前に {{position}} 件）",
-    "preparing": "準備しています…",
-    "sampling": "生成しています… {{done}} / {{total}} ステップ",
-    "cancelled": "キャンセルしました。",
-    "result": "シード {{seed}}・音声 {{seconds}} 秒・生成 {{elapsed}} 秒",
-    "watermarked": "透かしあり",
-    "notWatermarked": "透かしなし"
-  }
+  "loadingModel": "音声合成モデルを読み込んでいます…（1 分ほどかかることがあります）"
 }

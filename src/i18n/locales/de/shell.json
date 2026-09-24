@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "label": "Bereiche",
+    "quick": "Schnellgenerierung",
+    "voices": "Stimmstudio",
+    "narration": "Erzählung",
+    "script": "Skript",
+    "library": "Bibliothek & Verlauf",
+    "apiServer": "API-Server",
+    "settings": "Einstellungen"
+  },
+  "comingSoon": {
+    "title": "Dieser Bereich ist in Arbeit",
+    "body": "Er folgt in einer der nächsten Versionen."
+  },
+  "status": {
+    "engine": {
+      "idle": "Modell nicht geladen",
+      "loading": "Modell wird geladen",
+      "ready": "Bereit",
+      "error": "Modellfehler"
+    },
+    "queueIdle": "Warteschlange: leer",
+    "queueCount_one": "Warteschlange: {{count}} Auftrag",
+    "queueCount_other": "Warteschlange: {{count}} Aufträge",
+    "memory": "Speicher {{used}} / {{total}}",
+    "watermarkOn": "Wasserzeichen: an",
+    "watermarkOff": "Wasserzeichen: aus",
+    "cpuMode": "CPU-Modus (Generierung ist langsam)",
+    "disconnected": "Die Sprachsynthese-Engine ist nicht erreichbar"
+  }
+}

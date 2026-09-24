@@ -22,10 +22,22 @@ class ErrorResponse(BaseModel):
 # --- System ----------------------------------------------------------------------------
 
 
+class RuntimeInfo(BaseModel):
+    """Runtime options of the resident model (change requires a reload, D4)."""
+
+    device: Device
+    model_precision: Precision
+    codec_device: Device
+    codec_precision: Precision
+    compile_model: bool
+    compile_dynamic: bool
+
+
 class EngineStatus(BaseModel):
     state: Literal["idle", "loading", "ready", "error"]
     model_id: str | None = None
     error_code: str | None = None
+    runtime: RuntimeInfo | None = None
 
 
 class HealthResponse(BaseModel):
@@ -60,6 +72,8 @@ class SystemInfo(BaseModel):
     active_model: str | None = None
     queue_length: int = 0
     watermark_available: bool | None = None
+    # ffmpeg is available: other audio formats can be read and saved (D20).
+    ffmpeg_available: bool = False
     issues: list[str] = []
 
 
@@ -295,6 +309,31 @@ class HistorySummary(BaseModel):
     used_seed: int
     watermarked: bool
     outputs: list[AudioOutput]
+    # The candidate the user adopted (requirements §6.3), if any.
+    adopted_audio_id: str | None = None
+
+
+class HistoryPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    adopted_audio_id: str | None
+
+
+AudioFormat = Literal["wav", "mp3", "m4a", "flac", "opus"]
+
+
+class SaveAudioRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str  # absolute destination, normally from the native save dialog
+    # None: from the path's extension, else WAV. Formats other than WAV need ffmpeg.
+    format: AudioFormat | None = None
+
+
+class SavedFile(BaseModel):
+    path: str
+    bytes: int
+    format: AudioFormat
 
 
 class HistoryEntry(HistorySummary):

@@ -4,7 +4,7 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
 
 import type {
   BootState,
@@ -50,6 +50,26 @@ export const onSetupProgress = (handler: (progress: SetupProgress) => void): Pro
 
 export const onSetupLog = (handler: (line: string) => void): Promise<UnlistenFn> =>
   listen<string>('setup://log', (event) => handler(event.payload));
+
+export interface FileFilter {
+  name: string;
+  extensions: string[];
+}
+
+/** Native single-file picker; resolves to null when cancelled. */
+export async function pickFile(title: string, filters: FileFilter[]): Promise<string | null> {
+  const selected = await open({ directory: false, multiple: false, title, filters });
+  return typeof selected === 'string' ? selected : null;
+}
+
+/** Native save dialog (asks before overwriting); resolves to null when cancelled. */
+export async function pickSavePath(
+  title: string,
+  defaultPath: string,
+  filters: FileFilter[],
+): Promise<string | null> {
+  return (await save({ title, defaultPath, filters })) ?? null;
+}
 
 /** Native folder picker; resolves to null when cancelled. */
 export async function pickDirectory(title: string, defaultPath?: string): Promise<string | null> {

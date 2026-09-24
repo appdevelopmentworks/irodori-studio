@@ -1,0 +1,140 @@
+{
+  "title": "Schnellgenerierung",
+  "sampleText": "こんにちは。これは音声合成の動作確認です。",
+  "text": {
+    "label": "Zu sprechender Text",
+    "placeholder": "Japanischen Text hier eingeben",
+    "count": "{{length}} / {{max}} Zeichen",
+    "shortcut": "Strg / ⌘ + Eingabe zum Erzeugen"
+  },
+  "emoji": {
+    "title": "Emoji-Palette",
+    "hint": "Klicken fügt an der Cursorposition ein. Ein wiederholtes Emoji verstärkt die Wirkung.",
+    "tooltip": "{{label}}: {{description}}"
+  },
+  "caption": {
+    "label": "Stilbeschreibung (Stimme, Gefühl, Sprechweise)",
+    "placeholder": "Auf Japanisch, z. B. 落ち着いた、近い距離感の女性話者",
+    "presets": "Stilvorlagen",
+    "clear": "Leeren",
+    "conflictHint": "Beschreiben Sie mit Referenzaudio lieber Gefühl und Sprechweise als die Stimme selbst – das ist stabiler."
+  },
+  "stylePresets": {
+    "calm": "Ruhig",
+    "bright": "Fröhlich",
+    "gentle": "Sanft",
+    "whisper": "Flüstern",
+    "sad": "Traurig",
+    "angry": "Wütend",
+    "excited": "Aufgeregt",
+    "sleepy": "Schläfrig",
+    "narration": "Erzählung",
+    "announcer": "Ansage"
+  },
+  "voice": {
+    "label": "Stimme",
+    "kinds": {
+      "none": "Keine",
+      "clips": "Referenzaudio",
+      "embedding": "Sprecher-Embedding",
+      "library": "Stimme aus der Bibliothek"
+    },
+    "libraryLater": "Verfügbar, sobald das Stimmstudio da ist.",
+    "noneHint": "Ohne Referenzaudio: Die Stilbeschreibung (oder nichts) bestimmt die Stimme.",
+    "addClips": "Audiodateien hinzufügen",
+    "clipsHint": "Mehrere saubere, kurze Clips eines Sprechers funktionieren am besten. Sie werden von oben nach unten verbunden (insgesamt bis {{max}} s).",
+    "clipsTotal": "Gesamt {{seconds}} s",
+    "clipsOver": "Alles über {{max}} s wird nicht verwendet.",
+    "clipDuration": "{{seconds}} s",
+    "uploading": "Wird hochgeladen …",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "remove": "Entfernen",
+    "chooseEmbedding": "Datei wählen",
+    "embeddingTitle": "Sprecher-Embedding-Datei wählen",
+    "embeddingFilter": "Sprecher-Embedding",
+    "embeddingHint": "Eine mit Speaker Inversion für dasselbe Basismodell erstellte .speaker.safetensors-Datei.",
+    "clear": "Entfernen",
+    "embeddingNone": "Nichts gewählt"
+  },
+  "simple": {
+    "title": "Generierung"
+  },
+  "advanced": {
+    "title": "Erweiterte Einstellungen",
+    "reset": "Auf Standard zurücksetzen",
+    "changed_one": "{{count}} Einstellung geändert",
+    "changed_other": "{{count}} Einstellungen geändert"
+  },
+  "lora": {
+    "label": "LoRA-Adapter",
+    "help": "Ordner eines trainierten LoRA-Adapters (mit adapter_config.json). Er gilt nur für diese Generierung und wird nicht ins Modell übernommen.",
+    "choose": "Ordner wählen",
+    "chooseTitle": "LoRA-Adapter-Ordner wählen",
+    "none": "Nicht verwendet",
+    "clear": "Entfernen"
+  },
+  "generate": {
+    "button": "Erzeugen",
+    "cancel": "Abbrechen",
+    "submitting": "Wird gesendet …",
+    "queued": "In der Warteschlange ({{position}} davor)",
+    "preparing": "Wird vorbereitet …",
+    "sampling": "Wird erzeugt … Schritt {{done}} von {{total}}",
+    "finishing": "Wird abgeschlossen …",
+    "cancelled": "Abgebrochen.",
+    "needText": "Bitte einen Text eingeben.",
+    "needClips": "Bitte Referenzaudio hinzufügen.",
+    "needEmbedding": "Bitte eine Sprecher-Embedding-Datei wählen.",
+    "invalidParams": "Einige erweiterte Einstellungen sind ungültig.",
+    "uploading": "Warten, bis die Referenzaudios hochgeladen sind.",
+    "paramError": "{{param}}: {{reason}}"
+  },
+  "candidates": {
+    "title": "Ergebnisse",
+    "empty": "Noch nichts erzeugt. Text eingeben und auf „Erzeugen“ klicken.",
+    "item": "Kandidat {{index}}",
+    "duration": "{{seconds}} s",
+    "adopt": "Übernehmen",
+    "adopted": "Übernommen",
+    "save": "Speichern …",
+    "saveTitle": "Audio speichern",
+    "saved": "Gespeichert: {{path}}",
+    "format": "Speichern als",
+    "formats": {
+      "wav": "WAV (unkomprimiert)",
+      "mp3": "MP3",
+      "m4a": "M4A (AAC)",
+      "flac": "FLAC (verlustfrei)",
+      "opus": "Opus"
+    },
+    "needFfmpeg": "Andere Formate als WAV benötigen ffmpeg."
+  },
+  "runLog": {
+    "title": "Ausführungsprotokoll",
+    "seed": "Seed",
+    "useSeed": "Diesen Seed verwenden",
+    "watermarked": "Mit Wasserzeichen",
+    "notWatermarked": "Ohne Wasserzeichen",
+    "elapsed": "Dauer {{seconds}} s",
+    "timings": "Zeitaufschlüsselung",
+    "ms": "{{ms}} ms",
+    "log": "Protokoll",
+    "empty": "Noch kein Protokoll.",
+    "stages": {
+      "prepare_lora": "LoRA vorbereiten",
+      "tokenize_text": "Text tokenisieren",
+      "encode_reference": "Referenz kodieren",
+      "prepare_reference": "Referenz vorbereiten",
+      "predict_duration": "Dauer vorhersagen",
+      "sample_rf": "Sampling",
+      "sample_meanflow": "Sampling (MeanFlow)",
+      "unpatchify_latent": "Latent zusammensetzen",
+      "decode_latent": "Audio dekodieren",
+      "silentcipher_watermark": "Wasserzeichen",
+      "total_to_decode": "Inferenz gesamt",
+      "synthesize": "Generierung gesamt",
+      "write_audio": "Dateien schreiben"
+    }
+  }
+}

@@ -46,7 +46,7 @@ The frontend never talks to upstream directly. Rust owns lifecycle and settings;
 
 - `output: 'export'`; served by Tauri. No runtime Node server (D11).
 - Base URL of the internal API from the `get_sidecar_port` Tauri command. No port literals.
-- Zustand stores: `sidecar`, `model` (active model + capabilities), `jobs`, `queue`, `settings`, `voices`, `narration`, `script`.
+- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job); later `voices`, `narration`, `script`.
 - **Capability-driven parameter UI.** The parameter panel is generated from `GET /models/active/capabilities` (a JSON schema-like list of parameters with type, range, default, group, `simple|advanced` tier, `visible_when`). No component hardcodes which parameters a model supports.
 - i18n via `react-i18next` (D17). Locale JSON under `src/i18n/locales/<locale>/`. Sidecar errors arrive as codes and are translated in the frontend.
 - Audio: playback via `<audio>` with blob URLs fetched from `/audio/{id}`; waveform editing (trim/split) with `wavesurfer.js` (regions plugin).
@@ -131,7 +131,7 @@ Adding Large = one entry + submodule bump. A MeanFlow model would declare `"samp
 
 - Rust selects a free port on `127.0.0.1`, spawns `<venv-python> -m app.main --port <port>` (cwd = sidecar dir), polls `GET /health` (retrying on a new port if the sidecar exits early), and exposes status `setup → starting → loading_model → ready` (or `error`) to the frontend (`app://status`); `loading_model` lasts until `/health` reports the engine `ready` (D4).
 - Teardown guard kills the process tree on window close, app quit, panic, and forced quit: every child (uv, provisioning scripts, sidecar) runs in its own kill-on-close Job Object (Windows) or process group (macOS); the sidecar also exits when the app's pid (`IRODORI_PARENT_PID`) disappears, which covers a forced quit on macOS. Children get a null stdin.
-- Environment passed to the sidecar: `PYTHONPATH=<sidecar dir>[;<upstream dir>]`, `HF_HOME=<data-root>/models`, `HF_HUB_OFFLINE=1`, `HF_HUB_DISABLE_TELEMETRY=1`, `HF_HUB_DISABLE_SYMLINKS_WARNING=1`, `IRODORI_DATA_ROOT`, `IRODORI_LOG_DIR`, `IRODORI_DEVICE`, `IRODORI_PRECISION`, `IRODORI_APP_VERSION`, `IRODORI_PARENT_PID`, `IRODORI_ALLOWED_ORIGINS`, `IRODORI_FFMPEG` (when bundled), `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, `PYTHONPYCACHEPREFIX=<data-root>/runtime/pycache`; plus `CUDA_DEVICE_ORDER`/`CUDA_VISIBLE_DEVICES` with several GPUs and `PYTORCH_ENABLE_MPS_FALLBACK=1` on macOS. Inherited `UV_*`, `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, `CONDA_PREFIX` and relocated HF cache variables are removed first.
+- Environment passed to the sidecar: `PYTHONPATH=<sidecar dir>[;<upstream dir>]`, `HF_HOME=<data-root>/models`, `HF_HUB_OFFLINE=1`, `HF_HUB_DISABLE_TELEMETRY=1`, `HF_HUB_DISABLE_SYMLINKS_WARNING=1`, `IRODORI_DATA_ROOT`, `IRODORI_LOG_DIR`, `IRODORI_DEVICE`, `IRODORI_PRECISION`, `IRODORI_APP_VERSION`, `IRODORI_PARENT_PID`, `IRODORI_ALLOWED_ORIGINS`, `IRODORI_FFMPEG` (the bundled LGPL build; in dev, an ffmpeg on PATH), `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, `PYTHONPYCACHEPREFIX=<data-root>/runtime/pycache`; plus `CUDA_DEVICE_ORDER`/`CUDA_VISIBLE_DEVICES` with several GPUs and `PYTORCH_ENABLE_MPS_FALLBACK=1` on macOS. Inherited `UV_*`, `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, `CONDA_PREFIX` and relocated HF cache variables are removed first.
 
 ## First-run setup (bootstrap)
 
@@ -154,7 +154,7 @@ Steps (each skipped when the marker shows it is current):
 5. **Models**: `python -m app.provision.download` — model + codec at their pinned commits into `<models>/pinned/...` with byte-level resume and hash verification; SilentCipher into the HF cache by branch. Bytes/total are reported.
 6. **Verify**: `python -m app.provision.selfcheck --device <d>` — torch on the chosen device with a real kernel launch, and the upstream import through the adapter.
 
-Wizard step 7, the test generation (synthesize and play one sentence), is a card on the ready screen once the model has loaded (Session 2; Session 3's Quick screen supersedes it). The marker (`<data-root>/runtime/setup.json`) records each finished step with the hashes of its inputs (`.python-version`, `uv.lock`, the torch recipe, `models.json`) and the device choice, so later launches skip setup entirely, an app update re-runs only the steps whose inputs changed, and switching CPU ⇄ GPU re-runs only the torch step.
+Wizard step 7, the test generation (synthesize and play one sentence), is the Quick screen itself: it opens with a sample sentence once the model has loaded (Session 3). The marker (`<data-root>/runtime/setup.json`) records each finished step with the hashes of its inputs (`.python-version`, `uv.lock`, the torch recipe, `models.json`) and the device choice, so later launches skip setup entirely, an app update re-runs only the steps whose inputs changed, and switching CPU ⇄ GPU re-runs only the torch step.
 
 ## Storage layout
 

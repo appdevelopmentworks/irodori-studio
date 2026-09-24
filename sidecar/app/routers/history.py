@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query, Response
 
 from app.errors import ErrorCode, not_found
 from app.routers.deps import services
-from app.schemas import HistoryEntry, HistoryPage
+from app.schemas import HistoryEntry, HistoryPage, HistoryPatch
 from app.services.container import Services
 
 router = APIRouter()
@@ -30,6 +30,15 @@ def list_history(
 @router.get("/history/{history_id}", response_model=HistoryEntry)
 def get_history(history_id: str, svc: ServicesDep) -> HistoryEntry:
     entry = svc.history.get(history_id)
+    if entry is None:
+        raise not_found(ErrorCode.HISTORY_NOT_FOUND, "history entry")
+    return entry
+
+
+@router.patch("/history/{history_id}", response_model=HistoryEntry)
+def update_history(history_id: str, body: HistoryPatch, svc: ServicesDep) -> HistoryEntry:
+    """Adopt one candidate (or clear the choice with `null`)."""
+    entry = svc.history.set_adopted(history_id, body.adopted_audio_id)
     if entry is None:
         raise not_found(ErrorCode.HISTORY_NOT_FOUND, "history entry")
     return entry

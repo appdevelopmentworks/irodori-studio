@@ -263,11 +263,11 @@ def test_engine_loading_then_ready(make_client) -> None:
 def test_engine_load_failure_fails_jobs(make_client) -> None:
     client, _ = make_client(FakeBackend(fail_load="model_files_missing"))
     engine = wait_ready(client)
-    assert engine == {
-        "state": "error",
-        "model_id": "irodori-v4.1-small",
-        "error_code": "model_files_missing",
-    }
+    assert (engine["state"], engine["model_id"], engine["error_code"]) == (
+        "error",
+        "irodori-v4.1-small",
+        "model_files_missing",
+    )
     assert "model_load_failed" in client.get("/system").json()["issues"]
     events = read_events(client, generate(client))
     assert events[-1][0] == "failed" and events[-1][1]["code"] == "model_files_missing"

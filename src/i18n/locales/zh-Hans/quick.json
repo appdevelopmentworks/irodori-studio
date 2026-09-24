@@ -1,0 +1,139 @@
+{
+  "title": "快速生成",
+  "sampleText": "こんにちは。これは音声合成の動作確認です。",
+  "text": {
+    "label": "朗读文本",
+    "placeholder": "在此输入日语文本",
+    "count": "{{length}} / {{max}} 字",
+    "shortcut": "按 Ctrl / ⌘ + Enter 生成"
+  },
+  "emoji": {
+    "title": "表情符号面板",
+    "hint": "点击即可在光标处插入。重复同一表情符号可增强效果。",
+    "tooltip": "{{label}}：{{description}}"
+  },
+  "caption": {
+    "label": "风格描述（音色、情感、说话方式）",
+    "placeholder": "请用日语书写，例如：落ち着いた、近い距離感の女性話者",
+    "presets": "风格预设",
+    "clear": "清除",
+    "conflictHint": "与参考音频一起使用时，描述情感和说话方式而非音色，效果更稳定。"
+  },
+  "stylePresets": {
+    "calm": "沉稳",
+    "bright": "明快",
+    "gentle": "温柔",
+    "whisper": "耳语",
+    "sad": "悲伤",
+    "angry": "生气",
+    "excited": "兴奋",
+    "sleepy": "困倦",
+    "narration": "旁白",
+    "announcer": "播音员"
+  },
+  "voice": {
+    "label": "声音",
+    "kinds": {
+      "none": "不指定",
+      "clips": "参考音频",
+      "embedding": "说话人嵌入",
+      "library": "资料库中的声音"
+    },
+    "libraryLater": "声音工作室上线后即可选择。",
+    "noneHint": "不使用参考音频：由风格描述（或不指定）决定声音。",
+    "addClips": "添加音频文件",
+    "clipsHint": "多段同一说话人的干净短音频效果最好。按从上到下的顺序拼接使用（合计最多 {{max}} 秒）。",
+    "clipsTotal": "合计 {{seconds}} 秒",
+    "clipsOver": "超过 {{max}} 秒的部分不会被使用。",
+    "clipDuration": "{{seconds}} 秒",
+    "uploading": "正在上传…",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "remove": "移除",
+    "chooseEmbedding": "选择文件",
+    "embeddingTitle": "选择说话人嵌入文件",
+    "embeddingFilter": "说话人嵌入",
+    "embeddingHint": "指定用 Speaker Inversion 为同一基础模型生成的 .speaker.safetensors。",
+    "clear": "清除",
+    "embeddingNone": "未选择"
+  },
+  "simple": {
+    "title": "生成设置"
+  },
+  "advanced": {
+    "title": "高级设置",
+    "reset": "恢复默认值",
+    "changed_other": "已修改 {{count}} 项"
+  },
+  "lora": {
+    "label": "LoRA 适配器",
+    "help": "已训练 LoRA 适配器的文件夹（包含 adapter_config.json）。只用于本次生成，不会合并到模型中。",
+    "choose": "选择文件夹",
+    "chooseTitle": "选择 LoRA 适配器文件夹",
+    "none": "不使用",
+    "clear": "清除"
+  },
+  "generate": {
+    "button": "生成",
+    "cancel": "取消",
+    "submitting": "正在发送…",
+    "queued": "排队中（前面还有 {{position}} 个）",
+    "preparing": "正在准备…",
+    "sampling": "正在生成… 第 {{done}} / {{total}} 步",
+    "finishing": "正在收尾…",
+    "cancelled": "已取消。",
+    "needText": "请输入文本。",
+    "needClips": "请添加参考音频。",
+    "needEmbedding": "请选择说话人嵌入文件。",
+    "invalidParams": "高级设置中有无效的值。",
+    "uploading": "正在等待参考音频上传完成。",
+    "paramError": "{{param}}：{{reason}}"
+  },
+  "candidates": {
+    "title": "生成结果",
+    "empty": "尚未生成。请输入文本后点击“生成”。",
+    "item": "候选 {{index}}",
+    "duration": "{{seconds}} 秒",
+    "adopt": "采用",
+    "adopted": "已采用",
+    "save": "保存…",
+    "saveTitle": "保存音频",
+    "saved": "已保存：{{path}}",
+    "format": "保存格式",
+    "formats": {
+      "wav": "WAV（未压缩）",
+      "mp3": "MP3",
+      "m4a": "M4A（AAC）",
+      "flac": "FLAC（无损压缩）",
+      "opus": "Opus"
+    },
+    "needFfmpeg": "WAV 以外的格式需要 ffmpeg。"
+  },
+  "runLog": {
+    "title": "运行日志",
+    "seed": "种子",
+    "useSeed": "使用此种子",
+    "watermarked": "已添加水印",
+    "notWatermarked": "无水印",
+    "elapsed": "用时 {{seconds}} 秒",
+    "timings": "处理时间明细",
+    "ms": "{{ms}} 毫秒",
+    "log": "日志",
+    "empty": "暂无日志。",
+    "stages": {
+      "prepare_lora": "准备 LoRA",
+      "tokenize_text": "文本分词",
+      "encode_reference": "编码参考音频",
+      "prepare_reference": "准备参考",
+      "predict_duration": "预测时长",
+      "sample_rf": "采样",
+      "sample_meanflow": "采样（MeanFlow）",
+      "unpatchify_latent": "整理潜在表示",
+      "decode_latent": "解码为音频",
+      "silentcipher_watermark": "嵌入水印",
+      "total_to_decode": "推理合计",
+      "synthesize": "生成合计",
+      "write_audio": "保存文件"
+    }
+  }
+}

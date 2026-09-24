@@ -17,7 +17,7 @@ from app.config import SidecarConfig
 from app.engine.base import BackendError, BackendFactory, RuntimeOptions, TtsBackend
 from app.engine.registry import ModelSpec, Registry
 from app.errors import ErrorCode
-from app.schemas import EngineStatus
+from app.schemas import EngineStatus, RuntimeInfo
 
 log = logging.getLogger("irodori.engine")
 
@@ -65,9 +65,20 @@ class EngineHost:
         return self._state
 
     def status(self) -> EngineStatus:
+        options = self.options
         with self._cond:
             return EngineStatus(
-                state=self._state, model_id=self.spec.id, error_code=self._error_code
+                state=self._state,
+                model_id=self.spec.id,
+                error_code=self._error_code,
+                runtime=RuntimeInfo(
+                    device=options.device,  # type: ignore[arg-type]
+                    model_precision=options.model_precision,  # type: ignore[arg-type]
+                    codec_device=options.codec_device,  # type: ignore[arg-type]
+                    codec_precision=options.codec_precision,  # type: ignore[arg-type]
+                    compile_model=options.compile_model,
+                    compile_dynamic=options.compile_dynamic,
+                ),
             )
 
     def wait_settled(self, timeout: float) -> bool:

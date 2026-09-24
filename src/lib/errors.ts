@@ -62,6 +62,9 @@ const KNOWN_CODES = new Set<string>([
   'history_not_found',
   'synthesis_failed',
   'out_of_memory',
+  'save_path_invalid',
+  'save_failed',
+  'ffmpeg_unavailable',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

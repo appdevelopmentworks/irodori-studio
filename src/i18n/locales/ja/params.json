@@ -1,0 +1,194 @@
+{
+  "num_steps": {
+    "label": "ステップ数",
+    "help": "サンプリングのステップ数。多いほど品質が上がり、生成は遅くなります。"
+  },
+  "num_candidates": {
+    "label": "候補数",
+    "help": "同じテキストを一度に何通り生成するか。多いほど VRAM を使います。"
+  },
+  "seed": {
+    "label": "シード",
+    "help": "同じシードと同じ設定なら同じ音声になります。空欄ならランダムです。",
+    "null": "ランダム"
+  },
+  "t_schedule_mode": {
+    "label": "時間スケジュール",
+    "help": "サンプリングのステップの配分。sway はステップ数を減らしたときの品質低下を抑えます。",
+    "choices": {
+      "linear": "線形（linear）",
+      "sway": "Sway"
+    }
+  },
+  "sway_coeff": {
+    "label": "Sway 係数",
+    "help": "負の値ほど、ノイズ側（序盤）により多くのステップを割り当てます。"
+  },
+  "truncation_factor": {
+    "label": "ノイズの縮小率",
+    "help": "初期ノイズを縮めます。0.8〜0.9 で揺らぎが減りますが、表現も控えめになります。",
+    "null": "なし"
+  },
+  "rescale_k": {
+    "label": "スコア再スケール k",
+    "help": "時間方向のスコア再スケーリング。σ と一緒に指定します。",
+    "null": "なし"
+  },
+  "rescale_sigma": {
+    "label": "スコア再スケール σ",
+    "help": "時間方向のスコア再スケーリング。k と一緒に指定します。",
+    "null": "なし"
+  },
+  "context_kv_cache": {
+    "label": "コンテキスト KV キャッシュ",
+    "help": "テキストなどの条件を前もって計算し、サンプリングを速くします。"
+  },
+  "seconds": {
+    "label": "長さ（秒）",
+    "help": "出力の長さを固定します。空欄なら長さ予測が自動で決めます（推奨）。",
+    "null": "自動"
+  },
+  "duration_scale": {
+    "label": "長さの倍率",
+    "help": "予測した長さに掛ける倍率。1 より大きいとゆっくり長く、小さいと速く短くなります。"
+  },
+  "cfg_guidance_mode": {
+    "label": "CFG の方式",
+    "help": "independent は条件ごとに強さを変えられます。joint は有効な強さをすべて同じ値にする必要があります。",
+    "choices": {
+      "independent": "独立（independent）",
+      "joint": "結合（joint）",
+      "alternating": "交互（alternating）"
+    }
+  },
+  "cfg_scale_text": {
+    "label": "CFG: テキスト",
+    "help": "テキストへの忠実さ。発音が弱いときに少し上げます。"
+  },
+  "cfg_scale_caption": {
+    "label": "CFG: キャプション",
+    "help": "キャプション（声質・スタイル）への忠実さ。"
+  },
+  "cfg_scale_speaker": {
+    "label": "CFG: 話者",
+    "help": "参照した話者にどれだけ似せるか。"
+  },
+  "cfg_scale": {
+    "label": "CFG の一括指定（非推奨）",
+    "help": "有効な CFG の強さをすべてこの値で上書きします。通常は空欄のままにします。",
+    "null": "使わない"
+  },
+  "cfg_min_t": {
+    "label": "CFG を適用する t の下限",
+    "help": "時刻 t がこの値以上のときだけ CFG をかけます。"
+  },
+  "cfg_max_t": {
+    "label": "CFG を適用する t の上限",
+    "help": "時刻 t がこの値以下のときだけ CFG をかけます。"
+  },
+  "speaker_kv_scale": {
+    "label": "話者 K/V の強調",
+    "help": "1 より大きい値で参照話者らしさを強めます（実験的）。",
+    "null": "なし"
+  },
+  "speaker_kv_min_t": {
+    "label": "話者 K/V 強調の t の下限",
+    "help": "時刻 t がこの値以上の間だけ話者 K/V を強調します。",
+    "null": "既定（0.9）"
+  },
+  "speaker_kv_max_layers": {
+    "label": "話者 K/V 強調の層数",
+    "help": "強調を最初の N 層だけに限定します。",
+    "null": "すべての層"
+  },
+  "speaker_uncond_mode": {
+    "label": "話者の無条件化",
+    "help": "話者埋め込みを使うときの、CFG の無条件側の作り方。",
+    "choices": {
+      "mask": "マスク（mask）",
+      "noise": "ノイズ（noise）"
+    }
+  },
+  "ref_normalize_db": {
+    "label": "参照音声の音量正規化（dB）",
+    "help": "エンコード前に参照音声の音量をそろえます。既定の -16 dB を推奨します。",
+    "null": "オフ"
+  },
+  "ref_ensure_max": {
+    "label": "参照音声のピーク保護",
+    "help": "正規化がオフのとき、ピークが 1.0 を超える参照音声だけ音量を下げます。"
+  },
+  "max_ref_seconds": {
+    "label": "参照音声の上限（秒）",
+    "help": "参照音声として使う長さの上限。空欄ならモデルの推奨値を使います。",
+    "null": "モデルの推奨値"
+  },
+  "max_text_len": {
+    "label": "テキストの最大トークン数",
+    "help": "これを超えるテキストは切り捨てられます。通常は空欄（モデルの既定値）のままにします。",
+    "null": "モデルの既定値"
+  },
+  "max_caption_len": {
+    "label": "キャプションの最大トークン数",
+    "help": "これを超えるキャプションは切り捨てられます。通常は空欄（モデルの既定値）のままにします。",
+    "null": "モデルの既定値"
+  },
+  "decode_mode": {
+    "label": "デコード方式",
+    "help": "sequential は候補を 1 つずつ変換して VRAM を節約し、batch はまとめて変換して速くなります。",
+    "choices": {
+      "sequential": "順次（sequential）",
+      "batch": "一括（batch）"
+    }
+  },
+  "trim_tail": {
+    "label": "末尾の無音を削る",
+    "help": "生成後、末尾の平坦な部分（無音）を切り落とします。"
+  },
+  "tail_window_size": {
+    "label": "末尾判定の窓幅",
+    "help": "末尾が平坦かを調べる窓の長さ（潜在フレーム数）。"
+  },
+  "tail_std_threshold": {
+    "label": "末尾判定の標準偏差しきい値",
+    "help": "揺らぎがこの値より小さい区間を平坦とみなします。"
+  },
+  "tail_mean_threshold": {
+    "label": "末尾判定の平均しきい値",
+    "help": "平均値が 0 からこの値以内の区間を平坦とみなします。"
+  },
+  "groups": {
+    "sampling": "サンプリング",
+    "duration": "長さ",
+    "cfg": "CFG（ガイダンス）",
+    "speaker": "話者",
+    "reference": "参照音声",
+    "advanced": "上級",
+    "runtime": "ランタイム"
+  },
+  "runtime": {
+    "device": "モデルのデバイス",
+    "modelPrecision": "モデルの精度",
+    "codecDevice": "コーデックのデバイス",
+    "codecPrecision": "コーデックの精度",
+    "compile": "torch.compile",
+    "on": "オン",
+    "off": "オフ",
+    "hint": "変更にはモデルの再読み込みが必要です。設定画面で変更できるようになります（今後のバージョン）。"
+  },
+  "reset": "既定値に戻す",
+  "defaultValue": "既定: {{value}}",
+  "errors": {
+    "type": "数値を入力してください",
+    "integer": "整数を入力してください",
+    "required": "値を入力してください",
+    "below_minimum": "{{min}} 以上にしてください",
+    "above_maximum": "{{max}} 以下にしてください",
+    "choice": "選択肢から選んでください",
+    "requires_pair": "k と σ は両方とも指定してください",
+    "above_cfg_max_t": "下限は上限以下にしてください",
+    "joint_requires_equal_scales": "joint では有効な CFG の強さをすべて同じ値にしてください",
+    "unknown": "この設定はこのモデルでは使えません",
+    "upstream": "モデルがこの組み合わせを受け付けませんでした"
+  }
+}

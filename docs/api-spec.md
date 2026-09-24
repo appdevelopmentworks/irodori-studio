@@ -6,7 +6,7 @@ Two listeners (D21):
 - **Internal API** — `http://127.0.0.1:<random>`; used only by the app UI. No auth (localhost, random port).
 - **External API** — optional; `<bind>:<port>` (default `127.0.0.1:50221`); OpenAI- and VOICEVOX-compatible routes for other apps. Bearer API key required when bound to a non-loopback address.
 
-Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2).
+Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3).
 
 ---
 
@@ -98,6 +98,13 @@ type EngineStatus = {
   state: "idle" | "loading" | "ready" | "error"; // the model loads at startup (D4)
   model_id: string | null;
   error_code: string | null;           // e.g. "model_files_missing" when state = "error"
+  runtime: RuntimeInfo | null;         // options of the resident model (a change reloads it, D4)
+};
+
+type RuntimeInfo = {
+  device: "cuda" | "mps" | "cpu"; model_precision: "fp32" | "bf16";
+  codec_device: "cuda" | "mps" | "cpu"; codec_precision: "fp32" | "bf16";
+  compile_model: boolean; compile_dynamic: boolean;
 };
 
 type SystemInfo = {
@@ -118,6 +125,7 @@ type SystemInfo = {
   active_model: string | null;         // set once the model is ready
   queue_length: number;                // running + queued jobs
   watermark_available: boolean | null; // SilentCipher loaded; null until the model is ready
+  ffmpeg_available: boolean;           // other audio formats can be read (clips) and saved
   issues: ("torch_unavailable" | "cuda_unavailable" | "mps_unavailable" | "watermark_unavailable" | "model_load_failed")[];
 };
 ```
@@ -186,6 +194,7 @@ type EmojiItem = {
 | POST | `/jobs/{id}/cancel` | `{job_id, state}`: `cancelled` (was queued), `cancelling` (running; cooperative, D27), or the final state if it already finished |
 | GET | `/queue` | `QueueSnapshot`: the running job and the queued ones in order (UI + external) |
 | GET | `/audio/{audio_id}` | `audio/wav`, 48 kHz mono 16-bit |
+| POST | `/audio/{audio_id}/save` | `{path, format?: "wav"\|"mp3"\|"m4a"\|"flac"\|"opus"}` (absolute path from the native save dialog; without `format`, the extension decides, else WAV; the format's extension is applied; an existing file is replaced) → `{path, bytes, format}`. Formats other than WAV are encoded by ffmpeg (MP3 VBR ≈ 190 kbps, M4A AAC 192 kbps, FLAC, Opus 128 kbps): `400 ffmpeg_unavailable` without it; `400 save_path_invalid` / `save_failed`. Sample rate, loudness, tempo, gain: `POST /export` (S7) |
 
 ```ts
 type JobAccepted = { job_id: string; queue_position: number }; // jobs ahead of this one
@@ -236,6 +245,7 @@ type ClipInfo = { clip_id: string; filename: string; duration_s: number; sample_
 | --- | --- | --- |
 | GET | `/history` | `?limit=1–200 (50)&offset=0&q=` → `{items: HistorySummary[], total}`, newest first; `q` matches text or caption |
 | GET / DELETE | `/history/{id}` | `HistoryEntry`: the request as submitted, every resolved parameter, seed and timings; DELETE also removes its audio |
+| PATCH | `/history/{id}` | `{adopted_audio_id: string \| null}` adopts one of its candidates (or clears it) → `HistoryEntry`; `404 audio_not_found` for another entry's audio |
 | POST | `/history/{id}/regenerate` | job with identical request (seed optional) |
 | GET / PATCH | `/preferences` | `Preferences`; PATCH takes any subset of the fields |
 
@@ -244,6 +254,7 @@ type HistorySummary = {
   id: string; created_at: string; model_id: string; text: string; caption: string | null;
   reference_kind: "none" | "voice" | "clips" | "embedding";
   used_seed: number; watermarked: boolean; outputs: AudioOutput[];
+  adopted_audio_id: string | null;     // the candidate the user adopted (requirements §6.3)
 };
 type HistoryEntry = HistorySummary & {
   request: SynthesisRequest;           // as submitted (unset fields absent)

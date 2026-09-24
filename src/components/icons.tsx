@@ -16,6 +16,18 @@ export function CheckIcon({ className = '' }: IconProps) {
   );
 }
 
+export function ChevronIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className={`${base} ${className}`}>
+      <path
+        fillRule="evenodd"
+        d="M7.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L11.6 10 7.3 5.7a1 1 0 0 1 0-1.4Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 export function CrossIcon({ className = '' }: IconProps) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className={`${base} ${className}`}>

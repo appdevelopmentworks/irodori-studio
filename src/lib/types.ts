@@ -47,14 +47,28 @@ export type SidecarErrorCode =
   | 'audio_not_found'
   | 'history_not_found'
   | 'synthesis_failed'
-  | 'out_of_memory';
+  | 'out_of_memory'
+  | 'save_path_invalid'
+  | 'save_failed'
+  | 'ffmpeg_unavailable';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
+
+/** Runtime options of the resident model; changing them needs a reload (D4). */
+export interface RuntimeInfo {
+  device: Device;
+  model_precision: Precision;
+  codec_device: Device;
+  codec_precision: Precision;
+  compile_model: boolean;
+  compile_dynamic: boolean;
+}
 
 export interface EngineStatus {
   state: EngineState;
   model_id: string | null;
   error_code: string | null;
+  runtime: RuntimeInfo | null;
 }
 
 export interface HealthResponse {
@@ -96,6 +110,8 @@ export interface SystemInfo {
   active_model: string | null;
   queue_length: number;
   watermark_available: boolean | null;
+  /** ffmpeg is available: other audio formats can be read and saved (D20). */
+  ffmpeg_available: boolean;
   issues: SystemIssue[];
 }
 
@@ -311,6 +327,20 @@ export interface HistorySummary {
   used_seed: number;
   watermarked: boolean;
   outputs: AudioOutput[];
+  /** The candidate the user adopted, if any. */
+  adopted_audio_id: string | null;
+}
+
+export interface HistoryPatch {
+  adopted_audio_id: string | null;
+}
+
+export type AudioFormat = 'wav' | 'mp3' | 'm4a' | 'flac' | 'opus';
+
+export interface SavedFile {
+  path: string;
+  bytes: number;
+  format: AudioFormat;
 }
 
 export interface HistoryEntry extends HistorySummary {

@@ -1,0 +1,182 @@
+{
+  "u1f442": {
+    "label": "Flüstern",
+    "description": "Flüstern, Geräusche direkt am Ohr"
+  },
+  "u1f62e_200d_1f4a8": {
+    "label": "Atem",
+    "description": "Atem, Seufzer, Atmen im Schlaf"
+  },
+  "u23f8_fe0f": {
+    "label": "Pause",
+    "description": "Pause, Stille"
+  },
+  "u1f92d": {
+    "label": "Kichern",
+    "description": "Kichern, Glucksen, unterdrücktes Lachen"
+  },
+  "u1f975": {
+    "label": "Keuchen",
+    "description": "Keuchen, Stöhnen, Ächzen"
+  },
+  "u1f4e2": {
+    "label": "Echo",
+    "description": "Echo, Hall"
+  },
+  "u1f60f": {
+    "label": "Neckend",
+    "description": "Neckend, verspielt schmeichelnd"
+  },
+  "u1f97a": {
+    "label": "Zittrig",
+    "description": "Zitternde Stimme, unsicher"
+  },
+  "u1f32c_fe0f": {
+    "label": "Außer Atem",
+    "description": "Atemnot, schweres Atmen, Atemgeräusche"
+  },
+  "u1f62e": {
+    "label": "Nach Luft schnappen",
+    "description": "Nach Luft schnappen"
+  },
+  "u1f445": {
+    "label": "Lecken",
+    "description": "Lecken, Kauen, nasse Geräusche"
+  },
+  "u1f48b": {
+    "label": "Lippengeräusch",
+    "description": "Schmatzen, Lippengeräusche"
+  },
+  "u1faf6": {
+    "label": "Zärtlich",
+    "description": "Sanft, zärtlich"
+  },
+  "u1f62d": {
+    "label": "Weinen",
+    "description": "Schluchzen, Weinen, traurig"
+  },
+  "u1f631": {
+    "label": "Schrei",
+    "description": "Schrei, Ruf, Kreischen"
+  },
+  "u1f62a": {
+    "label": "Schläfrig",
+    "description": "Schläfrig, träge"
+  },
+  "u1f634": {
+    "label": "Im Schlaf",
+    "description": "Reden im Schlaf, Schnarchen"
+  },
+  "u23e9": {
+    "label": "Schnell",
+    "description": "Schnelles Sprechen, ohne Pause, hastig"
+  },
+  "u1f4de": {
+    "label": "Telefon",
+    "description": "Wie am Telefon, durch einen Lautsprecher"
+  },
+  "u1f422": {
+    "label": "Langsam",
+    "description": "Langsam"
+  },
+  "u1f964": {
+    "label": "Schlucken",
+    "description": "Schluckgeräusch"
+  },
+  "u1f927": {
+    "label": "Husten",
+    "description": "Husten, Schniefen, Niesen, Räuspern"
+  },
+  "u1f612": {
+    "label": "Zungenschnalzen",
+    "description": "Missbilligendes Zungenschnalzen"
+  },
+  "u1f630": {
+    "label": "Aufgeregt",
+    "description": "Panisch, aufgewühlt, nervös, stotternd"
+  },
+  "u1f606": {
+    "label": "Freude",
+    "description": "Freudig, glücklich"
+  },
+  "u1f4a5": {
+    "label": "Kraftvoll",
+    "description": "Mit Schwung, ungestüm"
+  },
+  "u1f620": {
+    "label": "Wütend",
+    "description": "Wütend, unzufrieden, schmollend"
+  },
+  "u1f632": {
+    "label": "Überraschung",
+    "description": "Überraschung, Staunen"
+  },
+  "u1f971": {
+    "label": "Gähnen",
+    "description": "Gähnen"
+  },
+  "u1f616": {
+    "label": "Gequält",
+    "description": "Gequält, schmerzerfüllt"
+  },
+  "u1f61f": {
+    "label": "Besorgt",
+    "description": "Besorgt, ängstlich"
+  },
+  "u1fae3": {
+    "label": "Schüchtern",
+    "description": "Schüchtern, verlegen"
+  },
+  "u1f644": {
+    "label": "Genervt",
+    "description": "Genervt, mit Augenrollen"
+  },
+  "u1f60a": {
+    "label": "Fröhlich",
+    "description": "Fröhlich, vergnügt"
+  },
+  "u1f60e": {
+    "label": "Selbstbewusst",
+    "description": "Selbstbewusst, stolz"
+  },
+  "u1f44c": {
+    "label": "Zustimmung",
+    "description": "Zustimmende Laute, Nicken"
+  },
+  "u1f64f": {
+    "label": "Flehend",
+    "description": "Flehend, bittend"
+  },
+  "u1f974": {
+    "label": "Betrunken",
+    "description": "Betrunken"
+  },
+  "u1f3b5": {
+    "label": "Summen",
+    "description": "Summen"
+  },
+  "u1f910": {
+    "label": "Gedämpft",
+    "description": "Gedämpft, mit zugehaltenem Mund"
+  },
+  "u1f60c": {
+    "label": "Erleichtert",
+    "description": "Erleichtert, zufrieden"
+  },
+  "u1f914": {
+    "label": "Fragend",
+    "description": "Fragend, grübelnd"
+  },
+  "u1f4aa": {
+    "label": "Kräftig",
+    "description": "Mit Nachdruck, kräftig"
+  },
+  "u1f443": {
+    "label": "Schnuppern",
+    "description": "Schnuppern, Riechen"
+  },
+  "u1f4d6": {
+    "label": "Erzählung",
+    "description": "Erzählung, Monolog"
+  }
+}

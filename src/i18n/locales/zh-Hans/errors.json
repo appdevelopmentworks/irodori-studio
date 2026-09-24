@@ -56,6 +56,9 @@
     "audio_not_found": "找不到音频。",
     "history_not_found": "找不到该历史记录。",
     "synthesis_failed": "无法生成音频。",
-    "out_of_memory": "内存不足。请减少候选数量或缩短文本后重试。"
+    "out_of_memory": "内存不足。请减少候选数量或缩短文本后重试。",
+    "save_path_invalid": "保存位置无效。请选择其他位置。",
+    "save_failed": "无法保存文件。",
+    "ffmpeg_unavailable": "以此格式保存需要 ffmpeg。请改选 WAV。"
   }
 }

@@ -24,7 +24,7 @@ pub struct Layout {
     pub upstream_dir: PathBuf,
     /// Bundled uv, else `uv` found on PATH (dev).
     pub uv: PathBuf,
-    /// Bundled LGPL ffmpeg, when staged (D20).
+    /// Bundled LGPL ffmpeg, when staged (D20); in dev, else `ffmpeg` found on PATH.
     pub ffmpeg: Option<PathBuf>,
     pub installed: bool,
 }
@@ -49,7 +49,17 @@ pub fn resolve(app: &AppHandle) -> Result<Layout, AppError> {
         .filter(|p| p.is_file())
         .or_else(|| find_on_path("uv"))
         .ok_or_else(|| AppError::new(ErrorCode::UvMissing))?;
-    let ffmpeg = resource(app, &format!("ffmpeg/{}", exe_name("ffmpeg"))).filter(|p| p.is_file());
+    // Installed builds use only the bundled LGPL build (D20); dev runs may fall back to an
+    // ffmpeg on PATH until Session 10 stages one.
+    let ffmpeg = resource(app, &format!("ffmpeg/{}", exe_name("ffmpeg")))
+        .filter(|p| p.is_file())
+        .or_else(|| {
+            if installed {
+                None
+            } else {
+                find_on_path("ffmpeg")
+            }
+        });
 
     Ok(Layout {
         sidecar_dir,
@@ -100,7 +110,7 @@ fn exe_name(stem: &str) -> String {
     }
 }
 
-/// Search PATH like a shell would (dev convenience; installed builds bundle uv).
+/// Search PATH like a shell would (dev convenience; installed builds bundle uv and ffmpeg).
 fn find_on_path(stem: &str) -> Option<PathBuf> {
     let name = exe_name(stem);
     std::env::var_os("PATH").and_then(|paths| {

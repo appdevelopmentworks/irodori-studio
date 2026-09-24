@@ -1,0 +1,139 @@
+{
+  "title": "かんたん生成",
+  "sampleText": "こんにちは。これは音声合成の動作確認です。",
+  "text": {
+    "label": "読み上げるテキスト",
+    "placeholder": "ここに日本語の文章を入力します",
+    "count": "{{length}} / {{max}} 文字",
+    "shortcut": "Ctrl / ⌘ + Enter で生成"
+  },
+  "emoji": {
+    "title": "絵文字パレット",
+    "hint": "クリックでカーソル位置に挿入します。同じ絵文字を重ねると効果が強まります。",
+    "tooltip": "{{label}}：{{description}}"
+  },
+  "caption": {
+    "label": "キャプション（声質・感情・話し方）",
+    "placeholder": "例: 落ち着いた、近い距離感の女性話者",
+    "presets": "スタイルのプリセット",
+    "clear": "クリア",
+    "conflictHint": "参照音声と一緒に使うときは、声質ではなく感情や話し方を書くと安定します。"
+  },
+  "stylePresets": {
+    "calm": "落ち着いて",
+    "bright": "明るく",
+    "gentle": "優しく",
+    "whisper": "ささやき",
+    "sad": "悲しげに",
+    "angry": "怒って",
+    "excited": "興奮して",
+    "sleepy": "眠そうに",
+    "narration": "ナレーション",
+    "announcer": "アナウンサー"
+  },
+  "voice": {
+    "label": "声",
+    "kinds": {
+      "none": "指定なし",
+      "clips": "参照音声",
+      "embedding": "話者埋め込み",
+      "library": "ライブラリの声"
+    },
+    "libraryLater": "ボイススタジオの追加後に選べるようになります。",
+    "noneHint": "参照音声を使わず、キャプション（または指定なし）で声が決まります。",
+    "addClips": "音声ファイルを追加",
+    "clipsHint": "同じ話者のきれいな短いクリップを複数並べると安定します。上から順につなげて使います（合計 {{max}} 秒まで）。",
+    "clipsTotal": "合計 {{seconds}} 秒",
+    "clipsOver": "{{max}} 秒を超えた分は使われません。",
+    "clipDuration": "{{seconds}} 秒",
+    "uploading": "アップロード中…",
+    "moveUp": "上へ",
+    "moveDown": "下へ",
+    "remove": "削除",
+    "chooseEmbedding": "ファイルを選択",
+    "embeddingTitle": "話者埋め込みファイルを選択",
+    "embeddingFilter": "話者埋め込み",
+    "embeddingHint": "Speaker Inversion で作った .speaker.safetensors を指定します（同じベースモデル用のもの）。",
+    "clear": "解除",
+    "embeddingNone": "未選択"
+  },
+  "simple": {
+    "title": "生成の設定"
+  },
+  "advanced": {
+    "title": "詳細設定",
+    "reset": "既定値に戻す",
+    "changed_other": "{{count}} 項目を変更中"
+  },
+  "lora": {
+    "label": "LoRA アダプター",
+    "help": "学習済み LoRA アダプターのフォルダー（adapter_config.json を含む）。モデルには統合せず、この生成にだけ使います。",
+    "choose": "フォルダーを選択",
+    "chooseTitle": "LoRA アダプターのフォルダーを選択",
+    "none": "使わない",
+    "clear": "解除"
+  },
+  "generate": {
+    "button": "生成",
+    "cancel": "キャンセル",
+    "submitting": "送信しています…",
+    "queued": "順番待ちです（前に {{position}} 件）",
+    "preparing": "準備しています…",
+    "sampling": "生成しています… {{done}} / {{total}} ステップ",
+    "finishing": "仕上げています…",
+    "cancelled": "キャンセルしました。",
+    "needText": "テキストを入力してください。",
+    "needClips": "参照音声を追加してください。",
+    "needEmbedding": "話者埋め込みファイルを選んでください。",
+    "invalidParams": "詳細設定に正しくない値があります。",
+    "uploading": "参照音声のアップロードを待っています。",
+    "paramError": "{{param}}: {{reason}}"
+  },
+  "candidates": {
+    "title": "生成結果",
+    "empty": "まだ生成していません。テキストを入力して「生成」を押してください。",
+    "item": "候補 {{index}}",
+    "duration": "{{seconds}} 秒",
+    "adopt": "採用",
+    "adopted": "採用中",
+    "save": "保存…",
+    "saveTitle": "音声を保存",
+    "saved": "保存しました: {{path}}",
+    "format": "保存形式",
+    "formats": {
+      "wav": "WAV（無圧縮）",
+      "mp3": "MP3",
+      "m4a": "M4A（AAC）",
+      "flac": "FLAC（可逆圧縮）",
+      "opus": "Opus"
+    },
+    "needFfmpeg": "WAV 以外の形式には ffmpeg が必要です。"
+  },
+  "runLog": {
+    "title": "実行ログ",
+    "seed": "シード",
+    "useSeed": "このシードを使う",
+    "watermarked": "透かしあり",
+    "notWatermarked": "透かしなし",
+    "elapsed": "所要時間 {{seconds}} 秒",
+    "timings": "処理時間の内訳",
+    "ms": "{{ms}} ms",
+    "log": "ログ",
+    "empty": "ログはまだありません。",
+    "stages": {
+      "prepare_lora": "LoRA の準備",
+      "tokenize_text": "テキストの分割",
+      "encode_reference": "参照音声のエンコード",
+      "prepare_reference": "参照の準備",
+      "predict_duration": "長さの予測",
+      "sample_rf": "サンプリング",
+      "sample_meanflow": "サンプリング（MeanFlow）",
+      "unpatchify_latent": "潜在表現の整形",
+      "decode_latent": "音声へのデコード",
+      "silentcipher_watermark": "透かしの埋め込み",
+      "total_to_decode": "推論の合計",
+      "synthesize": "生成の合計",
+      "write_audio": "ファイルの保存"
+    }
+  }
+}

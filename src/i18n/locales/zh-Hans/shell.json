@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "label": "页面",
+    "quick": "快速生成",
+    "voices": "声音工作室",
+    "narration": "旁白",
+    "script": "台本",
+    "library": "资料库与历史",
+    "apiServer": "API 服务器",
+    "settings": "设置"
+  },
+  "comingSoon": {
+    "title": "此页面正在准备中",
+    "body": "将在后续版本中加入。"
+  },
+  "status": {
+    "engine": {
+      "idle": "模型未加载",
+      "loading": "正在加载模型",
+      "ready": "就绪",
+      "error": "模型错误"
+    },
+    "queueIdle": "队列：空闲",
+    "queueCount_other": "队列：{{count}} 个任务",
+    "memory": "内存 {{used}} / {{total}}",
+    "watermarkOn": "水印：开",
+    "watermarkOff": "水印：关",
+    "cpuMode": "CPU 模式（生成较慢）",
+    "disconnected": "无法连接语音合成引擎"
+  }
+}

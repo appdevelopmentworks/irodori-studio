@@ -1,0 +1,194 @@
+{
+  "num_steps": {
+    "label": "步数",
+    "help": "采样步数。步数越多质量越好，但生成越慢。"
+  },
+  "num_candidates": {
+    "label": "候选数",
+    "help": "一次为同一文本生成多少个版本。数量越多，占用的显存越多。"
+  },
+  "seed": {
+    "label": "种子",
+    "help": "相同的种子和设置会生成相同的音频。留空则随机。",
+    "null": "随机"
+  },
+  "t_schedule_mode": {
+    "label": "时间调度",
+    "help": "采样步的分配方式。sway 可在减少步数时保持质量。",
+    "choices": {
+      "linear": "线性（linear）",
+      "sway": "Sway"
+    }
+  },
+  "sway_coeff": {
+    "label": "Sway 系数",
+    "help": "值越小（负值），越多的步数分配在噪声一侧（前期）。"
+  },
+  "truncation_factor": {
+    "label": "截断系数",
+    "help": "缩小初始噪声。0.8–0.9 可减少波动，但表现力也会减弱。",
+    "null": "关闭"
+  },
+  "rescale_k": {
+    "label": "重缩放 k",
+    "help": "时间方向的分数重缩放。需与 σ 一起设置。",
+    "null": "关闭"
+  },
+  "rescale_sigma": {
+    "label": "重缩放 σ",
+    "help": "时间方向的分数重缩放。需与 k 一起设置。",
+    "null": "关闭"
+  },
+  "context_kv_cache": {
+    "label": "上下文 KV 缓存",
+    "help": "预先计算条件信息，加快采样。"
+  },
+  "seconds": {
+    "label": "时长（秒）",
+    "help": "固定输出时长。留空则由时长预测自动决定（推荐）。",
+    "null": "自动"
+  },
+  "duration_scale": {
+    "label": "时长倍率",
+    "help": "预测时长的倍率。大于 1 更慢更长，小于 1 更快更短。"
+  },
+  "cfg_guidance_mode": {
+    "label": "CFG 方式",
+    "help": "independent 可为每个条件设置不同强度；joint 需要所有已启用的强度相同。",
+    "choices": {
+      "independent": "独立（independent）",
+      "joint": "联合（joint）",
+      "alternating": "交替（alternating）"
+    }
+  },
+  "cfg_scale_text": {
+    "label": "CFG：文本",
+    "help": "对文本的遵循程度。发音不清时可稍微调高。"
+  },
+  "cfg_scale_caption": {
+    "label": "CFG：风格描述",
+    "help": "对风格描述（音色与风格）的遵循程度。"
+  },
+  "cfg_scale_speaker": {
+    "label": "CFG：说话人",
+    "help": "与参考说话人的相似程度。"
+  },
+  "cfg_scale": {
+    "label": "CFG 统一覆盖（不推荐）",
+    "help": "用此值覆盖所有已启用的 CFG 强度。通常留空。",
+    "null": "不使用"
+  },
+  "cfg_min_t": {
+    "label": "CFG 下限 t",
+    "help": "仅在时间 t 不小于此值时应用 CFG。"
+  },
+  "cfg_max_t": {
+    "label": "CFG 上限 t",
+    "help": "仅在时间 t 不大于此值时应用 CFG。"
+  },
+  "speaker_kv_scale": {
+    "label": "说话人 K/V 强化",
+    "help": "大于 1 的值会增强参考说话人的特征（实验性）。",
+    "null": "关闭"
+  },
+  "speaker_kv_min_t": {
+    "label": "说话人 K/V 强化下限 t",
+    "help": "仅在时间 t 不小于此值时强化说话人 K/V。",
+    "null": "默认（0.9）"
+  },
+  "speaker_kv_max_layers": {
+    "label": "说话人 K/V 强化层数",
+    "help": "仅在前 N 层进行强化。",
+    "null": "全部层"
+  },
+  "speaker_uncond_mode": {
+    "label": "说话人无条件方式",
+    "help": "使用说话人嵌入时，CFG 无条件分支的构造方式。",
+    "choices": {
+      "mask": "掩码（mask）",
+      "noise": "噪声（noise）"
+    }
+  },
+  "ref_normalize_db": {
+    "label": "参考音频响度归一化（dB）",
+    "help": "编码前统一参考音频的响度。推荐使用默认的 -16 dB。",
+    "null": "关闭"
+  },
+  "ref_ensure_max": {
+    "label": "参考音频峰值保护",
+    "help": "关闭归一化时，仅降低峰值超过 1.0 的参考音频音量。"
+  },
+  "max_ref_seconds": {
+    "label": "参考音频上限（秒）",
+    "help": "使用的参考音频的最大时长。留空则使用模型推荐值。",
+    "null": "模型推荐值"
+  },
+  "max_text_len": {
+    "label": "文本最大 token 数",
+    "help": "超出的文本会被截断。通常留空（模型默认值）。",
+    "null": "模型默认值"
+  },
+  "max_caption_len": {
+    "label": "风格描述最大 token 数",
+    "help": "超出的风格描述会被截断。通常留空（模型默认值）。",
+    "null": "模型默认值"
+  },
+  "decode_mode": {
+    "label": "解码方式",
+    "help": "sequential 逐个解码以节省显存；batch 一起解码，速度更快。",
+    "choices": {
+      "sequential": "逐个（sequential）",
+      "batch": "批量（batch）"
+    }
+  },
+  "trim_tail": {
+    "label": "裁剪尾部静音",
+    "help": "生成后裁掉末尾平坦（静音）的部分。"
+  },
+  "tail_window_size": {
+    "label": "尾部检测窗口",
+    "help": "检测尾部是否平坦的窗口长度（潜在帧数）。"
+  },
+  "tail_std_threshold": {
+    "label": "尾部标准差阈值",
+    "help": "波动小于此值的区间视为平坦。"
+  },
+  "tail_mean_threshold": {
+    "label": "尾部均值阈值",
+    "help": "均值与 0 之差在此值以内的区间视为平坦。"
+  },
+  "groups": {
+    "sampling": "采样",
+    "duration": "时长",
+    "cfg": "CFG（引导）",
+    "speaker": "说话人",
+    "reference": "参考音频",
+    "advanced": "高级",
+    "runtime": "运行时"
+  },
+  "runtime": {
+    "device": "模型设备",
+    "modelPrecision": "模型精度",
+    "codecDevice": "编解码器设备",
+    "codecPrecision": "编解码器精度",
+    "compile": "torch.compile",
+    "on": "开",
+    "off": "关",
+    "hint": "更改这些选项需要重新加载模型；后续版本将可在设置页面中更改。"
+  },
+  "reset": "恢复默认",
+  "defaultValue": "默认：{{value}}",
+  "errors": {
+    "type": "请输入数字",
+    "integer": "请输入整数",
+    "required": "请输入值",
+    "below_minimum": "不能小于 {{min}}",
+    "above_maximum": "不能大于 {{max}}",
+    "choice": "请从选项中选择",
+    "requires_pair": "请同时设置 k 和 σ",
+    "above_cfg_max_t": "下限不能大于上限",
+    "joint_requires_equal_scales": "joint 模式下，所有已启用的 CFG 强度必须相同",
+    "unknown": "此设置不适用于该模型",
+    "upstream": "模型不接受此组合"
+  }
+}

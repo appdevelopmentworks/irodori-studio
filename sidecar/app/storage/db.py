@@ -63,6 +63,10 @@ MIGRATIONS: tuple[str, ...] = (
         bytes         INTEGER NOT NULL
     );
     """,
+    # 2 — Session 3: the candidate the user adopted.
+    """
+    ALTER TABLE history ADD COLUMN adopted_audio_id TEXT;
+    """,
 )
 
 
