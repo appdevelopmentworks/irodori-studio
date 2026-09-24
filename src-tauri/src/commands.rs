@@ -38,6 +38,8 @@ pub enum AppStatus {
     #[default]
     Setup,
     Starting,
+    /// The sidecar answers; the model is loading (D4).
+    LoadingModel,
     Ready,
     Error,
 }
@@ -175,6 +177,9 @@ fn plan_for(inner: &Inner) -> Option<DevicePlan> {
 
 fn start_sidecar(app: &AppHandle) {
     let state = app.state::<AppState>();
+    // A retry after an error replaces any sidecar that is still running.
+    let previous = state.locked().sidecar.take();
+    drop(previous);
     state.set_status(app, AppStatus::Starting, None);
     match launch_sidecar(app, &state) {
         Ok(process) => {
@@ -208,10 +213,17 @@ fn launch_sidecar(app: &AppHandle, state: &AppState) -> Result<SidecarProcess, A
         allowed_origins: &origins,
     };
 
+    let mut process = spawn_healthy(&opts, state)?;
+    state.set_status(app, AppStatus::LoadingModel, None);
+    sidecar::wait_until_model_ready(&mut process, &state.shutting_down)?;
+    Ok(process)
+}
+
+fn spawn_healthy(opts: &SpawnOptions, state: &AppState) -> Result<SidecarProcess, AppError> {
     let mut last_error = None;
     for _ in 0..SIDECAR_START_ATTEMPTS {
         let port = sidecar::pick_free_port()?;
-        let mut process = sidecar::spawn(&opts, port)?;
+        let mut process = sidecar::spawn(opts, port)?;
         match sidecar::wait_until_healthy(&mut process, &state.shutting_down) {
             Ok(()) => return Ok(process),
             // Most likely the port was taken between picking and binding: retry.

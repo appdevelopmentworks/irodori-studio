@@ -25,6 +25,14 @@ export function formatMemory(bytes: number, locale: string): string {
   }).format(gib);
 }
 
+/** A duration in seconds as a plain number ("4.04" / "4,04"); the unit is in the copy. */
+export function formatSeconds(seconds: number, locale: string, fractionDigits = 1): string {
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(seconds);
+}
+
 export function formatPercent(done: number, total: number, locale: string): string {
   const ratio = total > 0 ? Math.min(done / total, 1) : 0;
   return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(

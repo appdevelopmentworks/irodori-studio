@@ -30,6 +30,8 @@ pub enum ErrorCode {
     SidecarExited,
     SidecarHealthTimeout,
     SidecarNotReady,
+    ModelLoadFailed,
+    ModelLoadTimeout,
 }
 
 impl ErrorCode {
@@ -58,6 +60,8 @@ impl ErrorCode {
             ErrorCode::SidecarExited => "sidecar_exited",
             ErrorCode::SidecarHealthTimeout => "sidecar_health_timeout",
             ErrorCode::SidecarNotReady => "sidecar_not_ready",
+            ErrorCode::ModelLoadFailed => "model_load_failed",
+            ErrorCode::ModelLoadTimeout => "model_load_timeout",
         }
     }
 }

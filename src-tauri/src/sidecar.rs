@@ -1,7 +1,8 @@
 //! Sidecar lifecycle: a free port on 127.0.0.1 (D10, golden rule 3), the runtime venv's
 //! Python running `-m app.main` (D1), output tee'd to `<logs>/sidecar.log`, `/health`
-//! polling, and guaranteed teardown through `ProcessTree` (golden rule 4). The sidecar
-//! also watches this app's pid and exits with it, which covers a forced quit on macOS.
+//! polling (first liveness, then the engine state until the model is resident, D4), and
+//! guaranteed teardown through `ProcessTree` (golden rule 4). The sidecar also watches
+//! this app's pid and exits with it, which covers a forced quit on macOS.
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufRead, BufReader, Read, Write};
@@ -12,6 +13,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use serde::Deserialize;
+
 use crate::bootstrap::{sanitize_env, Marker};
 use crate::error::{AppError, ErrorCode};
 use crate::layout::Layout;
@@ -21,6 +24,9 @@ use crate::platform::{Device, Precision, ProcessTree};
 /// First start imports FastAPI and uvicorn only (torch is imported lazily), but a cold
 /// disk cache on first launch after setup can still take a while.
 const HEALTH_TIMEOUT: Duration = Duration::from_secs(90);
+/// Model load: ≈ 20 s on a warm CUDA machine; reading ~3.5 GB of weights from a slow disk
+/// in CPU mode can take minutes.
+const MODEL_LOAD_TIMEOUT: Duration = Duration::from_secs(15 * 60);
 const LOG_ROTATE_BYTES: u64 = 5 * 1024 * 1024;
 
 pub struct SidecarProcess {
@@ -122,16 +128,8 @@ pub fn wait_until_healthy(
 ) -> Result<(), AppError> {
     let start = Instant::now();
     while start.elapsed() < HEALTH_TIMEOUT {
-        if cancelled.load(Ordering::SeqCst) {
-            return Err(AppError::with_detail(ErrorCode::Internal, "cancelled"));
-        }
-        if let Some(status) = process.exit_status() {
-            return Err(AppError::with_detail(
-                ErrorCode::SidecarExited,
-                status.to_string(),
-            ));
-        }
-        if health_ok(process.port) {
+        check_alive(process, cancelled)?;
+        if health(process.port).is_some() {
             return Ok(());
         }
         thread::sleep(Duration::from_millis(250));
@@ -139,21 +137,77 @@ pub fn wait_until_healthy(
     Err(AppError::new(ErrorCode::SidecarHealthTimeout))
 }
 
-fn health_ok(port: u16) -> bool {
+/// After `/health` answers, the sidecar loads the model in the background (D4); poll the
+/// engine state it reports until the model is ready or has failed to load.
+pub fn wait_until_model_ready(
+    process: &mut SidecarProcess,
+    cancelled: &AtomicBool,
+) -> Result<(), AppError> {
+    let start = Instant::now();
+    while start.elapsed() < MODEL_LOAD_TIMEOUT {
+        check_alive(process, cancelled)?;
+        if let Some(engine) = health(process.port).and_then(|body| body.engine) {
+            match engine.state.as_str() {
+                "ready" => return Ok(()),
+                "error" => {
+                    return Err(AppError::with_detail(
+                        ErrorCode::ModelLoadFailed,
+                        engine.error_code.unwrap_or_default(),
+                    ))
+                }
+                _ => {}
+            }
+        }
+        thread::sleep(Duration::from_millis(500));
+    }
+    Err(AppError::new(ErrorCode::ModelLoadTimeout))
+}
+
+fn check_alive(process: &mut SidecarProcess, cancelled: &AtomicBool) -> Result<(), AppError> {
+    if cancelled.load(Ordering::SeqCst) {
+        return Err(AppError::with_detail(ErrorCode::Internal, "cancelled"));
+    }
+    if let Some(status) = process.exit_status() {
+        return Err(AppError::with_detail(
+            ErrorCode::SidecarExited,
+            status.to_string(),
+        ));
+    }
+    Ok(())
+}
+
+/// `GET /health` body (docs/api-spec.md); only the fields Rust needs.
+#[derive(Debug, Deserialize)]
+struct HealthBody {
+    engine: Option<EngineHealth>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EngineHealth {
+    state: String,
+    error_code: Option<String>,
+}
+
+/// `Some(body)` when `/health` answered 200 with a JSON body.
+fn health(port: u16) -> Option<HealthBody> {
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
-    let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(500)) else {
-        return false;
-    };
+    let mut stream = TcpStream::connect_timeout(&addr, Duration::from_millis(500)).ok()?;
     let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
     let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
     let request =
         format!("GET /health HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n");
-    if stream.write_all(request.as_bytes()).is_err() {
-        return false;
-    }
+    stream.write_all(request.as_bytes()).ok()?;
     let mut response = String::new();
-    let _ = stream.take(4096).read_to_string(&mut response);
-    response.starts_with("HTTP/1.1 200")
+    let _ = stream.take(16 * 1024).read_to_string(&mut response);
+    parse_health(&response)
+}
+
+fn parse_health(response: &str) -> Option<HealthBody> {
+    if !response.starts_with("HTTP/1.1 200") {
+        return None;
+    }
+    let (_, body) = response.split_once("\r\n\r\n")?;
+    serde_json::from_str(body.trim()).ok()
 }
 
 fn tee<R: Read + Send + 'static>(reader: R, log_path: PathBuf) {
@@ -177,4 +231,33 @@ fn tee<R: Read + Send + 'static>(reader: R, log_path: PathBuf) {
 
 fn open_log(path: &Path) -> Option<File> {
     OpenOptions::new().create(true).append(true).open(path).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const OK: &str = "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\n\r\n";
+
+    #[test]
+    fn parses_the_engine_state() {
+        let body = parse_health(&format!(
+            "{OK}{{\"status\":\"ok\",\"engine\":{{\"state\":\"error\",\"model_id\":\"m\",\"error_code\":\"model_files_missing\"}}}}"
+        ))
+        .unwrap();
+        let engine = body.engine.unwrap();
+        assert_eq!(engine.state, "error");
+        assert_eq!(engine.error_code.as_deref(), Some("model_files_missing"));
+    }
+
+    #[test]
+    fn rejects_errors_and_garbage() {
+        assert!(parse_health("HTTP/1.1 500 Internal Server Error\r\n\r\n{}").is_none());
+        assert!(parse_health(&format!("{OK}not json")).is_none());
+        // A body without the engine still counts as healthy.
+        assert!(parse_health(&format!("{OK}{{\"status\":\"ok\"}}"))
+            .unwrap()
+            .engine
+            .is_none());
+    }
 }

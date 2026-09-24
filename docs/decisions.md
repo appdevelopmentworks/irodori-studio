@@ -61,7 +61,7 @@ Same as qwen-tts-desktop: Rust picks a free port on `127.0.0.1`, spawns the side
 ### D12 — Watermark: default ON, user can turn it OFF  `LOCKED` (scope of OFF `OPEN`)
 SilentCipher watermarking is applied by default. A Settings toggle can disable it.
 `OPEN` (owner to decide): whether the toggle is ignored (watermark forced ON) when the generation uses reference audio or a speaker embedding (i.e. voice cloning). Implement the rule in exactly one function, `watermark_policy(request, settings) -> bool`, so either answer is a one-line change.
-**Sub-item `OPEN` (Session 2):** find how upstream applies the watermark (inside `InferenceRuntime.synthesize` when the dependency/model files are present). Determine the cleanest supported way to skip it without editing upstream (runtime flag, constructor option, or calling a lower-level API). Record the finding here.
+**Sub-item `OPEN` (Session 2):** find how upstream applies the watermark (inside `InferenceRuntime.synthesize` when the dependency/model files are present). Determine the cleanest supported way to skip it without editing upstream (runtime flag, constructor option, or calling a lower-level API). Record the finding here. → Resolved in S2 ("S2 — D12 sub-item" below).
 
 ### D13 — Consent gating and first-run terms  `LOCKED`
 First run requires accepting terms that include upstream's ethical restrictions. Creating a voice from imported or recorded audio requires a consent confirmation that is stored with the voice (`consent: {confirmed_at, statement}`) and exported inside voice packages.
@@ -114,7 +114,7 @@ Working name `irodori-studio` for folder and identifiers. Public display name `O
 Where the Space and the CLI defaults differ, use the Space (the owner's parity target). Known difference: `cfg_scale_caption` is 4.0 in the Space vs 3.0 in the CLI docs. Full table in `upstream-notes.md`.
 
 ### D27 — Progress and cancellation granularity  `OPEN`
-Upstream `InferenceRuntime.synthesize` exposes a `log_fn` but no per-step progress or cancel hook (verify at the pinned commit). v1 reports progress per request / per chunk / per line and cancels cooperatively between units. Mid-sampling cancel is `OPEN`; do not patch upstream for it.
+Upstream `InferenceRuntime.synthesize` exposes a `log_fn` but no per-step progress or cancel hook (verify at the pinned commit). v1 reports progress per request / per chunk / per line and cancels cooperatively between units. Mid-sampling cancel is `OPEN`; do not patch upstream for it. → Resolved in S2 ("S2 — D27" below).
 
 ---
 
@@ -152,3 +152,32 @@ Upstream `pyproject.toml` declares `torch>=2.10.0`, `torchaudio>=2.10.0`, `torch
 - **Sidecar lifetime** (golden rule 4): every child runs in its own kill-on-close job object (Windows) or process group (macOS). The sidecar additionally watches the app's pid (`IRODORI_PARENT_PID`): `WaitForSingleObject` on Windows, a 1 s liveness poll on macOS, which covers a forced quit there. A blocking read on the sidecar's stdin was tried first and rejected: on Windows a pending read on the stdin pipe deadlocks `import torch` in another thread.
 - **CORS**: the internal API accepts only the app's own WebView origins. A per-launch auth token for the internal API (defence against local cross-site requests) is a possible hardening for the owner to consider; it would change the "no auth" note in `api-spec.md`.
 - **[mac] acceptance pending**: no Mac was available in S1 (requirements §11 #21). The macOS probe, policy (unit-tested) and process-group code compile in CI's macOS job, but "M2 → MPS, setup completes" and "M1 shows the warning" are unverified on hardware.
+
+### S2 — D12 sub-item: skipping the watermark
+Finding at the pinned commit: `InferenceRuntime.__init__` creates `SilentCipherWatermarker(device=codec_device)`, and every `synthesize` applies it after decoding when `runtime.watermarker.ready` (stage `silentcipher_watermark`). There is no runtime flag or constructor option; if SilentCipher fails to load, upstream only logs a warning and returns unwatermarked audio. Outcome:
+- **OFF:** for exactly that call the adapter swaps `runtime.watermarker` for a disabled stand-in (`ready = False`) and restores it afterwards (the single queue serializes calls); upstream's "watermark is unavailable" warning is dropped for such calls. No upstream edit, no second runtime.
+- **ON but SilentCipher not loaded:** the job fails with `watermark_unavailable` and `GET /system` lists the issue, so default ON never lapses silently.
+- The toggle is `Preferences.watermark_enabled` (sidecar database, below); `services/policy.py::watermark_policy()` still makes the decision. Requirements §11 #4 option B is `FORCE_WATERMARK_FOR_CLONING = True` (one line).
+
+### S2 — D27: progress and cancellation
+Verified at the pinned commit: `synthesize` takes only `log_fn`; `sample_euler_rf_cfg` and `sample_euler_meanflow` have no callback. Outcome:
+- After loading, the adapter wraps the model's `forward_with_encoded_conditions` instance attribute once — the attribute upstream itself replaces for torch.compile, and (by code reading; no LoRA adapter was at hand to test) the one LoRA's `PeftModel` forwards attribute lookups to. Every sampling step has its own strictly decreasing `t`, so a new `t` marks a new step: the wrapper emits `progress {done, total, unit: "step"}` and checks for cancellation there.
+- Cancelling a running job raises `SynthesisCancelled` inside sampling; upstream's lock, LoRA context and inference mode unwind normally and the next request works (GPU smoke test). Measured on an RTX 5090: cancel requested at step 10/120 → `cancelled` 52 ms later. Outside sampling (reference encode, duration prediction, decode, watermark: each < 0.2 s on a GPU) cancellation is checked between stages, and a result that completes anyway is discarded. Queued jobs are removed immediately.
+- If an upstream bump changes this call path, progress stops arriving and cancellation degrades to between stages; `test_progress_and_cancel_mid_sampling` (marker `gpu`) catches that.
+
+### S2 — Engine, jobs and storage
+- **Model load (D4):** the sidecar starts loading the default model as soon as it serves; `GET /health` reports `engine.state` (`loading → ready | error`). Rust shows `loading_model` between `starting` and `ready` and fails with `model_load_failed` (detail = the sidecar's code, e.g. `model_files_missing`) or `model_load_timeout` (15 min). Jobs submitted meanwhile wait in the queue.
+- **Upstream loading:** `InferenceRuntime.from_key` on local paths (`model.safetensors` with its sibling `tokenizer/`, codec `weights.pth`) — no network — and not through `get_cached_runtime`, because `EngineHost` owns residency. At load the adapter checks that every parameter-table name is a `SamplingRequest` field (`upstream_incompatible` otherwise).
+- **Runtime options** come from the setup marker: model precision = the plan's (bf16 only on CUDA); the codec runs on the model's device and always in fp32 (small, and the audio path is where precision is audible).
+- **Parameters:** `engine/params.py` is the single table (32 per-request parameters with Space defaults, including upstream's `tail_*` trim settings for CLI parity). It drives validation and `GET /models/active/capabilities`; `capabilities.param_defaults` (per-model defaults) and `ignores` tags (`cfg`, `sway`, `speaker_kv`) keep MeanFlow or Large a data-only change.
+- **Seeds** are `0 … 2^53−1` because JSON numbers must survive JavaScript; the sidecar draws random seeds itself in that range and always passes an explicit seed upstream. Same seed + parameters → byte-identical WAV on CUDA (verified).
+- **Reference clips:** uploads are normalized to float32 WAV (soundfile reads WAV/FLAC/OGG/Opus/MP3; the bundled ffmpeg handles the rest) and encoded once into a latent cached per clip, keyed by codec revision, device, precision and preprocessing; generations pass these as `ref_latents` (upstream's `--ref-latents` path). The encoder mirrors upstream's waveform path (soundfile decode, single-clip trim to the checkpoint's `max_ref_seconds`): with the same seed, a stereo 44.1 kHz clip gave bit-identical audio through upstream's `ref_wavs` and through the cached latent (RTX 5090), so results match the Space's waveform path. Encoding ≈ 0.19 s once, then nothing.
+- **Sidecar preferences** (watermark, history limits) live in the SQLite `preferences` table and apply immediately — also to the external API, which never passes through the UI. Restart-level settings (locale, data root, device) stay in Rust's settings.json (D16).
+- **Storage:** `<data-root>/irodori-studio.db` (WAL, migrations tracked by `PRAGMA user_version`); history audio in `history/<history_id>/<audio_id>.wav` (48 kHz mono PCM16); clips in `clips/<clip_id>/` with `audio.wav` and `latents/`. History keeps the request as submitted plus every resolved parameter; pruning (500 entries / 5 GB, D23) runs after each generation and when the limits change.
+- **Emoji palette:** parsed from upstream's source with `ast` (gradio is not installed); `key` = the code points (`u1f442`, `u1f62e_200d_1f4a8`) as the stable i18n id; labels stay upstream's Japanese source text.
+- **Text limits:** 2000 characters of text and 1000 of caption, as sanity bounds (the model itself truncates at `max_text_len` tokens and ~30 s of audio).
+- **Setup step 7** (test generation, requirements §6.2) is a card on the ready screen until Session 3's Quick screen.
+
+### S2 — Measurements (Windows 11, RTX 5090, driver 610.88, fp32, 40 steps)
+- Cold model load 20.5 s; ≈ 5.3 GB VRAM in use afterwards.
+- About 4 s of audio: predict_duration 30–150 ms, sample_rf 610–830 ms, decode_latent 22–55 ms, watermark 9–48 ms — 0.7–1.1 s per request end to end; 4 candidates ≈ 1.0 s.

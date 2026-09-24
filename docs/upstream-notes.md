@@ -17,7 +17,7 @@ Sources:
 - v4.1 = v4-Small with a separately retrained duration predictor (fewer over-long outputs). Same inference interface.
 - Text/caption encoder: fine-tuned ModernBERT-ja-310m, embedded in the checkpoint + bundled `tokenizer/` (no separate ModernBERT download needed).
 - Codec: `Aratako/Semantic-DACVAE-Japanese-32dim` (≈ 0.43 GB), 48 kHz output, 32-dim continuous latents, 25 fps.
-- Watermark: Sony SilentCipher applied automatically when the dependency and model files are available (verify how to skip — D12).
+- Watermark: Sony SilentCipher, applied automatically at the end of every generation when it loaded; upstream has no switch (verified S2; how the app skips it: decisions.md, S2).
 - Upstream `main` tracks the v4/v4.1 codebase including MeanFlow and the forthcoming **v4-Large**.
 - Related (not offered in v1, D5): `-MF` (MeanFlow distilled, default 4 steps; CFG and Sway do not apply), `-Quantized` (torchao int8/int4/fp8; validated on CUDA only; int4 needs compute capability ≥ 8.0), third-party `phasefield-audio/Irodori-TTS-v4.1-Anime`.
 
@@ -46,7 +46,7 @@ result.sample_rate     # 48000
 result.used_seed
 result.stage_timings   # list[(stage, seconds)] — source for our Timings
 result.messages
-runtime.model_cfg.use_speaker_condition_resolved   # (verify)
+runtime.model_cfg.use_speaker_condition_resolved   # True for v4.1-Small (verified S2)
 runtime.unload()
 ```
 
@@ -54,7 +54,16 @@ runtime.unload()
 - `SamplingRequest`: `text, caption, ref_wav, ref_wavs, ref_latent, ref_latents, ref_embed, no_ref, ref_normalize_db=-16.0, ref_ensure_max=True, num_candidates=1, decode_mode="sequential", seconds, duration_scale=1.0, min_seconds=0.5, max_seconds=30.0, max_ref_seconds (None = checkpoint recommendation), max_text_len, max_caption_len, num_steps (None = checkpoint default), cfg_scale_text=3.0, cfg_scale_caption=3.0, cfg_scale_speaker=5.0, cfg_guidance_mode="independent", cfg_scale, cfg_min_t=0.5, cfg_max_t=1.0, truncation_factor, rescale_k, rescale_sigma, context_kv_cache=True, speaker_kv_scale, speaker_kv_min_t, speaker_kv_max_layers, speaker_uncond_mode="mask", seed, t_schedule_mode="linear", sway_coeff=-1.0, trim_tail=True, tail_window_size=20, tail_std_threshold=0.05, tail_mean_threshold=0.1, lora_adapter`.
 - CLI equivalents: `--ref-embed` → `ref_embed`, `--speaker-uncond-mode` → `speaker_uncond_mode`, `--lora-adapter` → `lora_adapter` (all per request); `--compile-model` / `--compile-dynamic` → `RuntimeKey`. The runtime default `cfg_scale_caption` is 3.0; the Space uses 4.0 (D26: follow the Space).
 - Emoji palette data: `EMOJI_PALETTE_ITEMS` in `irodori_tts/gradio_emoji_palette.py` — 45 × `EmojiPaletteItem(emoji, label, description)` with Japanese label/description. That module imports `gradio` at the top, and gradio is not installed (decisions.md, S0), so read the constant without importing the module.
-- Still (verify) for Session 2: how the watermark is applied/skipped (D12 sub-item), progress and cancel hooks (D27), MeanFlow handling at this commit.
+
+Verified in Session 2 (`inference_runtime.py`, `rf.py`, `meanflow.py`, `watermark.py`, `lora.py`):
+- **Watermark:** `InferenceRuntime.__init__` creates `SilentCipherWatermarker(device=codec_device)`; `synthesize` runs `watermarker.encode_batch` after decoding when `watermarker.ready`, else appends the message `warning: SilentCipher watermark is unavailable; …`. No flag or constructor option.
+- **Hooks:** `synthesize(req, *, log_fn=None)` is the only callback. The samplers have no progress or cancel hook; they call `model.forward_with_encoded_conditions(..., t=...)` through the instance attribute, once per step in `independent` CFG mode and up to twice in `joint` / `alternating` (every step has a distinct, strictly decreasing `t`). `synthesize` holds `runtime._infer_lock`, the LoRA context and `torch.inference_mode()` as context managers, so an exception raised inside sampling unwinds cleanly.
+- **Validation:** bad inputs raise `ValueError` (text empty after normalization, `joint` guidance with unequal enabled scales, `rescale_k` without `rescale_sigma`, non-positive `duration_scale` / `truncation_factor`, …). A manual `seconds` is clamped to `[min_seconds 0.5, max_seconds 30]` with a warning. The duration predictor's frame count is averaged over candidates, so all candidates of one request share one length.
+- **Seeds:** `seed=None` draws `secrets.randbits(63)`; the app passes explicit seeds ≤ 2^53−1 instead (decisions.md, S2).
+- **MeanFlow:** chosen from the checkpoint's `flow_parameterization` metadata; default 4 steps; runtime CFG (scales, mode, time bounds) and speaker K/V scaling are ignored; `sample_euler_meanflow` uses a linear schedule (no Sway).
+- **LoRA:** `lora_adapter` loads a PEFT adapter dynamically (`PeftModel` wraps the model; adapters are cached per path; requests without one run under `disable_adapter()`); rejected when `compile_model` is on.
+- **Stage timings** (`SamplingResult.stage_timings`, seconds): `prepare_lora` (with LoRA), `tokenize_text`, `prepare_reference`, `predict_duration`, `sample_rf` / `sample_meanflow`, `unpatchify_latent`, `decode_latent`, `silentcipher_watermark`; plus `total_to_decode`.
+- **Loading:** `InferenceRuntime.from_key` builds the ModernBERT backbone from the config embedded in the safetensors metadata (`AutoConfig.for_model`, no download), finds the bundled tokenizer next to the checkpoint, and loads the codec from a local `weights.pth`; SilentCipher resolves `sony/silentcipher` from the Hugging Face cache (it prints "Downloading the model from the Hugging Face Hub..." even when offline).
 
 ## Dependencies (verified S0)
 
@@ -126,6 +135,8 @@ runtime.unload()
 | int8 / int4 (not offered) | ~1.37 s | ~3.2–3.3 GB |
 
 Stage breakdown (40 steps): predict_duration 131 ms, sample_rf 774 ms, decode_latent 84 ms, watermark 75 ms. Cold model load ≈ 16 s per process. CPU fallback: minutes per sentence. Full CUDA venv ≈ 7.8 GB; HF cache ≈ 5 GB.
+
+Measured in this app (Session 2, Windows 11, RTX 5090, fp32, 40 steps, ~4 s of audio): cold model load 20.5 s, ≈ 5.3 GB VRAM in use; predict_duration 30–150 ms, sample_rf 610–830 ms, decode_latent 22–55 ms, watermark 9–48 ms; 0.7–1.1 s per request end to end, 4 candidates ≈ 1.0 s; reference-clip encode ≈ 0.19 s (cached afterwards). Same seed → byte-identical output.
 
 ## macOS / MPS (community reports)
 

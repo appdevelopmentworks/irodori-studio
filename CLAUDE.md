@@ -83,6 +83,8 @@ npm run tauri icon assets/icon.png
 uv sync
 uv run ruff check .
 uv run pytest -m "not gpu"
+# GPU smoke test: a torch venv + a provisioned data root (docs/coding-conventions.md)
+IRODORI_TEST_DATA_ROOT=<data-root> <runtime-venv-python> -m pytest -m gpu tests/test_gpu_smoke.py
 
 # Lint
 npm run lint

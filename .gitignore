@@ -19,6 +19,8 @@ __pycache__/
 *.py[cod]
 .ruff_cache/
 .pytest_cache/
+# Data root of a sidecar started by hand (app/config.py::DEV_DATA_ROOT).
+/sidecar/.dev-data/
 
 # ---- Staged bundle resources (scripts/stage-runtime.*, Session 10) ----
 # Keep the placeholder dirs so resource paths resolve in dev builds, but never

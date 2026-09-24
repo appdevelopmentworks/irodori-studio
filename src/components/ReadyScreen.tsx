@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { createApi } from '@/lib/api';
+import { type Api, createApi } from '@/lib/api';
 import { formatMemory } from '@/lib/format';
 import { getSidecarPort } from '@/lib/tauri';
 import type { SystemInfo } from '@/lib/types';
@@ -11,12 +11,14 @@ import { useAppStore } from '@/store/app';
 
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Screen } from './Screen';
+import { SmokeTest } from './SmokeTest';
 
-// Session 1 placeholder: proves the sidecar is up. Session 3 replaces it with the app
-// shell (docs/project-structure.md).
+// Placeholder until Session 3's app shell (docs/project-structure.md): proves the sidecar
+// and the model are up, with a one-sentence test generation (setup step 7).
 export function ReadyScreen() {
   const { t, i18n } = useTranslation();
   const setPort = useAppStore((s) => s.setPort);
+  const [api, setApi] = useState<Api | null>(null);
   const [system, setSystem] = useState<SystemInfo | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -25,7 +27,9 @@ export function ReadyScreen() {
     getSidecarPort()
       .then((port) => {
         setPort(port);
-        return createApi(port).getSystem();
+        const client = createApi(port);
+        if (active) setApi(client);
+        return client.getSystem();
       })
       .then((info) => active && setSystem(info))
       .catch(() => active && setFailed(true));
@@ -100,6 +104,8 @@ export function ReadyScreen() {
             </p>
           ))}
         </section>
+
+        {api ? <SmokeTest api={api} /> : null}
 
         <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           {t('common.japaneseOnlyNotice')}

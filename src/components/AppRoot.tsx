@@ -73,6 +73,7 @@ export function AppRoot() {
     case 'setup':
       return <SetupWizard />;
     case 'starting':
+    case 'loading_model':
       return <StartupScreen />;
     case 'ready':
       return <ReadyScreen />;

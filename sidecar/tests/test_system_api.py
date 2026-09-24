@@ -14,9 +14,13 @@ def _client(**env: str) -> TestClient:
 
 
 def test_health() -> None:
+    # Without the lifespan (no `with`), nothing starts: the engine stays idle.
     response = _client().get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {
+        "status": "ok",
+        "engine": {"state": "idle", "model_id": "irodori-v4.1-small", "error_code": None},
+    }
 
 
 def test_system_reports_configuration() -> None:

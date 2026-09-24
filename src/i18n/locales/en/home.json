@@ -1,5 +1,6 @@
 {
   "starting": "Starting the speech engine…",
+  "loadingModel": "Loading the speech model… (this can take about a minute)",
   "ready": {
     "heading": "All set",
     "body": "The speech engine is running. The app screens will be added in upcoming versions."
@@ -15,5 +16,20 @@
     "upstream": "Irodori-TTS",
     "loading": "Loading…",
     "failed": "Could not load the system information."
+  },
+  "smokeTest": {
+    "heading": "Test generation",
+    "body": "Generate and play a short sentence to check that speech synthesis works.",
+    "sampleLabel": "Sentence (Japanese)",
+    "sampleText": "こんにちは。これは音声合成の動作確認です。",
+    "generate": "Generate and play",
+    "cancel": "Cancel",
+    "queued": "Waiting in the queue ({{position}} ahead)",
+    "preparing": "Preparing…",
+    "sampling": "Generating… step {{done}} of {{total}}",
+    "cancelled": "Cancelled.",
+    "result": "Seed {{seed}} · {{seconds}} s of audio · generated in {{elapsed}} s",
+    "watermarked": "Watermarked",
+    "notWatermarked": "No watermark"
   }
 }

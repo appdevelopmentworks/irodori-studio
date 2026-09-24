@@ -45,7 +45,7 @@ Conventions for consistency across Claude Code / Codex sessions. Lightweight on 
 - Errors raise typed exceptions mapped to stable codes in `app/errors.py`; never return free-text-only errors.
 - Force UTF-8 at startup. All storage locations from env/args set by Rust; no hardcoded user paths.
 - ffmpeg path from `IRODORI_FFMPEG`; never assume ffmpeg on PATH in installed builds.
-- Tests: pure-Python units (chunker, parsers, SRT, policy, registry, params schema, compat translation) must run without torch in CI. GPU/MPS tests are marked and run manually.
+- Tests: pure-Python units (chunker, parsers, SRT, policy, registry, params schema, compat translation) must run without torch in CI; API and job tests use the fake backend in `tests/conftest.py`. GPU/MPS tests are marked `gpu` and run manually with a torch venv against a provisioned data root, e.g. the app's runtime venv plus pytest: `uv pip install --python <data-root>/runtime/venv/<Scripts|bin>/python pytest`, then from `sidecar/` run `IRODORI_TEST_DATA_ROOT=<data-root> <that python> -m pytest -m gpu tests/test_gpu_smoke.py` (`IRODORI_TEST_DEVICE` picks cuda / mps / cpu).
 
 ## Cross-cutting contract rule
 

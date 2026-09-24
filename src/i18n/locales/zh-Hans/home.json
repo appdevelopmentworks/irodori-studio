@@ -1,5 +1,6 @@
 {
   "starting": "正在启动语音合成引擎…",
+  "loadingModel": "正在加载语音合成模型…（可能需要约一分钟）",
   "ready": {
     "heading": "准备就绪",
     "body": "语音合成引擎已启动。各功能页面将在后续版本中加入。"
@@ -15,5 +16,20 @@
     "upstream": "Irodori-TTS",
     "loading": "正在加载…",
     "failed": "无法获取系统信息。"
+  },
+  "smokeTest": {
+    "heading": "试听测试",
+    "body": "生成并播放一个短句，确认语音合成可以正常工作。",
+    "sampleLabel": "朗读文本（日语）",
+    "sampleText": "こんにちは。これは音声合成の動作確認です。",
+    "generate": "生成并播放",
+    "cancel": "取消",
+    "queued": "排队中（前面还有 {{position}} 个）",
+    "preparing": "正在准备…",
+    "sampling": "正在生成… 第 {{done}} / {{total}} 步",
+    "cancelled": "已取消。",
+    "result": "种子 {{seed}} · 音频 {{seconds}} 秒 · 生成用时 {{elapsed}} 秒",
+    "watermarked": "已添加水印",
+    "notWatermarked": "无水印"
   }
 }

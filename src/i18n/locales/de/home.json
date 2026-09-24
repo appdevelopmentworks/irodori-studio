@@ -1,5 +1,6 @@
 {
   "starting": "Die Sprachsynthese-Engine wird gestartet…",
+  "loadingModel": "Das Sprachmodell wird geladen … (das kann etwa eine Minute dauern)",
   "ready": {
     "heading": "Alles bereit",
     "body": "Die Sprachsynthese-Engine läuft. Die App-Bildschirme folgen in kommenden Versionen."
@@ -15,5 +16,20 @@
     "upstream": "Irodori-TTS",
     "loading": "Wird geladen…",
     "failed": "Die Systeminformationen konnten nicht geladen werden."
+  },
+  "smokeTest": {
+    "heading": "Testgenerierung",
+    "body": "Erzeugen und spielen Sie einen kurzen Satz ab, um die Sprachsynthese zu prüfen.",
+    "sampleLabel": "Satz (Japanisch)",
+    "sampleText": "こんにちは。これは音声合成の動作確認です。",
+    "generate": "Erzeugen und abspielen",
+    "cancel": "Abbrechen",
+    "queued": "In der Warteschlange ({{position}} davor)",
+    "preparing": "Wird vorbereitet …",
+    "sampling": "Wird erzeugt … Schritt {{done}} von {{total}}",
+    "cancelled": "Abgebrochen.",
+    "result": "Seed {{seed}} · {{seconds}} s Audio · erzeugt in {{elapsed}} s",
+    "watermarked": "Mit Wasserzeichen",
+    "notWatermarked": "Ohne Wasserzeichen"
   }
 }

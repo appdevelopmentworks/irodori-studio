@@ -13,8 +13,53 @@ export interface ErrorResponse {
   detail: Record<string, unknown>;
 }
 
+/** Stable error codes of the sidecar (sidecar/app/errors.py). */
+export type SidecarErrorCode =
+  | 'internal_error'
+  | 'torch_unavailable'
+  | 'cuda_unavailable'
+  | 'mps_unavailable'
+  | 'watermark_unavailable'
+  | 'model_load_failed'
+  | 'model_files_missing'
+  | 'model_not_loaded'
+  | 'upstream_incompatible'
+  | 'upstream_unavailable'
+  | 'invalid_request'
+  | 'invalid_params'
+  | 'text_empty'
+  | 'text_too_long'
+  | 'caption_unsupported'
+  | 'reference_unsupported'
+  | 'lora_unsupported'
+  | 'lora_not_found'
+  | 'lora_incompatible_with_compile'
+  | 'embedding_not_found'
+  | 'voice_not_found'
+  | 'clip_not_found'
+  | 'clip_format_unsupported'
+  | 'clip_decode_failed'
+  | 'clip_empty'
+  | 'clip_too_short'
+  | 'clip_too_long'
+  | 'clip_too_large'
+  | 'job_not_found'
+  | 'audio_not_found'
+  | 'history_not_found'
+  | 'synthesis_failed'
+  | 'out_of_memory';
+
+export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
+
+export interface EngineStatus {
+  state: EngineState;
+  model_id: string | null;
+  error_code: string | null;
+}
+
 export interface HealthResponse {
   status: 'ok';
+  engine: EngineStatus;
 }
 
 export interface TorchInfo {
@@ -34,7 +79,12 @@ export interface DeviceInfo {
   memory_used_mb: number | null;
 }
 
-export type SystemIssue = 'torch_unavailable' | 'cuda_unavailable' | 'mps_unavailable';
+export type SystemIssue =
+  | 'torch_unavailable'
+  | 'cuda_unavailable'
+  | 'mps_unavailable'
+  | 'watermark_unavailable'
+  | 'model_load_failed';
 
 export interface SystemInfo {
   app_version: string;
@@ -47,6 +97,242 @@ export interface SystemInfo {
   queue_length: number;
   watermark_available: boolean | null;
   issues: SystemIssue[];
+}
+
+// Models, capabilities and the parameter schema (D5, D26).
+
+export interface Capabilities {
+  caption: boolean;
+  speaker_reference: boolean;
+  speaker_embedding: boolean;
+  lora: boolean;
+  duration_predictor: boolean;
+  max_ref_seconds: number;
+  max_output_seconds: number;
+  sampling: 'rf' | 'meanflow';
+  ignores: string[];
+}
+
+export interface ModelInfo {
+  id: string;
+  display_name: string;
+  tier: string;
+  size_bytes_approx: number;
+  installed: boolean;
+  active: boolean;
+  capabilities: Capabilities;
+}
+
+export type ParamGroup = 'sampling' | 'duration' | 'cfg' | 'speaker' | 'reference' | 'advanced';
+
+export interface ParamSchema {
+  name: keyof SamplingParams;
+  type: 'int' | 'float' | 'bool' | 'enum';
+  default: number | boolean | string | null;
+  nullable: boolean;
+  min: number | null;
+  max: number | null;
+  step: number | null;
+  choices: string[] | null;
+  group: ParamGroup;
+  tier: 'simple' | 'advanced';
+  /** Visible when every key's current value is listed; key "reference" = reference kind. */
+  visible_when: Record<string, (string | boolean)[]> | null;
+}
+
+export interface Limits {
+  max_candidates: number;
+  max_text_chars: number;
+  max_caption_chars: number;
+  max_clips: number;
+  max_clip_seconds: number;
+  max_upload_bytes: number;
+}
+
+export interface ModelCapabilities {
+  model_id: string;
+  display_name: string;
+  capabilities: Capabilities;
+  params: ParamSchema[];
+  limits: Limits;
+}
+
+export interface EmojiItem {
+  symbol: string;
+  /** Stable i18n id (`emoji.<key>`) derived from the code points. */
+  key: string;
+  label_ja: string;
+  description_ja: string;
+}
+
+// Generation.
+
+export type ReferenceInput =
+  | { kind: 'none' }
+  | { kind: 'voice'; voice_id: string }
+  | { kind: 'clips'; clip_ids: string[] }
+  | { kind: 'embedding'; path: string };
+
+/** All optional: omitted = capability default; `null` = auto/off where nullable. */
+export interface SamplingParams {
+  num_steps?: number;
+  num_candidates?: number;
+  seed?: number | null;
+  t_schedule_mode?: 'linear' | 'sway';
+  sway_coeff?: number;
+  truncation_factor?: number | null;
+  rescale_k?: number | null;
+  rescale_sigma?: number | null;
+  context_kv_cache?: boolean;
+  seconds?: number | null;
+  duration_scale?: number;
+  cfg_guidance_mode?: 'independent' | 'joint' | 'alternating';
+  cfg_scale_text?: number;
+  cfg_scale_caption?: number;
+  cfg_scale_speaker?: number;
+  cfg_scale?: number | null;
+  cfg_min_t?: number;
+  cfg_max_t?: number;
+  speaker_kv_scale?: number | null;
+  speaker_kv_min_t?: number | null;
+  speaker_kv_max_layers?: number | null;
+  speaker_uncond_mode?: 'mask' | 'noise';
+  ref_normalize_db?: number | null;
+  ref_ensure_max?: boolean;
+  max_ref_seconds?: number | null;
+  max_text_len?: number | null;
+  max_caption_len?: number | null;
+  decode_mode?: 'sequential' | 'batch';
+  trim_tail?: boolean;
+  tail_window_size?: number;
+  tail_std_threshold?: number;
+  tail_mean_threshold?: number;
+}
+
+export interface SynthesisRequest {
+  text: string;
+  caption?: string | null;
+  reference?: ReferenceInput;
+  lora_adapter?: string | null;
+  params?: SamplingParams;
+  apply_dictionary?: boolean;
+}
+
+export interface JobAccepted {
+  job_id: string;
+  queue_position: number;
+}
+
+export type JobState = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface AudioOutput {
+  index: number;
+  audio_id: string;
+  duration_s: number;
+}
+
+/** Milliseconds per stage (upstream stage names plus encode_reference, write_audio). */
+export type Timings = Record<string, number>;
+
+export interface TtsResult {
+  history_id: string;
+  used_seed: number;
+  timings: Timings;
+  outputs: AudioOutput[];
+  watermarked: boolean;
+}
+
+export interface JobError {
+  code: string;
+  message: string;
+}
+
+export interface JobInfo {
+  job_id: string;
+  kind: 'tts';
+  state: JobState;
+  queue_position: number | null;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  error: JobError | null;
+  result: TtsResult | null;
+}
+
+export interface CancelResponse {
+  job_id: string;
+  state: 'cancelled' | 'cancelling' | 'completed' | 'failed';
+}
+
+export interface QueueItem {
+  job_id: string;
+  kind: 'tts';
+  source: 'ui' | 'api';
+  state: 'queued' | 'running';
+  created_at: string;
+}
+
+export interface QueueSnapshot {
+  running: QueueItem | null;
+  queued: QueueItem[];
+}
+
+/** `GET /jobs/{id}/events` (SSE); the event name is `type`. */
+export type JobEvent =
+  | { type: 'queued'; data: { position: number } }
+  | { type: 'started'; data: Record<string, never> }
+  | { type: 'log'; data: { line: string } }
+  | { type: 'progress'; data: { done: number; total: number; unit: 'step' | 'candidate' | 'chunk' | 'line' } }
+  | { type: 'candidate'; data: AudioOutput }
+  | { type: 'completed'; data: TtsResult }
+  | { type: 'failed'; data: JobError }
+  | { type: 'cancelled'; data: Record<string, never> };
+
+export type JobEventType = JobEvent['type'];
+
+// Clips, history, preferences.
+
+export interface ClipInfo {
+  clip_id: string;
+  filename: string;
+  duration_s: number;
+  sample_rate: number;
+  channels: number;
+  created_at: string;
+}
+
+export interface HistorySummary {
+  id: string;
+  created_at: string;
+  model_id: string;
+  text: string;
+  caption: string | null;
+  reference_kind: ReferenceInput['kind'];
+  used_seed: number;
+  watermarked: boolean;
+  outputs: AudioOutput[];
+}
+
+export interface HistoryEntry extends HistorySummary {
+  /** The request as submitted (unset fields absent). */
+  request: SynthesisRequest;
+  /** Every resolved parameter actually used, including the seed. */
+  params: Required<SamplingParams>;
+  timings: Timings;
+  messages: string[];
+  device: string;
+  precision: string;
+}
+
+export interface HistoryPage {
+  items: HistorySummary[];
+  total: number;
+}
+
+export interface Preferences {
+  watermark_enabled: boolean;
+  history_max_entries: number;
+  history_max_bytes: number;
 }
 
 // ---- Tauri IPC (mirrors src-tauri) ----------------------------------------------------
@@ -74,14 +360,16 @@ export type ErrorCode =
   | 'sidecar_spawn_failed'
   | 'sidecar_exited'
   | 'sidecar_health_timeout'
-  | 'sidecar_not_ready';
+  | 'sidecar_not_ready'
+  | 'model_load_failed'
+  | 'model_load_timeout';
 
 export interface AppError {
   code: ErrorCode;
   detail: string | null;
 }
 
-export type AppStatus = 'setup' | 'starting' | 'ready' | 'error';
+export type AppStatus = 'setup' | 'starting' | 'loading_model' | 'ready' | 'error';
 
 export interface StatusPayload {
   status: AppStatus;

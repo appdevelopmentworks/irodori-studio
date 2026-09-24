@@ -41,7 +41,8 @@ irodori-studio/
 │  │  ├─ library/                 history, presets, projects
 │  │  ├─ api-server/              config, status, request log
 │  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
-│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error/Ready screens, ErrorNotice, LanguageSwitcher;
+│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error/Ready screens, ErrorNotice, LanguageSwitcher,
+│  │                              SmokeTest (setup step 7 on the ready screen until the Quick screen);
 │  │                              later AudioPlayer, CandidateGrid, EmojiPalette, WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
@@ -85,7 +86,8 @@ irodori-studio/
    │  ├─ provision/               run by the Rust bootstrap: download.py (resumable), selfcheck.py, events.py
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
-   │  ├─ routers/                 system, models, tts, jobs, text, voices, narration, script, export, history, presets, projects, api_server
+   │  ├─ routers/                 system, models (+ /emoji), tts, jobs (+ SSE, /queue), audio, clips, history, preferences, deps;
+   │  │                           later text, voices, narration, script, export, presets, projects, api_server
    │  ├─ compat/                  openai.py, voicevox.py (external API)
    │  ├─ engine/
    │  │  ├─ base.py               TtsBackend protocol (D6)
@@ -93,9 +95,11 @@ irodori-studio/
    │  │  ├─ params.py             single parameter table (D26)
    │  │  ├─ irodori_adapter.py    TorchBackend → upstream InferenceRuntime (ONLY upstream import site)
    │  │  └─ host.py               resident EngineHost singleton
-   │  ├─ services/                job_manager, queue, policy (watermark), voices, narration, script, history, presets, projects
+   │  ├─ services/                container (wiring), job_manager (events), queue (single FIFO), synthesis, policy (watermark),
+   │  │                           clips, history, preferences, system_info; later voices, narration, script, presets, projects
    │  ├─ text/                    dictionary.py, reading.py, chunker.py, srt.py, script_parser.py
-   │  ├─ audio/                   io.py, concat.py, export.py (ffmpeg), post.py (loudnorm/atempo/gain)
-   │  └─ storage/                 db.py (SQLite + migrations), files.py
-   └─ tests/                      unit tests that do not need torch (chunker, parser, srt, policy, registry, schemas) + marked GPU tests
+   │  ├─ audio/                   io.py (upload decode, WAV writing); later concat.py, export.py (ffmpeg), post.py (loudnorm/atempo/gain)
+   │  └─ storage/                 db.py (SQLite + migrations), files.py (data-root layout, ULIDs)
+   └─ tests/                      unit tests that do not need torch (fake backend in conftest.py: params, registry, policy, API, jobs)
+                                  + test_gpu_smoke.py (marker `gpu`, real model; see coding-conventions.md)
 ```

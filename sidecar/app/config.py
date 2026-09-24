@@ -16,6 +16,9 @@ from pathlib import Path
 SIDECAR_DIR = Path(__file__).resolve().parents[1]
 MODELS_JSON = SIDECAR_DIR / "models.json"
 UPSTREAM_JSON = SIDECAR_DIR / "upstream.json"
+# Data root for a sidecar started by hand during development (gitignored). The app always
+# passes IRODORI_DATA_ROOT.
+DEV_DATA_ROOT = SIDECAR_DIR / ".dev-data"
 
 DEVICES = ("cuda", "mps", "cpu")
 PRECISIONS = ("fp32", "bf16")
@@ -30,6 +33,10 @@ class SidecarConfig:
     data_root: Path | None
     log_dir: Path | None
     allowed_origins: tuple[str, ...]
+    # HF_HOME (`<data-root>/models`): pinned model repos and the SilentCipher cache.
+    models_dir: Path | None = None
+    # Bundled LGPL ffmpeg (D20), when staged; used to decode uncommon upload formats.
+    ffmpeg: Path | None = None
 
     @classmethod
     def from_env(cls, *, port: int, environ: Mapping[str, str] = os.environ) -> SidecarConfig:
@@ -50,7 +57,17 @@ class SidecarConfig:
             data_root=_optional_path(environ.get("IRODORI_DATA_ROOT")),
             log_dir=_optional_path(environ.get("IRODORI_LOG_DIR")),
             allowed_origins=origins,
+            models_dir=_optional_path(environ.get("HF_HOME")),
+            ffmpeg=_optional_path(environ.get("IRODORI_FFMPEG")),
         )
+
+    @property
+    def root(self) -> Path:
+        return self.data_root or DEV_DATA_ROOT
+
+    @property
+    def models_root(self) -> Path:
+        return self.models_dir or self.root / "models"
 
 
 def upstream_commit() -> str | None:
