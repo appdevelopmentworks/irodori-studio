@@ -2,6 +2,7 @@
 // `get_sidecar_port` Tauri command via the app store (D10); never write a port literal.
 import type {
   AssembledNarration,
+  AssembledScript,
   AudioFormat,
   CancelResponse,
   ChunkPatch,
@@ -12,12 +13,15 @@ import type {
   EmojiItem,
   ExportedFile,
   ErrorResponse,
+  FileNames,
   HealthResponse,
   HistoryEntry,
   HistoryPage,
   HistoryPatch,
   JobAccepted,
   JobInfo,
+  LineInsert,
+  LinePatch,
   ModelCapabilities,
   ModelInfo,
   Narration,
@@ -32,6 +36,15 @@ import type {
   ReadingResult,
   RenderRequest,
   SavedFile,
+  Script,
+  ScriptCreate,
+  ScriptExported,
+  ScriptExportRequest,
+  ScriptImport,
+  ScriptPatch,
+  ScriptRenderRequest,
+  ScriptSummary,
+  ScriptTableRequest,
   SynthesisRequest,
   SystemInfo,
   Voice,
@@ -158,6 +171,42 @@ export function createApi(port: number) {
       send<AssembledNarration>(`${base}/narrations/${id}/assemble`, { method: 'POST' }),
     exportNarration: (id: string, body: NarrationExportRequest) =>
       send<NarrationExported>(`${base}/narrations/${id}/export`, json('POST', body)),
+
+    listScripts: () => send<ScriptSummary[]>(`${base}/scripts`),
+    createScript: (body: ScriptCreate) => send<Script>(`${base}/scripts`, json('POST', body)),
+    getScript: (id: string) => send<Script>(`${base}/scripts/${id}`),
+    updateScript: (id: string, patch: ScriptPatch) =>
+      send<Script>(`${base}/scripts/${id}`, json('PATCH', patch)),
+    deleteScript: (id: string) => send<void>(`${base}/scripts/${id}`, { method: 'DELETE' }),
+    /** More lines from text or a table (`replace` discards every take). */
+    importScript: (id: string, body: ScriptImport) =>
+      send<Script>(`${base}/scripts/${id}/import`, json('POST', body)),
+    insertLine: (id: string, body: LineInsert) =>
+      send<Script>(`${base}/scripts/${id}/lines`, json('POST', body)),
+    updateLine: (id: string, lineId: string, patch: LinePatch) =>
+      send<Script>(`${base}/scripts/${id}/lines/${lineId}`, json('PATCH', patch)),
+    deleteLine: (id: string, lineId: string) =>
+      send<Script>(`${base}/scripts/${id}/lines/${lineId}`, { method: 'DELETE' }),
+    moveLine: (id: string, lineId: string, position: number) =>
+      send<Script>(`${base}/scripts/${id}/lines/${lineId}/move`, json('POST', { position })),
+    /** `null` when no line needs rendering. */
+    renderScript: (id: string, body: ScriptRenderRequest = {}) =>
+      send<JobAccepted | null>(`${base}/scripts/${id}/render`, json('POST', body)),
+    assembleScript: (id: string) =>
+      send<AssembledScript>(`${base}/scripts/${id}/assemble`, { method: 'POST' }),
+    /** Per-line files, the merged drama and subtitles into a folder (files of the same
+     * name are overwritten). */
+    exportScript: (id: string, body: ScriptExportRequest) =>
+      send<ScriptExported>(`${base}/scripts/${id}/export`, json('POST', body)),
+    /** The per-line file names a naming template gives (to preview it). */
+    previewFileNames: (id: string, namingTemplate: string) =>
+      send<FileNames>(
+        `${base}/scripts/${id}/file-names`,
+        json('POST', { naming_template: namingTemplate }),
+      ),
+    /** The lines as CSV / TSV (UTF-8 with a BOM) at an absolute path. */
+    exportScriptTable: (id: string, body: ScriptTableRequest) =>
+      send<ExportedFile>(`${base}/scripts/${id}/table`, json('POST', body)),
 
     getHistory: (params: { limit?: number; offset?: number; q?: string } = {}) => {
       const query = new URLSearchParams();

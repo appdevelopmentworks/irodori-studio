@@ -30,6 +30,7 @@ from app.routers import (
     models,
     narration,
     preferences,
+    script,
     system,
     text,
     tts,
@@ -75,6 +76,7 @@ def create_app(
         voices,
         text,
         narration,
+        script,
         history,
         preferences,
     ):

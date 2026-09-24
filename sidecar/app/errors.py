@@ -66,6 +66,13 @@ class ErrorCode(str, Enum):
     CHUNK_NOT_FOUND = "chunk_not_found"
     NARRATION_BUSY = "narration_busy"
     NARRATION_INCOMPLETE = "narration_incomplete"
+    # Scripts (Session 6).
+    SCRIPT_INVALID = "script_invalid"
+    SCRIPT_NOT_FOUND = "script_not_found"
+    LINE_NOT_FOUND = "line_not_found"
+    SCRIPT_BUSY = "script_busy"
+    SCRIPT_INCOMPLETE = "script_incomplete"
+    NAMING_TEMPLATE_INVALID = "naming_template_invalid"
     # Jobs and stored results.
     JOB_NOT_FOUND = "job_not_found"
     AUDIO_NOT_FOUND = "audio_not_found"

@@ -62,7 +62,13 @@ export type SidecarErrorCode =
   | 'narration_not_found'
   | 'chunk_not_found'
   | 'narration_busy'
-  | 'narration_incomplete';
+  | 'narration_incomplete'
+  | 'script_invalid'
+  | 'script_not_found'
+  | 'line_not_found'
+  | 'script_busy'
+  | 'script_incomplete'
+  | 'naming_template_invalid';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -276,7 +282,7 @@ export interface JobError {
   message: string;
 }
 
-export type JobKind = 'tts' | 'encode' | 'narration';
+export type JobKind = 'tts' | 'encode' | 'narration' | 'script';
 
 export interface JobInfo {
   job_id: string;
@@ -287,7 +293,7 @@ export interface JobInfo {
   started_at: string | null;
   finished_at: string | null;
   error: JobError | null;
-  result: TtsResult | EncodeResult | NarrationResult | null;
+  result: TtsResult | EncodeResult | NarrationResult | ScriptResult | null;
 }
 
 export interface CancelResponse {
@@ -320,10 +326,24 @@ export interface NarrationResult {
   rendered: number;
 }
 
+/** Result of a `script` render job. */
+export interface ScriptResult {
+  script_id: string;
+  rendered: number;
+}
+
 /** `chunk` event of a narration render: a chunk's new takes (the first one adopted). */
 export interface ChunkRendered {
   index: number;
-  takes: NarrationTake[];
+  takes: Take[];
+  adopted_audio_id: string;
+}
+
+/** `line` event of a script render: a line's new takes (the first one adopted). */
+export interface LineRendered {
+  line_id: string;
+  index: number;
+  takes: Take[];
   adopted_audio_id: string;
 }
 
@@ -337,6 +357,7 @@ export type JobEvent<R = TtsResult> =
   | { type: 'progress'; data: { done: number; total: number; unit: ProgressUnit } }
   | { type: 'candidate'; data: AudioOutput }
   | { type: 'chunk'; data: ChunkRendered }
+  | { type: 'line'; data: LineRendered }
   | { type: 'completed'; data: R }
   | { type: 'failed'; data: JobError }
   | { type: 'cancelled'; data: Record<string, never> };
@@ -555,7 +576,8 @@ export interface SubtitleCue extends Cue {
   text: string;
 }
 
-export interface NarrationTake {
+/** Generated audio of a narration chunk or a script line; plays via `/audio/{id}`. */
+export interface Take {
   audio_id: string;
   duration_s: number;
   seed: number;
@@ -571,7 +593,7 @@ export interface NarrationChunk {
   estimated_seconds: number;
   /** SRT input: the cue this chunk must fit. */
   cue: Cue | null;
-  takes: NarrationTake[];
+  takes: Take[];
   adopted_audio_id: string | null;
 }
 
@@ -655,6 +677,159 @@ export interface NarrationExportRequest {
 
 export interface NarrationExported {
   files: ExportedFile[];
+}
+
+// Scripts (requirements §6.7).
+
+export type ScriptFormat = 'text' | 'csv' | 'tsv';
+
+/** Who says a line: a library voice (its defaults apply) or none, plus a caption for all
+ * of the speaker's lines (a line's own caption wins). */
+export interface ScriptSpeaker {
+  name: string;
+  voice_id: string | null;
+  caption: string | null;
+}
+
+export interface ScriptSettings {
+  /** For every line, over each voice's defaults; a line's own values win. */
+  params: SamplingParams;
+  /** After a line, unless the line says otherwise. */
+  pause_ms: number;
+  /** Per-line file names: {index} 001, {n} 1, {speaker}, {text_head}, {title}, {id}. */
+  naming_template: string;
+  /** "話者：セリフ" in the subtitles. */
+  subtitle_speakers: boolean;
+  apply_dictionary: boolean;
+}
+
+export interface ScriptLineInput {
+  speaker: string;
+  text: string;
+  caption?: string | null;
+  num_candidates?: number | null;
+  seed?: number | null;
+  pause_ms?: number | null;
+  /** Instead of the naming template. */
+  file_name?: string | null;
+}
+
+export interface ScriptLine {
+  id: string;
+  index: number;
+  speaker: string;
+  text: string;
+  caption: string | null;
+  num_candidates: number | null;
+  seed: number | null;
+  pause_ms: number | null;
+  file_name: string | null;
+  takes: Take[];
+  adopted_audio_id: string | null;
+}
+
+export interface ScriptCue extends SubtitleCue {
+  line_id: string;
+  speaker: string;
+}
+
+export interface AssembledScript {
+  audio_id: string;
+  duration_s: number;
+  cues: ScriptCue[];
+}
+
+export interface Script {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  speakers: ScriptSpeaker[];
+  settings: ScriptSettings;
+  lines: ScriptLine[];
+  assembled: AssembledScript | null;
+  /** The render job queued or running, to follow. */
+  render_job_id: string | null;
+}
+
+export interface ScriptSummary {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  lines: number;
+  rendered: number;
+  speakers: number;
+}
+
+export interface ScriptCreate {
+  title?: string | null;
+  source: string;
+  format?: ScriptFormat;
+  settings?: ScriptSettings;
+}
+
+export interface ScriptImport {
+  source: string;
+  format?: ScriptFormat;
+  /** `replace` discards every line and take; `append` adds at the end. */
+  mode?: 'replace' | 'append';
+}
+
+export interface ScriptPatch {
+  title?: string;
+  settings?: ScriptSettings;
+  speakers?: ScriptSpeaker[];
+}
+
+/** Only the fields sent change (`null` clears). New text or another speaker discards
+ * the line's takes. */
+export interface LinePatch {
+  speaker?: string;
+  text?: string;
+  caption?: string | null;
+  num_candidates?: number | null;
+  seed?: number | null;
+  pause_ms?: number | null;
+  file_name?: string | null;
+  adopted_audio_id?: string | null;
+}
+
+export interface LineInsert {
+  line: ScriptLineInput;
+  /** Omitted: at the end. */
+  position?: number | null;
+}
+
+export interface ScriptRenderRequest {
+  /** Omitted: every line without an adopted take (resume). */
+  line_ids?: string[] | null;
+  /** Also lines that have takes (a new take is added and adopted). */
+  redo?: boolean;
+  num_candidates?: number | null;
+}
+
+export interface ScriptExportRequest {
+  /** Absolute, from the native folder dialog. */
+  folder: string;
+  format?: AudioFormat;
+  per_line?: boolean;
+  merged?: boolean;
+  subtitles?: ('srt' | 'vtt')[];
+}
+
+export interface ScriptTableRequest {
+  path: string;
+  format?: 'csv' | 'tsv';
+}
+
+export interface ScriptExported {
+  files: ExportedFile[];
+}
+
+export interface FileNames {
+  /** Per line, without the extension. */
+  names: string[];
 }
 
 export interface Preferences {

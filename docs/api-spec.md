@@ -30,6 +30,7 @@ type ReferenceInput =
 // Names mirror upstream SamplingRequest. Every field is optional: omitted = the model's
 // default (HF Space values, D26); `null` = auto/off where nullable. Ranges, groups, tiers
 // and visibility are served by GET /models/active/capabilities (engine/params.py).
+// Responses carry only the fields that were given: an omitted field never comes back as `null`.
 type SamplingParams = {
   num_steps?: number;               // 1–120, default 40
   num_candidates?: number;          // 1–32, default 1
@@ -202,15 +203,16 @@ type AudioOutput = { index: number; audio_id: string; duration_s: number };
 type TtsResult = { history_id: string; used_seed: number; timings: Timings; outputs: AudioOutput[]; watermarked: boolean };
 type EncodeResult = { voice_id: string; encoded: number }; // clips encoded by an "encode" job
 type NarrationResult = { narration_id: string; rendered: number }; // chunks rendered by a "narration" job
+type ScriptResult = { script_id: string; rendered: number };        // lines rendered by a "script" job
 type JobInfo = {
-  job_id: string; kind: "tts" | "encode" | "narration";
+  job_id: string; kind: "tts" | "encode" | "narration" | "script";
   state: "queued" | "running" | "completed" | "failed" | "cancelled";
   queue_position: number | null;       // while queued
   created_at: string; started_at: string | null; finished_at: string | null;
   error: { code: string; message: string } | null;
-  result: TtsResult | EncodeResult | NarrationResult | null;
+  result: TtsResult | EncodeResult | NarrationResult | ScriptResult | null;
 };
-type QueueItem = { job_id: string; kind: "tts" | "encode" | "narration"; source: "ui" | "api"; state: "queued" | "running"; created_at: string };
+type QueueItem = { job_id: string; kind: "tts" | "encode" | "narration" | "script"; source: "ui" | "api"; state: "queued" | "running"; created_at: string };
 type QueueSnapshot = { running: QueueItem | null; queued: QueueItem[] };
 ```
 
@@ -221,14 +223,15 @@ SSE (`text/event-stream`): each event has `event: <type>`, `id: <sequence number
 | `queued` | `{position}`: on submit and whenever the position changes |
 | `started` | `{}` |
 | `log` | `{line}`: upstream and sidecar log lines (developer text) |
-| `progress` | `{done, total, unit}`: `unit` is `"step"` (sampling steps) for single generations and for the chunk being rendered, `"clip"` for encode jobs (after each clip), `"chunk"` for narration jobs (after each chunk); `"line"` for script jobs later |
+| `progress` | `{done, total, unit}`: `unit` is `"step"` (sampling steps) for single generations and for the chunk being rendered, `"clip"` for encode jobs (after each clip), `"chunk"` for narration jobs (after each chunk), `"line"` for script jobs (after each line) |
 | `candidate` | `AudioOutput`, one per candidate, before `completed` |
-| `chunk` | narration jobs: `{index, takes: NarrationTake[], adopted_audio_id}` — a chunk's new takes (the first one adopted) |
-| `completed` | `TtsResult`, `EncodeResult` for an encode job, `NarrationResult` for a narration job (terminal) |
+| `chunk` | narration jobs: `{index, takes: Take[], adopted_audio_id}` — a chunk's new takes (the first one adopted) |
+| `line` | script jobs: `{line_id, index, takes: Take[], adopted_audio_id}` — a line's new takes (the first one adopted) |
+| `completed` | `TtsResult`, `EncodeResult` for an encode job, `NarrationResult` for a narration job, `ScriptResult` for a script job (terminal) |
 | `failed` | `{code, message}` (terminal) |
 | `cancelled` | `{}` (terminal) |
 
-A single generation streams `queued → started → log / progress … → candidate × N → completed`; an encode job `queued → started → log / progress (unit "clip") … → completed`; a narration job `queued → started → (progress "step" … → chunk → progress "chunk") × chunks → completed`. Failures detected only at run time include `watermark_unavailable` (the watermark is on but SilentCipher did not load, D12), `model_load_failed` / `model_files_missing`, `out_of_memory`, `invalid_params` (rejected upstream) and `synthesis_failed`.
+A single generation streams `queued → started → log / progress … → candidate × N → completed`; an encode job `queued → started → log / progress (unit "clip") … → completed`; a narration job `queued → started → (progress "step" … → chunk → progress "chunk") × chunks → completed`; a script job `queued → started → (progress "step" … → line → progress "line") × lines → completed` (a line edited or deleted meanwhile sends no `line` event). Failures detected only at run time include `watermark_unavailable` (the watermark is on but SilentCipher did not load, D12), `model_load_failed` / `model_files_missing`, `out_of_memory`, `invalid_params` (rejected upstream) and `synthesis_failed`.
 
 ### Clips
 Reference audio: ad-hoc clips for `ReferenceInput.kind = "clips"`, and the clips a library voice owns (upload first, then list them in `POST /voices` / `PATCH /voices/{id}`). A clip is stored once as float WAV with its encoded latents cached per model/codec/normalization. Edits never change a clip: trim and split create new clips that take its place (inside its voice too) and delete it. Clips no voice owns are deleted a day after upload, at sidecar start (D13).
@@ -376,11 +379,12 @@ type NarrationSettings = {
   voice_lock: boolean;                 // default true: without speaker audio, chunk 1's take is the others' reference
   apply_dictionary: boolean;           // default true
 };
-type NarrationTake = { audio_id: string; duration_s: number; seed: number; truncated: boolean; created_at: string };
+// A narration chunk's or a script line's generated audio; `truncated`: within 50 ms of the output limit.
+type Take = { audio_id: string; duration_s: number; seed: number; truncated: boolean; created_at: string };
 type NarrationChunk = {
   index: number; text: string; pause_after: PauseKind; estimated_seconds: number;
   cue: { start_ms: number; end_ms: number } | null;   // SRT input: generated at the cue's length
-  takes: NarrationTake[]; adopted_audio_id: string | null;
+  takes: Take[]; adopted_audio_id: string | null;
 };
 type SubtitleCue = { index: number; start_ms: number; end_ms: number; text: string };
 type Narration = {
@@ -402,12 +406,63 @@ type NarrationExportRequest = { path: string; format?: AudioFormat; subtitles?: 
 Assembly trims each adopted take's silence (keeping 30 ms before and 60 ms after the sound, threshold −50 dBFS) and places it after the previous one plus the pause (text) or at its cue start (SRT; after the previous take if that one runs long). Subtitle cues are the takes' exact positions; SRT input keeps its cue end when the take starts on time.
 
 ### Script
+Multi-speaker dialogue (requirements §6.7) kept in the sidecar: lines from "話者：セリフ" text or a CSV / TSV table, a speaker → voice map, rendered line by line as one queue job with takes per line, exported as one file per line plus the merged drama with subtitles, and written back as a table. Takes are audio rows owned by the script (never pruned with the history) and play or save through `/audio/{id}`. Lines have stable ids, so their takes survive inserting, deleting and reordering lines.
+
 | Method | Path | Notes |
 | --- | --- | --- |
-| POST | `/script/parse` | `{text}` ("話者：セリフ") or `{csv, delimiter}` → rows |
-| POST | `/script/render` | `{rows[], speaker_map: {speaker: voice_id}, defaults}` → job |
-| POST | `/script/{render_id}/lines/{index}/regenerate` | job |
-| POST | `/script/{render_id}/export` | `{mode: "per_line"|"merged"|"both", naming_template, pause_ms, subtitles}` |
+| GET | `/scripts` | `ScriptSummary[]`, most recently changed first |
+| POST | `/scripts` | `ScriptCreate` → `201 Script`: the source is parsed now. `422 script_invalid` (`detail.reason`: `empty`; `header` — a table without a text column; `value` — with `row` and `column` for a bad number in a table, or `line` for a line out of range), `422 text_too_long` (> 5000 lines), `422 naming_template_invalid` (`detail.token`); settings are validated like a request |
+| GET / DELETE | `/scripts/{id}` | `Script` / `204` (with its audio); `409 script_busy` while rendering |
+| PATCH | `/scripts/{id}` | `ScriptPatch` → `Script`: title, settings (validated like a request) or the speaker map (names unique, `404 voice_not_found`; a speaker the lines use keeps an entry even when left out); clears the assembled file |
+| POST | `/scripts/{id}/import` | `ScriptImport` → `Script`: `append` adds lines at the end; `replace` discards every line and take (`409 script_busy` while rendering) |
+| POST | `/scripts/{id}/lines` | `LineInsert` → `Script` |
+| PATCH / DELETE | `/scripts/{id}/lines/{line_id}` | `LinePatch` → `Script`: new text or another speaker discards the line's takes; `adopted_audio_id` must be one of its takes (`404 audio_not_found`) / → `Script`; `404 line_not_found` |
+| POST | `/scripts/{id}/lines/{line_id}/move` | `{position}` → `Script` |
+| POST | `/scripts/{id}/render` | `ScriptRenderRequest` → `JobAccepted` (kind `script`), or `null` when nothing needs rendering; `409 script_busy` if one is queued or running. Default: every line without an adopted take, in order — resuming after a cancel; `redo` adds and adopts a new take |
+| POST | `/scripts/{id}/assemble` | → `AssembledScript`; `409 script_incomplete` (`detail.missing`: ids of lines without a take) |
+| POST | `/scripts/{id}/export` | `ScriptExportRequest` → `{files: ExportedFile[]}` into an existing folder (files of the same name are replaced): one file per line named by the template, and the merged drama `<title>.<ext>` (assembled first if needed) with `.srt` / `.vtt` beside it; formats as `/audio/{id}/save`; `409 script_incomplete` |
+| POST | `/scripts/{id}/file-names` | `{naming_template}` → `{names: string[]}`: the per-line names (without extension) a template gives, to preview it before saving; `422 naming_template_invalid` |
+| POST | `/scripts/{id}/table` | `ScriptTableRequest` → `ExportedFile`: the lines as CSV / TSV (UTF-8 with a BOM, header row), which `POST /scripts` reads back unchanged |
+
+```ts
+type ScriptFormat = "text" | "csv" | "tsv";
+type ScriptSpeaker = { name: string; voice_id: string | null; caption: string | null }; // name ≤ 32 chars
+type ScriptSettings = {
+  params: SamplingParams;              // every line, over each voice's defaults
+  pause_ms: number;                    // 0–10000, default 500: after a line unless it sets its own
+  naming_template: string;             // default "{index}_{speaker}_{text_head}"
+  subtitle_speakers: boolean;          // default true: "話者：セリフ" (SRT) / "<v 話者>セリフ" (WebVTT)
+  apply_dictionary: boolean;           // default true
+};
+type ScriptLineInput = {
+  speaker: string; text: string;       // text 1–1000 chars
+  caption?: string | null; num_candidates?: number | null; seed?: number | null;
+  pause_ms?: number | null;
+  file_name?: string | null;           // instead of the naming template
+};
+type ScriptLine = Required<ScriptLineInput> & { id: string; index: number; takes: Take[]; adopted_audio_id: string | null };
+type ScriptCue = SubtitleCue & { line_id: string; speaker: string };
+type AssembledScript = { audio_id: string; duration_s: number; cues: ScriptCue[] };
+type Script = {
+  id: string; title: string; created_at: string; updated_at: string;
+  speakers: ScriptSpeaker[]; settings: ScriptSettings; lines: ScriptLine[];
+  assembled: AssembledScript | null;
+  render_job_id: string | null;        // a render queued or running, to follow
+};
+type ScriptSummary = { id: string; title: string; created_at: string; updated_at: string; lines: number; rendered: number; speakers: number };
+type ScriptCreate = { title?: string | null; source: string; format?: ScriptFormat; settings?: ScriptSettings };
+type ScriptImport = { source: string; format?: ScriptFormat; mode?: "replace" | "append" };
+type ScriptPatch = { title?: string; settings?: ScriptSettings; speakers?: ScriptSpeaker[] };
+type LinePatch = Partial<ScriptLineInput> & { adopted_audio_id?: string | null }; // only the fields sent change; null clears
+type LineInsert = { line: ScriptLineInput; position?: number | null };             // omitted: at the end
+type ScriptRenderRequest = { line_ids?: string[] | null; redo?: boolean; num_candidates?: number | null };
+type ScriptExportRequest = { folder: string; format?: AudioFormat; per_line?: boolean; merged?: boolean; subtitles?: ("srt" | "vtt")[] };
+type ScriptTableRequest = { path: string; format?: "csv" | "tsv" };  // the format's extension is applied
+```
+
+Text: one line per text line, as "話者：セリフ", "話者: セリフ" or "話者「セリフ」"; a line without a speaker continues the previous speaker, lines wholly in parentheses (stage directions) are skipped, and 「」 around a whole line are removed. Tables have a header row — `index, speaker, text, caption, candidates, seed, pause_ms, file` or Japanese names such as 話者 / セリフ / キャプション / 候補数 / シード / 行後の間 / ファイル名 (other columns are ignored); a table without a recognized header is read as speaker, text.
+
+Each line's request: the speaker's voice supplies the reference, LoRA and defaults (caption, parameters, seed); the script's parameters override them, and the line's own candidates and seed override those. The caption is the line's, else the speaker's, else the voice default; a speaker without a voice renders without a reference. Assembly trims each adopted take's silence as for narration and joins the takes with each line's pause (`pause_ms`, else the script's); subtitle cues are the takes' exact positions. Per-line file names are the line's own `file_name` or the template (`{index}` zero-padded to at least 3 digits, `{n}`, `{speaker}`, `{text_head}` = the first 12 characters, `{title}`, `{id}`), with characters unsafe on Windows or macOS replaced by `_`, at most 120 characters, and made unique within the script (`_2`, `_3`, …).
 
 ### Export, history filters, presets, projects
 | Method | Path | Notes |

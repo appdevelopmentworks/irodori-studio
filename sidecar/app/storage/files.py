@@ -58,6 +58,11 @@ class DataLayout:
         return self.root / "narrations"
 
     @property
+    def scripts(self) -> Path:
+        """Script audio: line takes and the assembled drama."""
+        return self.root / "scripts"
+
+    @property
     def tmp(self) -> Path:
         return self.root / "runtime" / "tmp"
 

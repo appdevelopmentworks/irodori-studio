@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 
 from app.audio import assemble, export
-from app.audio.io import read_frames, write_wav
+from app.audio.io import read_frames
 from app.engine.base import BackendError, SynthesisCancelled
 from app.engine.host import EngineHost
 from app.errors import ApiError, ErrorCode
@@ -37,7 +37,6 @@ from app.schemas import (
     NarrationSettings,
     NarrationSplit,
     NarrationSummary,
-    NarrationTake,
     NarrationWarning,
     ReferenceClips,
     RenderRequest,
@@ -45,11 +44,13 @@ from app.schemas import (
     SplitRules,
     SubtitleCue,
     SynthesisRequest,
+    Take,
 )
 from app.services.clips import ClipStore
 from app.services.job_manager import Job, JobManager, now_iso
 from app.services.queue import SynthesisQueue
 from app.services.synthesis import RunHooks, SynthesisService, Synthesized
+from app.services.takes import TakeStore
 from app.services.voices import VoiceService
 from app.storage.db import Database
 from app.storage.files import DataLayout, is_id, new_id, remove_tree
@@ -63,8 +64,6 @@ log = logging.getLogger("irodori.narration")
 MAX_CHUNKS = 2000
 # Chunks are packed to stay under this share of the model's output limit (estimates err).
 LENGTH_MARGIN = 0.8
-# A take at least this close to the output limit was probably cut off.
-TRUNCATION_SLACK_S = 0.05
 CLAUSE_PAUSE_SHARE = 0.5  # a chunk split mid-sentence pauses half a sentence pause
 
 
@@ -102,6 +101,9 @@ class NarrationService:
         self._jobs = jobs
         self._queue = queue
         self._ffmpeg = ffmpeg
+        self._takes = TakeStore(
+            db, layout, owner="narration_id", item="chunk_idx", root=layout.narrations
+        )
         self._active: dict[str, str] = {}  # narration id -> its render job
 
     # --- Queries --------------------------------------------------------------------------
@@ -179,7 +181,7 @@ class NarrationService:
                     _dump([w.model_dump() for w in warnings]), now_iso(), narration_id,
                 ),
             )  # fmt: skip
-        self._drop_audio(narration_id, lambda row: True)
+        self._drop_audio(narration_id, lambda item: True)
         self._drop_lock(narration_id)
         return self.require(narration_id)
 
@@ -221,7 +223,7 @@ class NarrationService:
                     (text, seconds, narration_id, index),
                 )
             # A take of other words is useless; a running render drops its result too.
-            self._drop_audio(narration_id, lambda row: row["chunk_idx"] == index)
+            self._drop_audio(narration_id, lambda item: item == index)
         elif "adopted_audio_id" in changes:
             audio_id = body.adopted_audio_id
             if audio_id is not None and audio_id not in {t.audio_id for t in chunk.takes}:
@@ -382,26 +384,9 @@ class NarrationService:
                 end = max(end, chunk.cue.end_ms)  # SRT input keeps its own timing
             cues.append(SubtitleCue(index=chunk.index, start_ms=start, end_ms=end, text=chunk.text))
 
-        self._drop_assembled(narration_id)
-        audio_id = new_id()
-        path = self._layout.narrations / narration_id / f"{audio_id}.wav"
-        size = write_wav(path, audio, rate)
-        duration = round(len(audio) / rate, 3)
+        audio_id, duration = self._takes.write_assembled(narration_id, audio, rate)
         assembled = AssembledNarration(audio_id=audio_id, duration_s=duration, cues=cues)
         with self._db.transaction() as conn:
-            conn.execute(
-                "INSERT INTO audio (id, narration_id, chunk_idx, idx, rel_path, duration_s,"
-                " sample_rate, bytes, created_at) VALUES (?, ?, NULL, 0, ?, ?, ?, ?, ?)",
-                (
-                    audio_id,
-                    narration_id,
-                    self._layout.to_rel(path),
-                    duration,
-                    rate,
-                    size,
-                    now_iso(),
-                ),
-            )
             conn.execute(
                 "UPDATE narrations SET assembled_json = ? WHERE id = ?",
                 (_dump(assembled.model_dump()), narration_id),
@@ -573,85 +558,40 @@ class NarrationService:
 
     def _store_takes(
         self, narration_id: str, chunk: NarrationChunk, done: Synthesized
-    ) -> list[NarrationTake]:
-        folder = self._layout.narrations / narration_id
-        limit = self._host.spec.capabilities.max_output_seconds
-        created = now_iso()
-        takes: list[NarrationTake] = []
-        rows: list[tuple[Any, ...]] = []
-        for index, samples in enumerate(done.audios):
-            audio_id = new_id()
-            path = folder / f"{audio_id}.wav"
-            size = write_wav(path, samples, done.sample_rate)
-            duration = round(len(samples) / done.sample_rate, 3)
-            truncated = chunk.cue is None and duration >= limit - TRUNCATION_SLACK_S
-            takes.append(
-                NarrationTake(
-                    audio_id=audio_id,
-                    duration_s=duration,
-                    seed=done.used_seed,
-                    truncated=truncated,
-                    created_at=created,
-                )
-            )
-            rows.append(
-                (audio_id, narration_id, chunk.index, index, self._layout.to_rel(path), duration,
-                 done.sample_rate, size, done.used_seed, int(truncated), created)
-            )  # fmt: skip
-        with self._db.transaction() as conn:
+    ) -> list[Take]:
+        def commit(conn: Any, takes: list[Take]) -> bool:
             current = conn.execute(
                 "SELECT text FROM narration_chunks WHERE narration_id = ? AND idx = ?",
                 (narration_id, chunk.index),
             ).fetchone()
-            keep = current is not None and current["text"] == chunk.text
-            if keep:
-                conn.executemany(
-                    "INSERT INTO audio (id, narration_id, chunk_idx, idx, rel_path, duration_s,"
-                    " sample_rate, bytes, seed, truncated, created_at)"
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    rows,
-                )
-                conn.execute(
-                    "UPDATE narration_chunks SET adopted_audio_id = ?"
-                    " WHERE narration_id = ? AND idx = ?",
-                    (takes[0].audio_id, narration_id, chunk.index),
-                )
-        if not keep:  # edited or re-split meanwhile
-            for take in takes:
-                (folder / f"{take.audio_id}.wav").unlink(missing_ok=True)
-            return []
-        self._touch(narration_id)
-        self._drop_assembled(narration_id)
+            if current is None or current["text"] != chunk.text:
+                return False  # edited or re-split meanwhile
+            conn.execute(
+                "UPDATE narration_chunks SET adopted_audio_id = ?"
+                " WHERE narration_id = ? AND idx = ?",
+                (takes[0].audio_id, narration_id, chunk.index),
+            )
+            return True
+
+        # A cue sets the length itself: an SRT take at the limit is not cut off.
+        limit = None if chunk.cue else self._host.spec.capabilities.max_output_seconds
+        takes = self._takes.write(narration_id, chunk.index, done, limit_s=limit, commit=commit)
+        if takes:
+            self._touch(narration_id)
+            self._drop_assembled(narration_id)
         return takes
 
     def _drop_audio(self, narration_id: str, which: Any) -> None:
-        """Delete take rows and files selected by `which(row)` (never the assembled file)."""
-        rows = self._db.query(
-            "SELECT id, rel_path, chunk_idx FROM audio"
-            " WHERE narration_id = ? AND chunk_idx IS NOT NULL",
-            (narration_id,),
-        )
-        doomed = [row for row in rows if which(row)]
-        if not doomed:
-            return
-        with self._db.transaction() as conn:
-            conn.executemany("DELETE FROM audio WHERE id = ?", [(row["id"],) for row in doomed])
-        for row in doomed:
-            self._layout.from_rel(row["rel_path"]).unlink(missing_ok=True)
-        self._drop_assembled(narration_id)
+        """Delete the takes of the chunks selected by `which(index)`."""
+        if self._takes.drop(narration_id, which):
+            self._drop_assembled(narration_id)
 
     def _drop_assembled(self, narration_id: str) -> None:
-        rows = self._db.query(
-            "SELECT id, rel_path FROM audio WHERE narration_id = ? AND chunk_idx IS NULL",
-            (narration_id,),
-        )
         with self._db.transaction() as conn:
             conn.execute(
                 "UPDATE narrations SET assembled_json = NULL WHERE id = ?", (narration_id,)
             )
-            conn.executemany("DELETE FROM audio WHERE id = ?", [(row["id"],) for row in rows])
-        for row in rows:
-            self._layout.from_rel(row["rel_path"]).unlink(missing_ok=True)
+        self._takes.drop_assembled(narration_id)
 
     def _touch(self, narration_id: str) -> None:
         with self._db.transaction() as conn:
@@ -664,10 +604,7 @@ class NarrationService:
             raise ApiError(ErrorCode.NARRATION_BUSY, "a render is in progress", status_code=409)
 
     def _audio_path(self, audio_id: str | None) -> Path:
-        row = self._db.query_one("SELECT rel_path FROM audio WHERE id = ?", (audio_id or "",))
-        if row is None:
-            raise ApiError(ErrorCode.AUDIO_NOT_FOUND, "audio not found", status_code=404)
-        return self._layout.from_rel(row["rel_path"])
+        return self._takes.path(audio_id)
 
     def _export_audio(self, source: Path, dest: Path, fmt: str) -> None:
         try:
@@ -677,21 +614,7 @@ class NarrationService:
 
     def _narration(self, row: Any) -> Narration:
         narration_id = row["id"]
-        takes: dict[int, list[NarrationTake]] = {}
-        for audio in self._db.query(
-            "SELECT * FROM audio WHERE narration_id = ? AND chunk_idx IS NOT NULL"
-            " ORDER BY created_at, idx",
-            (narration_id,),
-        ):
-            takes.setdefault(audio["chunk_idx"], []).append(
-                NarrationTake(
-                    audio_id=audio["id"],
-                    duration_s=audio["duration_s"],
-                    seed=audio["seed"] or 0,
-                    truncated=bool(audio["truncated"]),
-                    created_at=audio["created_at"] or "",
-                )
-            )
+        takes = self._takes.by_item(narration_id)
         chunks = [
             NarrationChunk(
                 index=c["idx"],

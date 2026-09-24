@@ -82,12 +82,15 @@ export function requestParams(schema: ParamSchema[], values: ParamValues): Sampl
 }
 
 /** Parameter values from a stored request or a voice's defaults: values equal to the
- * schema default are left out, like values the user never touched. */
+ * schema default are left out, like values the user never touched. A `null` for a
+ * parameter that cannot be off means "not given" too. */
 export function valuesFrom(params: SamplingParams, schema: ParamSchema[]): ParamValues {
   const values: ParamValues = {};
   for (const param of schema) {
     const value = params[param.name];
-    if (value !== undefined && value !== param.default) values[param.name] = value;
+    if (value === undefined || value === param.default) continue;
+    if (value === null && !param.nullable) continue;
+    values[param.name] = value;
   }
   return values;
 }

@@ -5,9 +5,15 @@ Keep in sync with the spec and with src/lib/types.ts in the same change.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    model_serializer,
+)
 
 Device = Literal["cuda", "mps", "cpu"]
 Precision = Literal["fp32", "bf16"]
@@ -214,6 +220,13 @@ class SamplingParams(BaseModel):
     tail_std_threshold: float | None = None
     tail_mean_threshold: float | None = None
 
+    @model_serializer(mode="wrap")
+    def _given_only(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        """Only the values that were given: omitted means the default while `null` means
+        auto/off, so an omitted value must not come back as `null`."""
+        data = handler(self)
+        return {name: value for name, value in data.items() if name in self.model_fields_set}
+
 
 class SynthesisRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -259,12 +272,17 @@ class NarrationResult(BaseModel):
     rendered: int
 
 
+class ScriptResult(BaseModel):
+    script_id: str
+    rendered: int
+
+
 class JobError(BaseModel):
     code: str
     message: str
 
 
-JobKind = Literal["tts", "encode", "narration"]
+JobKind = Literal["tts", "encode", "narration", "script"]
 
 
 class JobInfo(BaseModel):
@@ -276,7 +294,7 @@ class JobInfo(BaseModel):
     started_at: str | None = None
     finished_at: str | None = None
     error: JobError | None = None
-    result: TtsResult | EncodeResult | NarrationResult | None = None
+    result: TtsResult | EncodeResult | NarrationResult | ScriptResult | None = None
 
 
 class CancelResponse(BaseModel):
@@ -568,7 +586,9 @@ class SubtitleCue(Cue):
     text: str
 
 
-class NarrationTake(BaseModel):
+class Take(BaseModel):
+    """A generated take of a narration chunk or a script line."""
+
     audio_id: str
     duration_s: float
     seed: int
@@ -582,7 +602,7 @@ class NarrationChunk(BaseModel):
     pause_after: PauseKind
     estimated_seconds: float
     cue: Cue | None = None  # SRT input: the cue this chunk must fit
-    takes: list[NarrationTake] = []
+    takes: list[Take] = []
     adopted_audio_id: str | None = None
 
 
@@ -678,6 +698,182 @@ class NarrationExportRequest(BaseModel):
 
 class NarrationExported(BaseModel):
     files: list[ExportedFile]
+
+
+# --- Scripts (Session 6) -----------------------------------------------------------------
+
+ScriptFormat = Literal["text", "csv", "tsv"]
+
+
+class ScriptSpeaker(BaseModel):
+    """Who says a line: a library voice (its defaults apply) or none, plus a caption for
+    all of the speaker's lines (a line's own caption wins)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(max_length=32)
+    voice_id: str | None = None
+    caption: str | None = Field(default=None, max_length=1000)
+
+
+class ScriptSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    params: SamplingParams = Field(default_factory=SamplingParams)  # for every line
+    pause_ms: int = Field(default=500, ge=0, le=10_000)  # after a line, unless it says otherwise
+    # Per-line file names: {index} 001, {n} 1, {speaker}, {text_head}, {title}, {id}.
+    naming_template: str = Field(default="{index}_{speaker}_{text_head}", max_length=200)
+    subtitle_speakers: bool = True  # "話者：セリフ" in the subtitles
+    apply_dictionary: bool = True
+
+
+class ScriptLineInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    speaker: str = Field(default="", max_length=32)
+    text: str = Field(min_length=1, max_length=1000)
+    caption: str | None = Field(default=None, max_length=1000)
+    num_candidates: int | None = Field(default=None, ge=1, le=32)
+    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    pause_ms: int | None = Field(default=None, ge=0, le=10_000)
+    file_name: str | None = Field(default=None, max_length=120)  # instead of the template
+
+
+class ScriptLine(ScriptLineInput):
+    id: str
+    index: int
+    takes: list[Take] = []
+    adopted_audio_id: str | None = None
+
+
+class ScriptCue(SubtitleCue):
+    line_id: str
+    speaker: str
+
+
+class AssembledScript(BaseModel):
+    audio_id: str
+    duration_s: float
+    cues: list[ScriptCue]
+
+
+class Script(BaseModel):
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+    speakers: list[ScriptSpeaker]
+    settings: ScriptSettings
+    lines: list[ScriptLine]
+    assembled: AssembledScript | None = None
+    render_job_id: str | None = None
+
+
+class ScriptSummary(BaseModel):
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+    lines: int
+    rendered: int
+    speakers: int
+
+
+class ScriptCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(default=None, max_length=100)
+    source: str = Field(min_length=1, max_length=500_000)
+    format: ScriptFormat = "text"
+    settings: ScriptSettings = Field(default_factory=ScriptSettings)
+
+
+class ScriptImport(BaseModel):
+    """More lines from text or a table: replacing every line (their takes are discarded)
+    or appended at the end."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str = Field(min_length=1, max_length=500_000)
+    format: ScriptFormat = "text"
+    mode: Literal["replace", "append"] = "replace"
+
+
+class ScriptPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(default=None, min_length=1, max_length=100)
+    settings: ScriptSettings | None = None
+    speakers: list[ScriptSpeaker] | None = Field(default=None, max_length=200)
+
+
+class LinePatch(BaseModel):
+    """Only the fields sent change (`null` clears). New text or another speaker discards
+    the line's takes."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    speaker: str | None = Field(default=None, max_length=32)
+    text: str | None = Field(default=None, min_length=1, max_length=1000)
+    caption: str | None = Field(default=None, max_length=1000)
+    num_candidates: int | None = Field(default=None, ge=1, le=32)
+    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    pause_ms: int | None = Field(default=None, ge=0, le=10_000)
+    file_name: str | None = Field(default=None, max_length=120)
+    adopted_audio_id: str | None = None
+
+
+class LineInsert(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    line: ScriptLineInput
+    position: int | None = Field(default=None, ge=0)  # omitted: at the end
+
+
+class LineMove(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    position: int = Field(ge=0)
+
+
+class ScriptRenderRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Lines to render; omitted = every line without an adopted take (resume).
+    line_ids: list[str] | None = Field(default=None, max_length=5000)
+    redo: bool = False
+    num_candidates: int | None = Field(default=None, ge=1, le=32)
+
+
+class ScriptExportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    folder: str  # absolute, from the native folder dialog
+    format: AudioFormat = "wav"
+    per_line: bool = True
+    merged: bool = True
+    subtitles: list[Literal["srt", "vtt"]] = Field(default_factory=lambda: ["srt"])
+
+
+class ScriptTableRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str  # absolute, from the native save dialog
+    format: Literal["csv", "tsv"] = "csv"
+
+
+class ScriptExported(BaseModel):
+    files: list[ExportedFile]
+
+
+class FileNamesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    naming_template: str = Field(max_length=200)
+
+
+class FileNames(BaseModel):
+    names: list[str]  # per line, without the extension
 
 
 # --- Preferences -----------------------------------------------------------------------

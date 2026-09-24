@@ -56,6 +56,30 @@ export function WarningIcon({ className = '' }: IconProps) {
   );
 }
 
+export function PlayIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className={`${base} ${className}`}>
+      <path d="M6.3 3.6A1 1 0 0 0 4.8 4.5v11a1 1 0 0 0 1.5.9l9-5.5a1 1 0 0 0 0-1.8l-9-5.5Z" />
+    </svg>
+  );
+}
+
+export function StopIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className={`${base} ${className}`}>
+      <rect x="5" y="5" width="10" height="10" rx="1.5" />
+    </svg>
+  );
+}
+
+export function PlusIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className={`${base} ${className}`}>
+      <path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1Z" />
+    </svg>
+  );
+}
+
 export function Spinner({ className = '' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={`${base} animate-spin ${className}`}>

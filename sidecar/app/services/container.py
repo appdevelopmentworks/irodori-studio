@@ -17,6 +17,7 @@ from app.services.job_manager import Job, JobManager
 from app.services.narration import NarrationService
 from app.services.preferences import PreferencesStore
 from app.services.queue import SynthesisQueue
+from app.services.script import ScriptService
 from app.services.synthesis import SynthesisService
 from app.services.voices import VoiceService
 from app.storage.db import Database
@@ -42,6 +43,7 @@ class Services:
     dictionary: DictionaryStore
     reader: Reader
     narration: NarrationService
+    script: ScriptService
     autoload: bool = True
 
     def start(self) -> None:
@@ -79,14 +81,17 @@ def build_services(
     synthesis: SynthesisService | None = None
     voices: VoiceService | None = None
     narration: NarrationService | None = None
+    script: ScriptService | None = None
 
     def execute(job: Job) -> None:
-        # One queue for all GPU work (D24): generations, voice encoding, narrations.
-        assert synthesis is not None and voices is not None and narration is not None
+        # One queue for all GPU work (D24): generations, voice encoding, narrations, scripts.
+        assert synthesis and voices and narration and script
         if job.kind == "encode":
             voices.execute_encode(job)
         elif job.kind == "narration":
             narration.execute_render(job)
+        elif job.kind == "script":
+            script.execute_render(job)
         else:
             synthesis.execute(job)
 
@@ -125,6 +130,16 @@ def build_services(
         queue=queue,
         ffmpeg=config.ffmpeg,
     )
+    script = ScriptService(
+        db=db,
+        layout=layout,
+        host=host,
+        synthesis=synthesis,
+        voices=voices,
+        jobs=jobs,
+        queue=queue,
+        ffmpeg=config.ffmpeg,
+    )
     return Services(
         config=config,
         registry=registry,
@@ -141,5 +156,6 @@ def build_services(
         dictionary=dictionary,
         reader=reader,
         narration=narration,
+        script=script,
         autoload=autoload,
     )

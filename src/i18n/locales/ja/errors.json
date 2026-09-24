@@ -71,6 +71,12 @@
     "narration_not_found": "ナレーションが見つかりません。",
     "chunk_not_found": "チャンクが見つかりません。",
     "narration_busy": "このナレーションは生成中です。完了するかキャンセルしてから操作してください。",
-    "narration_incomplete": "未生成のチャンクがあります。すべて生成してから結合してください。"
+    "narration_incomplete": "未生成のチャンクがあります。すべて生成してから結合してください。",
+    "script_invalid": "台本を読み込めませんでした。形式を確認してください。",
+    "script_not_found": "台本が見つかりません。",
+    "line_not_found": "行が見つかりません。",
+    "script_busy": "この台本は生成中です。完了するかキャンセルしてから操作してください。",
+    "script_incomplete": "未生成の行があります。すべて生成してから結合・書き出ししてください。",
+    "naming_template_invalid": "ファイル名のテンプレートに使えない項目があります。{index}・{n}・{speaker}・{text_head}・{title}・{id} を使ってください。"
   }
 }

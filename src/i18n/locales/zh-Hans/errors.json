@@ -71,6 +71,12 @@
     "narration_not_found": "找不到该旁白。",
     "chunk_not_found": "找不到该片段。",
     "narration_busy": "此旁白正在生成中。请等待完成或先取消。",
-    "narration_incomplete": "还有未生成的片段。请全部生成后再连接。"
+    "narration_incomplete": "还有未生成的片段。请全部生成后再连接。",
+    "script_invalid": "无法读取台本。请检查格式。",
+    "script_not_found": "找不到该台本。",
+    "line_not_found": "找不到该行。",
+    "script_busy": "此台本正在生成中。请等待完成或先取消。",
+    "script_incomplete": "还有未生成的行。请全部生成后再合并或导出。",
+    "naming_template_invalid": "文件名模板中有无法使用的项目。请使用 {index}、{n}、{speaker}、{text_head}、{title}、{id}。"
   }
 }

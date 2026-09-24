@@ -46,7 +46,7 @@ The frontend never talks to upstream directly. Rust owns lifecycle and settings;
 
 - `output: 'export'`; served by Tauri. No runtime Node server (D11).
 - Base URL of the internal API from the `get_sidecar_port` Tauri command. No port literals.
-- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs), `narration` (manuscript, settings draft, render job, reading previews); later `script`. Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
+- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs), `narration` (manuscript, settings draft, render job, reading previews), `script` (import text, open script, settings draft, render job, file-name preview). Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
 - **Capability-driven parameter UI.** The parameter panel is generated from `GET /models/active/capabilities` (a JSON schema-like list of parameters with type, range, default, group, `simple|advanced` tier, `visible_when`). No component hardcodes which parameters a model supports.
 - i18n via `react-i18next` (D17). Locale JSON under `src/i18n/locales/<locale>/`. Sidecar errors arrive as codes and are translated in the frontend.
 - Audio: playback via `<audio>` with blob URLs fetched from `/audio/{id}`; waveform editing (trim/split) with `wavesurfer.js` (regions plugin).
@@ -164,10 +164,11 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 | Data root | user-selected | default `<local-app-data>/data` (not roaming) |
 | Runtime | `<data-root>/runtime/` | `venv/` (recreated if broken), `python/` (uv-managed), `uv-cache/`, `pycache/`, `setup.json` marker |
 | Models | `<data-root>/models` | `HF_HOME`; pinned repos in `pinned/<owner>--<name>/<commit>/`, SilentCipher in `hub/` |
-| Database | `<data-root>/irodori-studio.db` | SQLite (WAL), sidecar-owned: preferences, history + audio, clips, voices, dictionary, narrations; migrations via `PRAGMA user_version` |
+| Database | `<data-root>/irodori-studio.db` | SQLite (WAL), sidecar-owned: preferences, history + audio, clips, voices, dictionary, narrations, scripts; migrations via `PRAGMA user_version` |
 | Voices | `<data-root>/voices/<voice-id>/` | `voice.speaker.safetensors` for embedding voices; the rest of a voice is database rows and its clips |
 | History audio | `<data-root>/history/<history-id>/<audio-id>.wav` | 48 kHz mono PCM16; pruned by D23 |
 | Narration audio | `<data-root>/narrations/<narration-id>/<audio-id>.wav` | chunk takes and the joined file; deleted with the narration, never pruned |
+| Script audio | `<data-root>/scripts/<script-id>/<audio-id>.wav` | line takes and the merged drama; deleted with the script, never pruned |
 | Reference clips | `<data-root>/clips/<clip-id>/` | ad-hoc uploads and library voices' clips: `audio.wav` (float32) + cached `latents/` per model setting; unowned clips are purged after a day |
 | Projects | `<data-root>/projects/` | `.iroproj` |
 | Exports | user-selected default | |
@@ -196,7 +197,7 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 
 ### Script
 
-`POST /script/parse` (text or CSV → rows) → user assigns speakers to voices → `POST /script/render` (job; per-line candidates). Adopted takes → per-line files (naming template) and/or merged drama audio + subtitles.
+`POST /scripts` parses "話者：セリフ" text or a CSV / TSV table (`text/script_parser.py`) into lines with stable ids and derives the speakers → the user maps speakers to library voices (plus a caption per speaker), edits lines in the table (text, caption, candidates, seed, pause, file name; insert, delete, move) → `POST /scripts/{id}/render` queues one `script` job that synthesizes the lines needing a take in order through the same `SynthesisService` path, each request built from voice defaults < script parameters < line values, emitting `line {line_id, takes}` and line progress. Takes are `audio` rows keyed by `script_id` + `line_id` (`services/takes.py`, shared with narration), so they follow their line through edits; new text or another speaker discards a line's takes. `/assemble` joins the adopted takes with each line's pause into one WAV with speaker-tagged cues; `/export` writes one file per line named by the template (previewed via `/file-names`), the merged drama and SRT/VTT into a folder; `/table` writes the lines back as CSV / TSV that `POST /scripts` reads unchanged.
 
 ### External API request
 

@@ -77,6 +77,12 @@ const KNOWN_CODES = new Set<string>([
   'chunk_not_found',
   'narration_busy',
   'narration_incomplete',
+  'script_invalid',
+  'script_not_found',
+  'line_not_found',
+  'script_busy',
+  'script_incomplete',
+  'naming_template_invalid',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

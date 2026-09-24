@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner, WarningIcon } from '@/components/icons';
+import { ProgressBar } from '@/components/ProgressBar';
 import { button, primaryButton, textarea } from '@/components/ui';
 import { formatClock, formatSeconds } from '@/lib/format';
 import { isBusy } from '@/lib/jobs';
@@ -165,8 +166,8 @@ export function ChunkSection({ model }: { model: ModelCapabilities }) {
         </div>
         {busy && (job?.chunks || job?.steps) ? (
           <div className="space-y-1">
-            {job.chunks ? <Bar done={job.chunks.done} total={job.chunks.total} /> : null}
-            {job.steps ? <Bar done={job.steps.done} total={job.steps.total} thin /> : null}
+            {job.chunks ? <ProgressBar done={job.chunks.done} total={job.chunks.total} /> : null}
+            {job.steps ? <ProgressBar done={job.steps.done} total={job.steps.total} thin /> : null}
           </div>
         ) : null}
         {job?.phase === 'completed' && job.result ? (
@@ -204,23 +205,6 @@ export function ChunkSection({ model }: { model: ModelCapabilities }) {
         ))}
       </ol>
     </section>
-  );
-}
-
-function Bar({ done, total, thin = false }: { done: number; total: number; thin?: boolean }) {
-  return (
-    <div
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={total}
-      aria-valuenow={done}
-      className={`${thin ? 'h-1' : 'h-1.5'} overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800`}
-    >
-      <div
-        className={`h-full ${thin ? 'bg-sky-300' : 'bg-sky-500'} transition-[width]`}
-        style={{ width: `${(100 * done) / Math.max(total, 1)}%` }}
-      />
-    </div>
   );
 }
 

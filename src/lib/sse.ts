@@ -10,6 +10,7 @@ const EVENT_TYPES: JobEventType[] = [
   'progress',
   'candidate',
   'chunk',
+  'line',
   'completed',
   'failed',
   'cancelled',

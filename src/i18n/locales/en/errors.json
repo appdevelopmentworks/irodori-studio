@@ -71,6 +71,12 @@
     "narration_not_found": "The narration was not found.",
     "chunk_not_found": "The chunk was not found.",
     "narration_busy": "This narration is being rendered. Wait for it to finish or cancel it first.",
-    "narration_incomplete": "Some chunks are not rendered yet. Render them all before joining."
+    "narration_incomplete": "Some chunks are not rendered yet. Render them all before joining.",
+    "script_invalid": "The script could not be read. Check its format.",
+    "script_not_found": "The script was not found.",
+    "line_not_found": "The line was not found.",
+    "script_busy": "This script is being rendered. Wait for it to finish or cancel it first.",
+    "script_incomplete": "Some lines are not rendered yet. Render them all before joining or exporting.",
+    "naming_template_invalid": "The file name template has an unknown field. Use {index}, {n}, {speaker}, {text_head}, {title} or {id}."
   }
 }

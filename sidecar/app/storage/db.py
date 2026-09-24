@@ -149,6 +149,36 @@ MIGRATIONS: tuple[str, ...] = (
     CREATE INDEX audio_history ON audio (history_id);
     CREATE INDEX audio_narration ON audio (narration_id, chunk_idx);
     """,
+    # 5 — Session 6: scripts (dialogue). Lines have stable ids, so their takes survive
+    # inserting, deleting and reordering lines.
+    """
+    CREATE TABLE scripts (
+        id             TEXT PRIMARY KEY,     -- ULID
+        title          TEXT NOT NULL,
+        created_at     TEXT NOT NULL,
+        updated_at     TEXT NOT NULL,
+        speakers_json  TEXT NOT NULL,        -- [{name, voice_id, caption}] in order
+        settings_json  TEXT NOT NULL,
+        assembled_json TEXT                  -- {audio_id, duration_s, cues}
+    );
+    CREATE TABLE script_lines (
+        id               TEXT PRIMARY KEY,   -- ULID
+        script_id        TEXT NOT NULL REFERENCES scripts (id) ON DELETE CASCADE,
+        position         INTEGER NOT NULL,
+        speaker          TEXT NOT NULL,
+        text             TEXT NOT NULL,
+        caption          TEXT,
+        num_candidates   INTEGER,
+        seed             INTEGER,
+        pause_ms         INTEGER,
+        file_name        TEXT,
+        adopted_audio_id TEXT
+    );
+    CREATE INDEX script_lines_order ON script_lines (script_id, position);
+    ALTER TABLE audio ADD COLUMN script_id TEXT REFERENCES scripts (id) ON DELETE CASCADE;
+    ALTER TABLE audio ADD COLUMN line_id TEXT;
+    CREATE INDEX audio_script ON audio (script_id, line_id);
+    """,
 )
 
 

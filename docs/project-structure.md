@@ -44,12 +44,16 @@ irodori-studio/
 │  │  │                           (voice + lock, caption, parameters, pauses, dictionary), ChunkSection (render / resume,
 │  │  │                           takes, edit, readings), ExportSection (join, export + subtitles), actions.ts
 │  │  ├─ dictionary/              DictionaryEditor (the user dictionary, D19)
-│  │  ├─ script/                  table editor, parser, speaker map, takes, export
+│  │  ├─ script/                  ScriptScreen: ImportSection (paste / .txt / .csv / .tsv, append / replace),
+│  │  │                           SpeakersSection (speaker → voice, caption), SettingsSection (title, pause, naming
+│  │  │                           template + preview, subtitles, parameters, dictionary), LinesSection + LineRow (table
+│  │  │                           editor, emoji at the caret, render / redo, takes, shared player), ExportSection (join,
+│  │  │                           per-line / merged / subtitles into a folder, CSV / TSV), actions.ts
 │  │  ├─ library/                 history, presets, projects
 │  │  ├─ api-server/              config, status, request log
 │  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
 │  ├─ components/                 AppRoot (boot + routing by status), Startup/Error screens, AppShell (Sidebar + screen + StatusBar),
-│  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid;
+│  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid, ProgressBar;
 │  │                              later WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
@@ -66,8 +70,9 @@ irodori-studio/
 │  │  ├─ errors.ts                error code → i18n key
 │  │  ├─ jobs.ts                  client job state advanced by SSE events (shared by screens)
 │  │  ├─ wav.ts                   WAV writer for recordings
+│  │  ├─ textFile.ts              text files the user picks (UTF-8, else Shift_JIS)
 │  │  └─ format.ts                Intl formatting (bytes, memory, seconds, dates, percent)
-│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration; later script
+│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration, script
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", entitlements, localized plist strings
 │  ├─ Info.plist                  merged into the macOS Info.plist (NSMicrophoneUsageDescription)
@@ -99,7 +104,7 @@ irodori-studio/
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
    │  ├─ routers/                 system, models (+ /emoji), tts, jobs (+ SSE, /queue), audio, clips, history, preferences, deps;
-   │  │                           voices, text (dictionary, reading), narration; later script, export, presets,
+   │  │                           voices, text (dictionary, reading), narration, script; later export, presets,
    │  │                           projects, api_server
    │  ├─ compat/                  openai.py, voicevox.py (external API)
    │  ├─ engine/
@@ -109,11 +114,12 @@ irodori-studio/
    │  │  ├─ irodori_adapter.py    TorchBackend → upstream InferenceRuntime (ONLY upstream import site)
    │  │  └─ host.py               resident EngineHost singleton
    │  ├─ services/                container (wiring), job_manager (events), queue (single FIFO), synthesis, policy (watermark),
-   │  │                           clips, voices (library, encode jobs, packages), narration (split, render jobs,
-   │  │                           assemble, export), history, preferences, system_info; later script, presets, projects
+   │  │                           clips, voices (library, encode jobs, packages), takes (chunk / line audio rows),
+   │  │                           narration (split, render jobs, assemble, export), script (lines, speaker map, render
+   │  │                           jobs, assemble, export, tables), history, preferences, system_info; later presets, projects
    │  ├─ text/                    dictionary.py (user dictionary), reading.py (pyopenjtalk-plus readings, length
-   │  │                           estimates), chunker.py (D18, Markdown to text), srt.py (SRT/WebVTT in and out);
-   │  │                           later script_parser.py
+   │  │                           estimates), chunker.py (D18, Markdown to text), srt.py (SRT/WebVTT in and out),
+   │  │                           script_parser.py ("話者：セリフ" text, CSV / TSV in and out)
    │  ├─ audio/                   io.py (upload decode, WAV reading/writing), export.py (ffmpeg save formats),
    │  │                           assemble.py (silence trim, joining takes);
    │  │                           later concat.py, post.py (loudnorm/atempo/gain)

@@ -7,6 +7,7 @@ import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
 import { button, card, input, primaryButton } from '@/components/ui';
 import { codeOf } from '@/lib/jobs';
+import { readTextFile } from '@/lib/textFile';
 import type { ModelCapabilities, NarrationFormat } from '@/lib/types';
 import { useNarrationStore } from '@/store/narration';
 
@@ -14,16 +15,6 @@ import { split } from './actions';
 
 const FORMATS: NarrationFormat[] = ['text', 'markdown', 'srt'];
 const SUBTITLE_TIMING = /^\s*(\d+:)?\d{1,2}:\d{2}[,.]\d{1,3}\s*-->/m;
-
-/** UTF-8, or Shift_JIS for older Japanese text files. */
-async function readText(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
-  } catch {
-    return new TextDecoder('shift_jis').decode(buffer);
-  }
-}
 
 function formatOf(name: string, text: string): NarrationFormat {
   const lower = name.toLowerCase();
@@ -76,7 +67,7 @@ export function ManuscriptSection({ model }: { model: ModelCapabilities }) {
   const importFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      const text = await readText(file);
+      const text = await readTextFile(file);
       setSource(text, formatOf(file.name, text));
       setError(null);
     } catch {

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { NarrationScreen } from '@/features/narration/NarrationScreen';
 import { QuickScreen } from '@/features/quick/QuickScreen';
+import { ScriptScreen } from '@/features/script/ScriptScreen';
 import { VoiceStudioScreen } from '@/features/voice-studio/VoiceStudioScreen';
 import { getSidecarPort } from '@/lib/tauri';
 import { useAppStore } from '@/store/app';
@@ -51,6 +52,8 @@ export function AppShell() {
             <VoiceStudioScreen />
           ) : screen === 'narration' ? (
             <NarrationScreen />
+          ) : screen === 'script' ? (
+            <ScriptScreen />
           ) : (
             <ComingSoon screen={screen} />
           )}

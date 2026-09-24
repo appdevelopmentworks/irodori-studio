@@ -61,7 +61,7 @@
     "save_failed": "Die Datei konnte nicht gespeichert werden.",
     "ffmpeg_unavailable": "Zum Speichern in diesem Format wird ffmpeg benötigt. Bitte WAV wählen.",
     "clip_range_invalid": "Der ausgewählte Bereich ist ungültig. Wählen Sie den Bereich erneut aus.",
-    "clip_in_use": "Dieser Clip gehört zu einer Stimme. Entfernen Sie ihn im Stimmenstudio im Editor der Stimme.",
+    "clip_in_use": "Dieser Clip gehört zu einer Stimme. Entfernen Sie ihn im Stimmstudio im Editor der Stimme.",
     "voice_invalid": "Die Stimme ist unvollständig. Prüfen Sie Namen und Referenzaudio.",
     "consent_required": "Für die Stimme einer realen Person muss deren Einwilligung bestätigt werden.",
     "embedding_invalid": "Die Sprecher-Embedding-Datei ist ungültig oder passt nicht zu diesem Modell.",
@@ -71,6 +71,12 @@
     "narration_not_found": "Die Erzählung wurde nicht gefunden.",
     "chunk_not_found": "Der Abschnitt wurde nicht gefunden.",
     "narration_busy": "Diese Erzählung wird gerade erzeugt. Warten Sie, bis sie fertig ist, oder brechen Sie sie zuerst ab.",
-    "narration_incomplete": "Einige Abschnitte sind noch nicht erzeugt. Erzeugen Sie alle, bevor Sie sie zusammenfügen."
+    "narration_incomplete": "Einige Abschnitte sind noch nicht erzeugt. Erzeugen Sie alle, bevor Sie sie zusammenfügen.",
+    "script_invalid": "Das Skript konnte nicht gelesen werden. Prüfen Sie das Format.",
+    "script_not_found": "Das Skript wurde nicht gefunden.",
+    "line_not_found": "Die Zeile wurde nicht gefunden.",
+    "script_busy": "Dieses Skript wird gerade erzeugt. Warten Sie, bis es fertig ist, oder brechen Sie es zuerst ab.",
+    "script_incomplete": "Einige Zeilen sind noch nicht erzeugt. Erzeugen Sie alle, bevor Sie zusammenfügen oder exportieren.",
+    "naming_template_invalid": "Die Dateinamen-Vorlage enthält ein unbekanntes Feld. Verwenden Sie {index}, {n}, {speaker}, {text_head}, {title} oder {id}."
   }
 }

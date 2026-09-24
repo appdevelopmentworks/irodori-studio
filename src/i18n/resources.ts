@@ -11,6 +11,7 @@ import deHome from './locales/de/home.json';
 import deNarration from './locales/de/narration.json';
 import deParams from './locales/de/params.json';
 import deQuick from './locales/de/quick.json';
+import deScript from './locales/de/script.json';
 import deSetup from './locales/de/setup.json';
 import deShell from './locales/de/shell.json';
 import deVoiceStudio from './locales/de/voiceStudio.json';
@@ -22,6 +23,7 @@ import enHome from './locales/en/home.json';
 import enNarration from './locales/en/narration.json';
 import enParams from './locales/en/params.json';
 import enQuick from './locales/en/quick.json';
+import enScript from './locales/en/script.json';
 import enSetup from './locales/en/setup.json';
 import enShell from './locales/en/shell.json';
 import enVoiceStudio from './locales/en/voiceStudio.json';
@@ -33,6 +35,7 @@ import jaHome from './locales/ja/home.json';
 import jaNarration from './locales/ja/narration.json';
 import jaParams from './locales/ja/params.json';
 import jaQuick from './locales/ja/quick.json';
+import jaScript from './locales/ja/script.json';
 import jaSetup from './locales/ja/setup.json';
 import jaShell from './locales/ja/shell.json';
 import jaVoiceStudio from './locales/ja/voiceStudio.json';
@@ -44,6 +47,7 @@ import zhHansHome from './locales/zh-Hans/home.json';
 import zhHansNarration from './locales/zh-Hans/narration.json';
 import zhHansParams from './locales/zh-Hans/params.json';
 import zhHansQuick from './locales/zh-Hans/quick.json';
+import zhHansScript from './locales/zh-Hans/script.json';
 import zhHansSetup from './locales/zh-Hans/setup.json';
 import zhHansShell from './locales/zh-Hans/shell.json';
 import zhHansVoiceStudio from './locales/zh-Hans/voiceStudio.json';
@@ -59,6 +63,7 @@ export const resources = {
       narration: jaNarration,
       params: jaParams,
       quick: jaQuick,
+      script: jaScript,
       setup: jaSetup,
       shell: jaShell,
       voiceStudio: jaVoiceStudio,
@@ -74,6 +79,7 @@ export const resources = {
       narration: enNarration,
       params: enParams,
       quick: enQuick,
+      script: enScript,
       setup: enSetup,
       shell: enShell,
       voiceStudio: enVoiceStudio,
@@ -89,6 +95,7 @@ export const resources = {
       narration: zhHansNarration,
       params: zhHansParams,
       quick: zhHansQuick,
+      script: zhHansScript,
       setup: zhHansSetup,
       shell: zhHansShell,
       voiceStudio: zhHansVoiceStudio,
@@ -104,6 +111,7 @@ export const resources = {
       narration: deNarration,
       params: deParams,
       quick: deQuick,
+      script: deScript,
       setup: deSetup,
       shell: deShell,
       voiceStudio: deVoiceStudio,

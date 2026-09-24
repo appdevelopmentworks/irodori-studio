@@ -32,6 +32,7 @@ def test_split_render_assemble_export(make_client, tmp_path: Path) -> None:
     client, backend = make_client()
     wait_ready(client)
     narration = _create(client, settings={"pauses": {"sentence_ms": 300, "paragraph_ms": 800}})
+    assert narration["settings"]["params"] == {}  # nothing given, nothing sent back as null
     chunks = narration["chunks"]
     assert [c["text"] for c in chunks] == [
         "一つ目の文です。",
