@@ -179,6 +179,21 @@ MIGRATIONS: tuple[str, ...] = (
     ALTER TABLE audio ADD COLUMN line_id TEXT;
     CREATE INDEX audio_script ON audio (script_id, line_id);
     """,
+    # 6 — Session 7: the library voice of a history entry (filtering by voice) and
+    # parameter presets.
+    """
+    ALTER TABLE history ADD COLUMN voice_id TEXT;
+    UPDATE history SET voice_id = json_extract(request_json, '$.reference.voice_id')
+        WHERE json_extract(request_json, '$.reference.kind') = 'voice';
+    CREATE INDEX history_voice ON history (voice_id, created_at);
+    CREATE TABLE presets (
+        id          TEXT PRIMARY KEY,        -- ULID
+        name        TEXT NOT NULL,
+        params_json TEXT NOT NULL,           -- SamplingParams: the values given
+        created_at  TEXT NOT NULL,
+        updated_at  TEXT NOT NULL
+    );
+    """,
 )
 
 

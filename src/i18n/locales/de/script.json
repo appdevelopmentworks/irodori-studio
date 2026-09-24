@@ -166,7 +166,6 @@
     "assemble": "Zusammenfügen und anhören",
     "reassemble": "Erneut zusammenfügen",
     "assembled": "{{duration}} ({{cues}} Untertitel)",
-    "format": "Audioformat",
     "perLine": "Eine Audiodatei je Zeile",
     "merged": "Zusammengefügtes Hörspiel",
     "subtitles": "Untertitel",

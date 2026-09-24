@@ -68,7 +68,9 @@ export type SidecarErrorCode =
   | 'line_not_found'
   | 'script_busy'
   | 'script_incomplete'
-  | 'naming_template_invalid';
+  | 'naming_template_invalid'
+  | 'preset_not_found'
+  | 'project_invalid';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -479,6 +481,8 @@ export interface HistorySummary {
   outputs: AudioOutput[];
   /** The candidate the user adopted, if any. */
   adopted_audio_id: string | null;
+  /** The library voice of a `{kind: "voice"}` request. */
+  voice_id: string | null;
 }
 
 export interface HistoryPatch {
@@ -486,6 +490,25 @@ export interface HistoryPatch {
 }
 
 export type AudioFormat = 'wav' | 'mp3' | 'm4a' | 'flac' | 'opus';
+export type SampleRate = 48000 | 44100;
+export type LoudnessTarget = -14 | -16 | -23;
+
+/** Post-processing for exports (D20); the defaults change nothing. */
+export interface PostOptions {
+  /** Opus stays at 48 kHz. */
+  sample_rate: SampleRate;
+  /** Integrated LUFS target (EBU R128), or off. */
+  loudness: LoudnessTarget | null;
+  /** 0.5–2.0: a time stretch that keeps the pitch. */
+  tempo: number;
+  /** -20–20 dB; only when loudness is off. */
+  gain_db: number;
+}
+
+/** Export settings the screens share (kept in preferences). */
+export interface OutputOptions extends PostOptions {
+  format: AudioFormat;
+}
 
 export interface SavedFile {
   path: string;
@@ -507,6 +530,43 @@ export interface HistoryEntry extends HistorySummary {
 export interface HistoryPage {
   items: HistorySummary[];
   total: number;
+}
+
+export interface HistoryQuery {
+  limit?: number;
+  offset?: number;
+  q?: string;
+  /** A library voice id, or `none` for entries without one. */
+  voice?: string;
+  /** ISO 8601 UTC, inclusive. */
+  since?: string;
+  /** ISO 8601 UTC, exclusive. */
+  before?: string;
+}
+
+export interface HistoryUsage {
+  entries: number;
+  bytes: number;
+}
+
+export interface RegenerateRequest {
+  /** Omitted: the entry's used seed (the same request); null: a new random seed. */
+  seed?: number | null;
+  num_candidates?: number | null;
+}
+
+export interface HistoryExportRequest {
+  history_ids: string[];
+  /** Absolute, from the native folder dialog. */
+  folder: string;
+  format?: AudioFormat;
+  post?: PostOptions | null;
+  /** {date} 20260925-143000 (local), {n}, {index} 001, {text_head}, {seed}, {id}. */
+  naming_template?: string;
+}
+
+export interface HistoryExported {
+  files: ExportedFile[];
 }
 
 // Text: the user dictionary and the reading preview (D19).
@@ -673,6 +733,8 @@ export interface NarrationExportRequest {
   format?: AudioFormat;
   subtitles?: ('srt' | 'vtt')[];
   per_chunk?: boolean;
+  /** Subtitles follow a changed tempo. */
+  post?: PostOptions | null;
 }
 
 export interface NarrationExported {
@@ -816,6 +878,8 @@ export interface ScriptExportRequest {
   per_line?: boolean;
   merged?: boolean;
   subtitles?: ('srt' | 'vtt')[];
+  /** Subtitles follow a changed tempo. */
+  post?: PostOptions | null;
 }
 
 export interface ScriptTableRequest {
@@ -836,6 +900,37 @@ export interface Preferences {
   watermark_enabled: boolean;
   history_max_entries: number;
   history_max_bytes: number;
+  output: OutputOptions;
+}
+
+// Presets and projects (requirements §6.8, D23).
+
+export interface PresetInput {
+  name: string;
+  /** Only the values given; loading a preset changes just those. */
+  params: SamplingParams;
+}
+
+export interface Preset extends PresetInput {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PresetPatch {
+  name?: string;
+  params?: SamplingParams;
+}
+
+export type ProjectKind = 'narration' | 'script';
+
+export interface ProjectOpened {
+  kind: ProjectKind;
+  id: string;
+  /** Library voices the project used that this library lacks (dropped). */
+  missing_voices: string[];
+  /** LoRA adapters not found (dropped). */
+  missing_lora: string[];
 }
 
 // ---- Tauri IPC (mirrors src-tauri) ----------------------------------------------------

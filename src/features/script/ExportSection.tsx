@@ -6,16 +6,17 @@ import { useTranslation } from 'react-i18next';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
 import { button, card, primaryButton } from '@/components/ui';
+import { postOf, usableOutput } from '@/features/output/output';
+import { OutputSettings } from '@/features/output/OutputSettings';
 import { formatClock } from '@/lib/format';
 import { codeOf, isBusy } from '@/lib/jobs';
 import { pickDirectory, pickSavePath } from '@/lib/tauri';
-import type { AudioFormat, ExportedFile, ModelCapabilities } from '@/lib/types';
+import type { ExportedFile, ModelCapabilities } from '@/lib/types';
 import { useScriptStore } from '@/store/script';
 import { useSidecarStore } from '@/store/sidecar';
 
 import { saveSettings } from './actions';
 
-const FORMATS: AudioFormat[] = ['wav', 'mp3', 'm4a', 'flac', 'opus'];
 const LISTED_FILES = 8;
 // Characters a file name may not contain on Windows or macOS.
 const UNSAFE = /[\\/:*?"<>|]/g;
@@ -26,9 +27,9 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
   const { t } = useTranslation();
   const api = useSidecarStore((s) => s.api);
   const ffmpeg = useSidecarStore((s) => s.system?.ffmpeg_available ?? false);
+  const preferences = useSidecarStore((s) => s.preferences);
   const script = useScriptStore((s) => s.script);
   const busyRender = useScriptStore((s) => isBusy(s.job));
-  const [format, setFormat] = useState<AudioFormat>('wav');
   const [perLine, setPerLine] = useState(true);
   const [merged, setMerged] = useState(true);
   const [srt, setSrt] = useState(true);
@@ -41,7 +42,8 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
   if (!api || !script) return null;
 
   const missing = script.lines.filter((line) => !line.adopted_audio_id).length;
-  const chosen: AudioFormat = ffmpeg ? format : 'wav';
+  const output = usableOutput(preferences?.output, ffmpeg);
+  const chosen = output.format;
   const assembled = script.assembled;
 
   const run = async (action: () => Promise<void>) => {
@@ -83,6 +85,7 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
         per_line: perLine,
         merged,
         subtitles: merged ? subtitles : [],
+        post: postOf(output),
       });
       setFiles(result.files);
       await refresh();
@@ -141,20 +144,6 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
 
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
         <label className="flex items-center gap-2">
-          <span className="text-zinc-500">{t('script.export.format')}</span>
-          <select
-            value={chosen}
-            onChange={(event) => setFormat(event.target.value as AudioFormat)}
-            className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          >
-            {FORMATS.map((option) => (
-              <option key={option} value={option} disabled={option !== 'wav' && !ffmpeg}>
-                {t(`quick.candidates.formats.${option}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
           <input type="checkbox" checked={perLine} onChange={(e) => setPerLine(e.target.checked)} />
           {t('script.export.perLine')}
         </label>
@@ -184,7 +173,7 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
           </label>
         </span>
       </div>
-      {!ffmpeg ? <p className="text-xs text-zinc-500">{t('quick.candidates.needFfmpeg')}</p> : null}
+      <OutputSettings />
       <p className="text-xs text-zinc-500">{t('script.export.overwrite')}</p>
 
       <div className="flex flex-wrap items-center gap-3">

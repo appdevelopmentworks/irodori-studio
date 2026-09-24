@@ -101,7 +101,6 @@
     "reassemble": "Neu zusammenfügen",
     "assembled": "{{duration}} ({{cues}} Untertitel)",
     "dialogTitle": "Erzählung exportieren",
-    "format": "Audioformat",
     "subtitles": "Untertitel",
     "srt": "SRT",
     "vtt": "WebVTT",

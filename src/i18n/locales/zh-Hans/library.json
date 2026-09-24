@@ -1,0 +1,103 @@
+{
+  "title": "库・历史记录",
+  "tabs": {
+    "history": "历史记录",
+    "presets": "预设"
+  },
+  "common": {
+    "cancel": "取消",
+    "close": "关闭"
+  },
+  "filters": {
+    "search": "搜索",
+    "searchPlaceholder": "按文本或描述文字搜索",
+    "voice": "声音",
+    "voiceAll": "全部",
+    "voiceNone": "无音色库声音",
+    "from": "开始日期",
+    "to": "结束日期",
+    "clear": "清除条件"
+  },
+  "history": {
+    "empty": "尚未生成。在快速生成中制作的音频会保留在这里。",
+    "noMatch": "没有符合条件的历史记录。",
+    "total_other": "{{count}} 条",
+    "selected_other": "已选择 {{count}} 条（共 {{total}} 条）",
+    "selectAll": "全选当前显示",
+    "select": "选择此记录",
+    "more_other": "加载更多（剩余 {{count}} 条）",
+    "seed": "种子 {{seed}}",
+    "caption": "描述文字：{{caption}}",
+    "voiceDeleted": "已删除的声音",
+    "reference": {
+      "none": "无声音",
+      "voice": "音色库声音",
+      "clips": "参考音频",
+      "embedding": "说话人嵌入"
+    },
+    "candidate": "候选 {{index}}（{{seconds}} 秒）",
+    "play": "播放候选 {{index}}",
+    "stop": "停止播放候选 {{index}}",
+    "adopt": "采用",
+    "adopted": "已采用",
+    "again": "以相同条件重新生成",
+    "againNewSeed": "更换种子重新生成",
+    "reuse": "使用这些设置",
+    "save": "保存…",
+    "saveTitle": "保存音频",
+    "saved": "已保存：{{path}}",
+    "details": "详细信息",
+    "hideDetails": "收起详细信息",
+    "run": "{{device}}・{{precision}}・生成用时 {{seconds}} 秒",
+    "delete": "删除",
+    "deleteConfirm": "确认删除",
+    "deleteSelected_other": "删除 {{count}} 条",
+    "queued": "排队中…",
+    "running": "正在生成…"
+  },
+  "export": {
+    "open": "导出…",
+    "title_other": "导出 {{count}} 条",
+    "hint": "导出每条记录中采用的候选（未采用时为第 1 个）。同名文件将被覆盖。",
+    "template": "文件名模板",
+    "tokens": {
+      "date": "日期时间",
+      "n": "编号（1）",
+      "index": "编号（001）",
+      "text_head": "文本开头",
+      "seed": "种子",
+      "id": "记录 ID"
+    },
+    "export": "选择文件夹并导出…",
+    "folderTitle": "选择导出文件夹",
+    "done_other": "已导出 {{count}} 个文件。"
+  },
+  "limits": {
+    "title": "历史记录上限",
+    "usage": "当前 {{entries}} 条・{{size}}",
+    "hint": "超过任一上限时，会自动从最旧的历史记录开始删除；降低上限后立即生效（旁白和台本的音频不受影响）。",
+    "entries": "最大条数",
+    "size": "最大容量（GB）",
+    "save": "保存上限",
+    "saved": "已保存。",
+    "invalid": "条数请设为 1〜100000，容量请设为 0.01 GB 以上。"
+  },
+  "presets": {
+    "hint": "为参数组合命名后保存的预设。可在快速生成、旁白和台本的高级设置中保存和读取。",
+    "empty": "还没有预设。",
+    "name": "预设名称",
+    "updated": "更新于 {{date}}",
+    "delete": "删除",
+    "defaults": "全部为默认值",
+    "value": "{{name}}：{{value}}"
+  },
+  "presetBar": {
+    "label": "预设",
+    "load": "读取…",
+    "none": "没有已保存的预设",
+    "saveAs": "将当前值保存为预设…",
+    "name": "预设名称",
+    "save": "保存",
+    "saved": "已保存“{{name}}”。"
+  }
+}

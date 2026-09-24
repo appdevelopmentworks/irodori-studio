@@ -16,7 +16,14 @@ import numpy as np
 
 from app.audio.io import write_wav
 from app.errors import ApiError, ErrorCode
-from app.schemas import AudioOutput, HistoryEntry, HistoryPage, HistorySummary, Preferences
+from app.schemas import (
+    AudioOutput,
+    HistoryEntry,
+    HistoryPage,
+    HistorySummary,
+    HistoryUsage,
+    Preferences,
+)
 from app.services.job_manager import now_iso
 from app.storage.db import Database
 from app.storage.files import DataLayout, is_id, new_id, remove_tree
@@ -38,6 +45,15 @@ class NewEntry:
     watermarked: bool
     device: str
     precision: str
+    voice_id: str | None = None
+
+
+@dataclass(frozen=True)
+class HistoryFilter:
+    query: str | None = None  # in the text or caption
+    voice: str | None = None  # a library voice id, or "none" for entries without one
+    since: str | None = None  # ISO 8601 UTC, inclusive
+    before: str | None = None  # ISO 8601 UTC, exclusive
 
 
 class HistoryStore:
@@ -69,13 +85,14 @@ class HistoryStore:
                 conn.execute(
                     "INSERT INTO history (id, created_at, kind, model_id, text, caption,"
                     " reference_kind, request_json, params_json, used_seed, timings_json,"
-                    " messages_json, watermarked, device, precision, total_bytes)"
-                    " VALUES (?, ?, 'tts', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    " messages_json, watermarked, device, precision, total_bytes, voice_id)"
+                    " VALUES (?, ?, 'tts', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         history_id, now_iso(), entry.model_id, entry.text, entry.caption,
                         entry.reference_kind, _dump(entry.request), _dump(entry.params),
                         entry.used_seed, _dump(entry.timings), _dump(entry.messages),
                         int(entry.watermarked), entry.device, entry.precision, total,
+                        entry.voice_id,
                     ),
                 )  # fmt: skip
                 conn.executemany(
@@ -88,12 +105,8 @@ class HistoryStore:
             raise
         return history_id, outputs
 
-    def list(self, *, limit: int, offset: int, query: str | None) -> HistoryPage:
-        where, args = "", []
-        if query:
-            where = " WHERE text LIKE ? ESCAPE '\\' OR caption LIKE ? ESCAPE '\\'"
-            pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-            args = [pattern + "%", pattern + "%"]
+    def list(self, *, limit: int, offset: int, filters: HistoryFilter | None = None) -> HistoryPage:
+        where, args = _where(filters or HistoryFilter())
         total = self._db.query_one(f"SELECT COUNT(*) AS n FROM history{where}", args)["n"]
         rows = self._db.query(
             f"SELECT * FROM history{where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
@@ -142,6 +155,12 @@ class HistoryStore:
         if deleted:
             remove_tree(self._layout.history / history_id)
         return bool(deleted)
+
+    def usage(self) -> HistoryUsage:
+        row = self._db.query_one(
+            "SELECT COUNT(*) AS n, COALESCE(SUM(total_bytes), 0) AS size FROM history"
+        )
+        return HistoryUsage(entries=row["n"] if row else 0, bytes=row["size"] if row else 0)
 
     def audio_path(self, audio_id: str) -> Path | None:
         if not is_id(audio_id):
@@ -198,7 +217,30 @@ def _summary(row: Any, outputs: dict[str, list[AudioOutput]]) -> HistorySummary:
         watermarked=bool(row["watermarked"]),
         outputs=outputs.get(row["id"], []),
         adopted_audio_id=row["adopted_audio_id"],
+        voice_id=row["voice_id"],
     )
+
+
+def _where(filters: HistoryFilter) -> tuple[str, list[Any]]:
+    clauses: list[str] = []
+    args: list[Any] = []
+    if filters.query:
+        escaped = filters.query.replace(chr(92), chr(92) * 2).replace("%", chr(92) + "%")
+        pattern = "%" + escaped.replace("_", chr(92) + "_") + "%"
+        clauses.append(f"(text LIKE ? ESCAPE '{chr(92)}' OR caption LIKE ? ESCAPE '{chr(92)}')")
+        args += [pattern, pattern]
+    if filters.voice == "none":
+        clauses.append("voice_id IS NULL")
+    elif filters.voice:
+        clauses.append("voice_id = ?")
+        args.append(filters.voice)
+    if filters.since:
+        clauses.append("created_at >= ?")
+        args.append(filters.since)
+    if filters.before:
+        clauses.append("created_at < ?")
+        args.append(filters.before)
+    return (" WHERE " + " AND ".join(clauses) if clauses else ""), args
 
 
 def _dump(value: object) -> str:

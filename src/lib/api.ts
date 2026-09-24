@@ -16,8 +16,12 @@ import type {
   FileNames,
   HealthResponse,
   HistoryEntry,
+  HistoryExported,
+  HistoryExportRequest,
   HistoryPage,
   HistoryPatch,
+  HistoryQuery,
+  HistoryUsage,
   JobAccepted,
   JobInfo,
   LineInsert,
@@ -31,9 +35,16 @@ import type {
   NarrationPatch,
   NarrationSplit,
   NarrationSummary,
+  PostOptions,
   Preferences,
+  Preset,
+  PresetInput,
+  PresetPatch,
+  ProjectKind,
+  ProjectOpened,
   QueueSnapshot,
   ReadingResult,
+  RegenerateRequest,
   RenderRequest,
   SavedFile,
   Script,
@@ -102,8 +113,8 @@ export function createApi(port: number) {
     audioUrl: (audioId: string) => `${base}/audio/${audioId}`,
     /** Saves a copy at an absolute path (from the native save dialog); formats other
      * than WAV need ffmpeg. */
-    saveAudio: (audioId: string, path: string, format: AudioFormat) =>
-      send<SavedFile>(`${base}/audio/${audioId}/save`, json('POST', { path, format })),
+    saveAudio: (audioId: string, path: string, format: AudioFormat, post?: PostOptions | null) =>
+      send<SavedFile>(`${base}/audio/${audioId}/save`, json('POST', { path, format, post })),
 
     uploadClip: (file: Blob, filename: string, origin: Exclude<ClipOrigin, 'generated'> = 'upload') => {
       const form = new FormData();
@@ -208,17 +219,37 @@ export function createApi(port: number) {
     exportScriptTable: (id: string, body: ScriptTableRequest) =>
       send<ExportedFile>(`${base}/scripts/${id}/table`, json('POST', body)),
 
-    getHistory: (params: { limit?: number; offset?: number; q?: string } = {}) => {
+    getHistory: (params: HistoryQuery = {}) => {
       const query = new URLSearchParams();
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== '') query.set(key, String(value));
       }
       return send<HistoryPage>(`${base}/history?${query}`);
     },
+    getHistoryUsage: () => send<HistoryUsage>(`${base}/history/usage`),
+    /** The entry's request again, as a new generation (a new history entry). */
+    regenerate: (id: string, body: RegenerateRequest = {}) =>
+      send<JobAccepted>(`${base}/history/${id}/regenerate`, json('POST', body)),
+    /** Each entry's adopted candidate (else its first) into a folder. */
+    exportHistory: (body: HistoryExportRequest) =>
+      send<HistoryExported>(`${base}/history/export`, json('POST', body)),
     getHistoryEntry: (id: string) => send<HistoryEntry>(`${base}/history/${id}`),
     updateHistoryEntry: (id: string, patch: HistoryPatch) =>
       send<HistoryEntry>(`${base}/history/${id}`, json('PATCH', patch)),
     deleteHistoryEntry: (id: string) => send<void>(`${base}/history/${id}`, { method: 'DELETE' }),
+
+    listPresets: () => send<Preset[]>(`${base}/presets`),
+    createPreset: (body: PresetInput) => send<Preset>(`${base}/presets`, json('POST', body)),
+    updatePreset: (id: string, patch: PresetPatch) =>
+      send<Preset>(`${base}/presets/${id}`, json('PATCH', patch)),
+    deletePreset: (id: string) => send<void>(`${base}/presets/${id}`, { method: 'DELETE' }),
+
+    /** A narration or script as an `.iroproj` file at an absolute path. */
+    saveProject: (kind: ProjectKind, id: string, path: string) =>
+      send<ExportedFile>(`${base}/projects/save`, json('POST', { kind, id, path })),
+    /** A new narration or script from a project file. */
+    openProject: (path: string) =>
+      send<ProjectOpened>(`${base}/projects/open`, json('POST', { path })),
 
     getPreferences: () => send<Preferences>(`${base}/preferences`),
     updatePreferences: (patch: Partial<Preferences>) =>

@@ -195,7 +195,7 @@ type EmojiItem = {
 | POST | `/jobs/{id}/cancel` | `{job_id, state}`: `cancelled` (was queued), `cancelling` (running; cooperative, D27), or the final state if it already finished |
 | GET | `/queue` | `QueueSnapshot`: the running job and the queued ones in order (UI + external) |
 | GET | `/audio/{audio_id}` | `audio/wav`, 48 kHz mono 16-bit |
-| POST | `/audio/{audio_id}/save` | `{path, format?: "wav"\|"mp3"\|"m4a"\|"flac"\|"opus"}` (absolute path from the native save dialog; without `format`, the extension decides, else WAV; the format's extension is applied; an existing file is replaced) → `{path, bytes, format}`. Formats other than WAV are encoded by ffmpeg (MP3 VBR ≈ 190 kbps, M4A AAC 192 kbps, FLAC, Opus 128 kbps): `400 ffmpeg_unavailable` without it; `400 save_path_invalid` / `save_failed`. Sample rate, loudness, tempo, gain: `POST /export` (S7) |
+| POST | `/audio/{audio_id}/save` | `{path, format?: "wav"\|"mp3"\|"m4a"\|"flac"\|"opus", post?: PostOptions}` (absolute path from the native save dialog; without `format`, the extension decides, else WAV; the format's extension is applied; an existing file is replaced) → `{path, bytes, format}`. Formats other than WAV and any post-processing go through ffmpeg (MP3 VBR ≈ 190 kbps, M4A AAC 192 kbps, FLAC, Opus 128 kbps): `400 ffmpeg_unavailable` without it; `400 save_path_invalid` / `save_failed` |
 
 ```ts
 type JobAccepted = { job_id: string; queue_position: number }; // jobs ahead of this one
@@ -254,14 +254,16 @@ type ClipInfo = {
 };
 ```
 
-### History (basic) & preferences
+### History & preferences
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/history` | `?limit=1–200 (50)&offset=0&q=` → `{items: HistorySummary[], total}`, newest first; `q` matches text or caption |
+| GET | `/history` | `?limit=1–200 (50)&offset=0&q=&voice=&since=&before=` → `{items: HistorySummary[], total}`, newest first. `q` matches text or caption; `voice` is a library voice id or `none` (entries without one); `since` (inclusive) and `before` (exclusive) are ISO 8601 UTC |
+| GET | `/history/usage` | `{entries, bytes}` the history holds |
 | GET / DELETE | `/history/{id}` | `HistoryEntry`: the request as submitted, every resolved parameter, seed and timings; DELETE also removes its audio |
 | PATCH | `/history/{id}` | `{adopted_audio_id: string \| null}` adopts one of its candidates (or clears it) → `HistoryEntry`; `404 audio_not_found` for another entry's audio |
-| POST | `/history/{id}/regenerate` | job with identical request (seed optional) |
-| GET / PATCH | `/preferences` | `Preferences`; PATCH takes any subset of the fields |
+| POST | `/history/{id}/regenerate` | `RegenerateRequest` → `202 JobAccepted`: the request as submitted again, a new history entry; the entry's used seed unless `seed` is given (`null`: a new random one); `404 history_not_found`, and the request's own errors (e.g. `voice_not_found`, `clip_not_found` when its reference is gone) |
+| POST | `/history/export` | `HistoryExportRequest` → `{files: ExportedFile[]}`: each entry's adopted candidate (else its first) into an existing folder, named by the template (files of the same name are replaced), with post-processing; `422 naming_template_invalid` |
+| GET / PATCH | `/preferences` | `Preferences`; PATCH takes any subset of the fields; lowering a history limit prunes at once |
 
 ```ts
 type HistorySummary = {
@@ -269,6 +271,7 @@ type HistorySummary = {
   reference_kind: "none" | "voice" | "clips" | "embedding";
   used_seed: number; watermarked: boolean; outputs: AudioOutput[];
   adopted_audio_id: string | null;     // the candidate the user adopted (requirements §6.3)
+  voice_id: string | null;             // the library voice of a {kind: "voice"} request
 };
 type HistoryEntry = HistorySummary & {
   request: SynthesisRequest;           // as submitted (unset fields absent)
@@ -281,7 +284,16 @@ type Preferences = {
   watermark_enabled: boolean;          // default true (D12; see watermark_policy)
   history_max_entries: number;         // default 500 (D23); the oldest entries are pruned
   history_max_bytes: number;           // default 5 GB
+  output: OutputOptions;               // the export settings every screen shares (D20)
 };
+type RegenerateRequest = { seed?: number | null; num_candidates?: number | null };
+type HistoryExportRequest = {
+  history_ids: string[];               // 1–1000
+  folder: string;                      // absolute, from the native folder dialog
+  format?: AudioFormat; post?: PostOptions | null;
+  naming_template?: string;            // default "{date}_{text_head}": {date} 20260925-143000 (local time), {n} 1, {index} 001, {text_head}, {seed}, {id}
+};
+type HistoryUsage = { entries: number; bytes: number };
 ```
 
 ### Text
@@ -400,7 +412,7 @@ type NarrationSummary = { id: string; title: string; created_at: string; updated
 type NarrationCreate = { title?: string | null; source: string; format?: NarrationFormat; rules?: SplitRules; settings?: NarrationSettings };
 type NarrationSplit = { source: string; format?: NarrationFormat; rules?: SplitRules };
 type RenderRequest = { indices?: number[] | null; redo?: boolean; num_candidates?: number | null };
-type NarrationExportRequest = { path: string; format?: AudioFormat; subtitles?: ("srt" | "vtt")[]; per_chunk?: boolean };
+type NarrationExportRequest = { path: string; format?: AudioFormat; subtitles?: ("srt" | "vtt")[]; per_chunk?: boolean; post?: PostOptions | null };
 ```
 
 Assembly trims each adopted take's silence (keeping 30 ms before and 60 ms after the sound, threshold −50 dBFS) and places it after the previous one plus the pause (text) or at its cue start (SRT; after the previous take if that one runs long). Subtitle cues are the takes' exact positions; SRT input keeps its cue end when the take starts on time.
@@ -456,7 +468,7 @@ type ScriptPatch = { title?: string; settings?: ScriptSettings; speakers?: Scrip
 type LinePatch = Partial<ScriptLineInput> & { adopted_audio_id?: string | null }; // only the fields sent change; null clears
 type LineInsert = { line: ScriptLineInput; position?: number | null };             // omitted: at the end
 type ScriptRenderRequest = { line_ids?: string[] | null; redo?: boolean; num_candidates?: number | null };
-type ScriptExportRequest = { folder: string; format?: AudioFormat; per_line?: boolean; merged?: boolean; subtitles?: ("srt" | "vtt")[] };
+type ScriptExportRequest = { folder: string; format?: AudioFormat; per_line?: boolean; merged?: boolean; subtitles?: ("srt" | "vtt")[]; post?: PostOptions | null };
 type ScriptTableRequest = { path: string; format?: "csv" | "tsv" };  // the format's extension is applied
 ```
 
@@ -464,13 +476,51 @@ Text: one line per text line, as "話者：セリフ", "話者: セリフ" or "�
 
 Each line's request: the speaker's voice supplies the reference, LoRA and defaults (caption, parameters, seed); the script's parameters override them, and the line's own candidates and seed override those. The caption is the line's, else the speaker's, else the voice default; a speaker without a voice renders without a reference. Assembly trims each adopted take's silence as for narration and joins the takes with each line's pause (`pause_ms`, else the script's); subtitle cues are the takes' exact positions. Per-line file names are the line's own `file_name` or the template (`{index}` zero-padded to at least 3 digits, `{n}`, `{speaker}`, `{text_head}` = the first 12 characters, `{title}`, `{id}`), with characters unsafe on Windows or macOS replaced by `_`, at most 120 characters, and made unique within the script (`_2`, `_3`, …).
 
-### Export, history filters, presets, projects
+### Output post-processing (D20)
+Every export takes the same optional `post` next to its format: `/audio/{id}/save`, `/narrations/{id}/export`, `/scripts/{id}/export`, `/history/export`. The screens share one set of export settings, kept in `Preferences.output`.
+
+```ts
+type AudioFormat = "wav" | "mp3" | "m4a" | "flac" | "opus";  // M4A is AAC
+type PostOptions = {                   // the defaults change nothing
+  sample_rate?: 48000 | 44100;         // default 48000; Opus is always 48 kHz
+  loudness?: -14 | -16 | -23 | null;   // integrated LUFS target (EBU R128), default off
+  tempo?: number;                      // 0.5–2.0, default 1: a time stretch that keeps the pitch
+  gain_db?: number;                    // -20–20, default 0; not used when loudness is set
+};
+type OutputOptions = PostOptions & { format: AudioFormat };
+```
+
+Loudness is two-pass `loudnorm` (measured first, then normalized linearly when the true-peak ceiling of -1 dBTP allows, else ffmpeg's dynamic mode). With a changed tempo, subtitle cues are moved with the audio (times ÷ tempo). A WAV without post-processing is copied as generated; everything else needs ffmpeg (`400 ffmpeg_unavailable`).
+
+### Presets
 | Method | Path | Notes |
 | --- | --- | --- |
-| POST | `/export` | `{audio_ids[] | history_id, format: wav|mp3|flac|opus|aac, sample_rate: 48000|44100, loudness?: -14|-16|-23|null, tempo?: number, gain_db?: number, dest_dir, naming_template}` |
-| GET | `/history` | voice and date filters on top of the S2 endpoint (Session 7) |
-| GET / POST / DELETE | `/presets` | named `SamplingParams` sets |
-| POST | `/projects/save` · `/projects/open` | `.iroproj` (D23) |
+| GET | `/presets` | `Preset[]` by name |
+| POST | `/presets` | `PresetInput` → `201 Preset`; parameters checked against the active model (`422 invalid_params`) |
+| PATCH / DELETE | `/presets/{id}` | `{name?, params?}` → `Preset` / `204`; `404 preset_not_found` |
+
+```ts
+type PresetInput = { name: string; params: SamplingParams };  // name 1–60 chars; only the values given
+type Preset = PresetInput & { id: string; created_at: string; updated_at: string };
+```
+
+A preset keeps the values that were given (those that differ from the defaults); the client loading one sets exactly those and leaves the rest at their defaults.
+
+### Projects (D23)
+| Method | Path | Notes |
+| --- | --- | --- |
+| POST | `/projects/save` | `{kind: "narration" \| "script", id, path}` → `ExportedFile`: one `.iroproj` file (the extension is applied); `404 narration_not_found` / `script_not_found`, `400 save_path_invalid` |
+| POST | `/projects/open` | `{path}` → `201 ProjectOpened`: a new narration or script with its adopted takes; `422 project_invalid` (`detail.reason`: `zip`, `format`, `version`, `content`, `audio`, `size`) |
+
+```ts
+type ProjectOpened = {
+  kind: "narration" | "script"; id: string;
+  missing_voices: string[];            // library voices (by name) this library lacks: dropped
+  missing_lora: string[];              // LoRA adapters not found: dropped
+};
+```
+
+`.iroproj` is a zip: `project.json` (`format: "iroproj"`, `version: 1`, `kind`, `app_version`, `model_id`, `saved_at`, `voices: {id: name}`, and `narration` — title, format, source, rules, settings, warnings, chunks `{text, pause_after, estimated_seconds, cue, take}` — or `script` — title, speakers, settings, lines `{speaker, text, caption, num_candidates, seed, pause_ms, file_name, take}`) and each adopted take as 16-bit FLAC `audio/NNNN.flac` (`take: {file, seed, truncated}`), so the takes come back bit for bit. Only adopted takes are saved; the assembled file is made again. Projects are saved in `<data-root>/projects/` by default.
 
 ### External API control
 | Method | Path | Notes |

@@ -1,0 +1,11 @@
+{
+  "open": "プロジェクトを開く…",
+  "save": "プロジェクトを保存…",
+  "openTitle": "プロジェクトを開く",
+  "saveTitle": "プロジェクトを保存",
+  "filter": "irodori-studio プロジェクト",
+  "saved": "保存しました: {{path}}",
+  "missing": "このプロジェクトで使っていた次の声・LoRA がこのパソコンにないため、指定を外して開きました: {{items}}",
+  "separator": "、",
+  "dismiss": "閉じる"
+}

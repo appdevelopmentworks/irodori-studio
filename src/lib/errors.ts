@@ -83,6 +83,8 @@ const KNOWN_CODES = new Set<string>([
   'script_busy',
   'script_incomplete',
   'naming_template_invalid',
+  'preset_not_found',
+  'project_invalid',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

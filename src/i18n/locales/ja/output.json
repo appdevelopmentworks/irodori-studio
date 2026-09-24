@@ -1,0 +1,30 @@
+{
+  "title": "書き出しの設定",
+  "format": "形式",
+  "formats": {
+    "wav": "WAV（無圧縮）",
+    "mp3": "MP3",
+    "m4a": "M4A（AAC）",
+    "flac": "FLAC（可逆圧縮）",
+    "opus": "Opus"
+  },
+  "sampleRate": "サンプリングレート",
+  "loudness": "ラウドネス正規化",
+  "loudnessOff": "しない",
+  "loudnessPresets": {
+    "streaming": "-14 LUFS（配信）",
+    "podcast": "-16 LUFS（Web）",
+    "broadcast": "-23 LUFS（放送）"
+  },
+  "tempo": "話速（後処理・倍）",
+  "gain": "音量（dB）",
+  "summary": {
+    "separator": "・",
+    "rate": "{{value}} kHz",
+    "loudness": "{{value}} LUFS",
+    "tempo": "話速 {{value}} 倍",
+    "gain": "{{value}} dB"
+  },
+  "hint": "すべての画面の書き出しに共通の設定です。話速は音程を変えずに伸縮し、字幕も合わせます。ラウドネス正規化を使うときは音量は使いません。Opus は常に 48 kHz です。",
+  "needFfmpeg": "WAV 以外の形式や後処理には ffmpeg が必要です。"
+}

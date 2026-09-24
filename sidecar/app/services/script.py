@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,6 +20,7 @@ import numpy as np
 
 from app.audio import assemble, export
 from app.audio.io import read_frames
+from app.audio.post import Post, post_of, retimed
 from app.engine.base import BackendError, SynthesisCancelled
 from app.engine.host import EngineHost
 from app.errors import ApiError, ErrorCode
@@ -54,21 +54,17 @@ from app.schemas import (
 from app.services.job_manager import Job, JobManager, now_iso
 from app.services.queue import SynthesisQueue
 from app.services.synthesis import RunHooks, SynthesisService, Synthesized
-from app.services.takes import TakeStore
+from app.services.takes import TakeAudio, TakeStore
 from app.services.voices import VoiceService
 from app.storage.db import Database
 from app.storage.files import DataLayout, is_id, new_id, remove_tree
-from app.text import srt
+from app.text import naming, srt
 from app.text.script_parser import LineDraft, ScriptError, parse_table, parse_text, to_table
 
 log = logging.getLogger("irodori.script")
 
 MAX_LINES = 5000
-TEXT_HEAD_CHARS = 12
 TEMPLATE_TOKENS = frozenset({"index", "n", "speaker", "text_head", "title", "id"})
-_TOKEN = re.compile(r"\{(\w*)\}")
-# Characters no file name may contain on Windows or macOS (and control characters).
-_UNSAFE = re.compile("[" + re.escape('<>:"/|?*' + chr(92)) + chr(0) + "-" + chr(31) + "]")
 _BOM = chr(0xFEFF)
 
 
@@ -77,6 +73,14 @@ class ScriptRenderPayload:
     script_id: str
     line_ids: tuple[str, ...]
     num_candidates: int | None
+
+
+@dataclass(frozen=True)
+class RestoredLine:
+    """A line as a project file saved it, with its adopted take."""
+
+    draft: LineDraft
+    take: TakeAudio | None
 
 
 class ScriptService:
@@ -162,6 +166,43 @@ class ScriptService:
                 ),
             )  # fmt: skip
             _insert_lines(conn, script_id, 0, drafts)
+        return self.require(script_id)
+
+    def restore(
+        self,
+        *,
+        title: str,
+        speakers: list[ScriptSpeaker],
+        settings: ScriptSettings,
+        lines: list[RestoredLine],
+    ) -> Script:
+        """A script as a project file saved it, with the lines' adopted takes."""
+        script_id = new_id()
+        now = now_iso()
+        drafts = [line.draft for line in lines]
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO scripts (id, title, created_at, updated_at, speakers_json,"
+                " settings_json) VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    script_id, title, now, now,
+                    _dump([s.model_dump() for s in _merge_speakers(speakers, drafts)]),
+                    _dump(_settings_dump(settings)),
+                ),
+            )  # fmt: skip
+            _insert_lines(conn, script_id, 0, drafts)
+        rows = self._db.query(
+            "SELECT id FROM script_lines WHERE script_id = ? ORDER BY position", (script_id,)
+        )
+        for row, line in zip(rows, lines, strict=True):
+            if line.take is None:
+                continue
+            audio_id = self._takes.restore(script_id, row["id"], line.take)
+            with self._db.transaction() as conn:
+                conn.execute(
+                    "UPDATE script_lines SET adopted_audio_id = ? WHERE id = ?",
+                    (audio_id, row["id"]),
+                )
         return self.require(script_id)
 
     def import_lines(self, script_id: str, body: ScriptImport) -> Script:
@@ -478,21 +519,28 @@ class ScriptService:
                 detail={"missing": missing},
             )
         extension = export.EXTENSIONS[body.format]
+        post = post_of(body.post)
         files: list[ExportedFile] = []
         if body.per_line:
-            for line, name in zip(script.lines, self.file_names(script), strict=True):
-                path = folder / f"{name}{extension}"
-                self._export_audio(self._takes.path(line.adopted_audio_id), path, body.format)
-                files.append(ExportedFile(path=str(path), bytes=path.stat().st_size))
+            pairs = [
+                (self._takes.path(line.adopted_audio_id), folder / f"{name}{extension}")
+                for line, name in zip(script.lines, self.file_names(script), strict=True)
+            ]
+            self._export_many(pairs, body.format, post)
+            files += [ExportedFile(path=str(path), bytes=path.stat().st_size) for _, path in pairs]
         if body.merged:
             assembled = script.assembled or self.assemble(script_id)
-            stem = _safe_name(script.title) or "script"
+            stem = naming.safe(script.title) or "script"
             path = folder / f"{stem}{extension}"
-            self._export_audio(self._takes.path(assembled.audio_id), path, body.format)
+            self._export_audio(self._takes.path(assembled.audio_id), path, body.format, post)
             files.append(ExportedFile(path=str(path), bytes=path.stat().st_size))
             for kind in dict.fromkeys(body.subtitles):
                 cues = [
-                    srt.Cue(cue.start_ms, cue.end_ms, self._cue_text(script, cue, kind))
+                    srt.Cue(
+                        retimed(cue.start_ms, post),
+                        retimed(cue.end_ms, post),
+                        self._cue_text(script, cue, kind),
+                    )
                     for cue in assembled.cues
                 ]
                 text = srt.to_srt(cues) if kind == "srt" else srt.to_vtt(cues)
@@ -531,28 +579,22 @@ class ScriptService:
     def file_names(self, script: Script) -> list[str]:
         """Per-line file names (without extension): the line's own name, else the
         template; made safe for Windows and macOS and unique within the script."""
-        width = max(3, len(str(len(script.lines))))
-        taken: set[str] = set()
+        unique = naming.UniqueNames()
         names: list[str] = []
         for line in script.lines:
             if line.file_name:
-                name = _safe_name(line.file_name)
+                name = naming.safe(line.file_name)
             else:
                 values = {
-                    "index": str(line.index + 1).zfill(width),
+                    "index": naming.zero_padded(line.index + 1, len(script.lines)),
                     "n": str(line.index + 1),
                     "speaker": line.speaker,
-                    "text_head": line.text[:TEXT_HEAD_CHARS],
+                    "text_head": line.text[: naming.TEXT_HEAD_CHARS],
                     "title": script.title,
                     "id": line.id,
                 }
-                name = _safe_name(_fill(script.settings.naming_template, values))
-            name = name or f"line_{line.index + 1}"
-            unique, n = name, 2
-            while unique.lower() in taken:
-                unique, n = f"{name}_{n}", n + 1
-            taken.add(unique.lower())
-            names.append(unique)
+                name = naming.safe(naming.fill(script.settings.naming_template, values))
+            names.append(unique.take(name or f"line_{line.index + 1}"))
         return names
 
     # --- Helpers ----------------------------------------------------------------------------
@@ -675,9 +717,15 @@ class ScriptService:
         if self.busy(script_id):
             raise ApiError(ErrorCode.SCRIPT_BUSY, "a render is in progress", status_code=409)
 
-    def _export_audio(self, source: Path, dest: Path, fmt: str) -> None:
+    def _export_audio(self, source: Path, dest: Path, fmt: str, post: Post | None) -> None:
         try:
-            export.export_audio(source, dest, fmt, ffmpeg=self._ffmpeg)
+            export.export_audio(source, dest, fmt, ffmpeg=self._ffmpeg, post=post)
+        except export.ExportError as exc:
+            raise ApiError(ErrorCode.parse(exc.code), str(exc)) from exc
+
+    def _export_many(self, pairs: list[tuple[Path, Path]], fmt: str, post: Post | None) -> None:
+        try:
+            export.export_many(pairs, fmt, ffmpeg=self._ffmpeg, post=post)
         except export.ExportError as exc:
             raise ApiError(ErrorCode.parse(exc.code), str(exc)) from exc
 
@@ -780,24 +828,15 @@ def _line(script: Script, line_id: str) -> ScriptLine:
 
 
 def _check_template(template: str) -> None:
-    for token in _TOKEN.findall(template):
-        if token not in TEMPLATE_TOKENS:
-            raise ApiError(
-                ErrorCode.NAMING_TEMPLATE_INVALID,
-                "unknown template field",
-                status_code=422,
-                detail={"token": token},
-            )
-
-
-def _fill(template: str, values: dict[str, str]) -> str:
-    """The naming template with its {fields} filled in (unknown fields stay as written)."""
-    return _TOKEN.sub(lambda m: values.get(m.group(1), m.group(0)), template)
-
-
-def _safe_name(name: str) -> str:
-    cleaned = " ".join(_UNSAFE.sub("_", name).split())
-    return cleaned.strip(" .")[:120]
+    try:
+        naming.check(template, TEMPLATE_TOKENS)
+    except naming.TemplateError as exc:
+        raise ApiError(
+            ErrorCode.NAMING_TEMPLATE_INVALID,
+            "unknown template field",
+            status_code=422,
+            detail={"token": exc.token},
+        ) from exc
 
 
 def _title_from(drafts: list[LineDraft]) -> str:

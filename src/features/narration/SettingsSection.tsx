@@ -8,6 +8,7 @@ import { button, card, input, link, textarea } from '@/components/ui';
 import { DictionaryEditor } from '@/features/dictionary/DictionaryEditor';
 import { ParamField } from '@/features/params/ParamField';
 import { ParamPanel } from '@/features/params/ParamPanel';
+import { PresetBar } from '@/features/params/PresetBar';
 import { currentValue, isVisible, type ParamName } from '@/features/params/schema';
 import { STYLE_PRESETS } from '@/features/quick/stylePresets';
 import { codeOf } from '@/lib/jobs';
@@ -229,7 +230,12 @@ export function SettingsSection({ model }: { model: ModelCapabilities }) {
         <summary className="cursor-pointer text-sm font-medium select-none">
           {t('narration.settings.advanced')}
         </summary>
-        <div className="pt-2">
+        <div className="space-y-3 pt-2">
+          <PresetBar
+            schema={model.params}
+            values={draft.values}
+            onLoad={(values) => updateDraft({ values })}
+          />
           <ParamPanel
             schema={model.params}
             values={draft.values}

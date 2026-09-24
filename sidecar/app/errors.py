@@ -73,6 +73,9 @@ class ErrorCode(str, Enum):
     SCRIPT_BUSY = "script_busy"
     SCRIPT_INCOMPLETE = "script_incomplete"
     NAMING_TEMPLATE_INVALID = "naming_template_invalid"
+    # Library, presets and projects (Session 7).
+    PRESET_NOT_FOUND = "preset_not_found"
+    PROJECT_INVALID = "project_invalid"
     # Jobs and stored results.
     JOB_NOT_FOUND = "job_not_found"
     AUDIO_NOT_FOUND = "audio_not_found"

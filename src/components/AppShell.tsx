@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+import { LibraryScreen } from '@/features/library/LibraryScreen';
 import { NarrationScreen } from '@/features/narration/NarrationScreen';
 import { QuickScreen } from '@/features/quick/QuickScreen';
 import { ScriptScreen } from '@/features/script/ScriptScreen';
@@ -54,6 +55,8 @@ export function AppShell() {
             <NarrationScreen />
           ) : screen === 'script' ? (
             <ScriptScreen />
+          ) : screen === 'library' ? (
+            <LibraryScreen />
           ) : (
             <ComingSoon screen={screen} />
           )}

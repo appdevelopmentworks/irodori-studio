@@ -101,7 +101,6 @@
     "reassemble": "重新连接",
     "assembled": "{{duration}}（{{cues}} 条字幕）",
     "dialogTitle": "导出旁白",
-    "format": "音频格式",
     "subtitles": "字幕",
     "srt": "SRT",
     "vtt": "WebVTT",

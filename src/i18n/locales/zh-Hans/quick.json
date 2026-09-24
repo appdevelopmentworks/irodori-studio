@@ -110,16 +110,7 @@
     "adopted": "已采用",
     "save": "保存…",
     "saveTitle": "保存音频",
-    "saved": "已保存：{{path}}",
-    "format": "保存格式",
-    "formats": {
-      "wav": "WAV（未压缩）",
-      "mp3": "MP3",
-      "m4a": "M4A（AAC）",
-      "flac": "FLAC（无损压缩）",
-      "opus": "Opus"
-    },
-    "needFfmpeg": "WAV 以外的格式需要 ffmpeg。"
+    "saved": "已保存：{{path}}"
   },
   "runLog": {
     "title": "运行日志",

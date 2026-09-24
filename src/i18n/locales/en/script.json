@@ -166,7 +166,6 @@
     "assemble": "Join and listen",
     "reassemble": "Join again",
     "assembled": "{{duration}} ({{cues}} subtitles)",
-    "format": "Audio format",
     "perLine": "One audio file per line",
     "merged": "Merged drama audio",
     "subtitles": "Subtitles",

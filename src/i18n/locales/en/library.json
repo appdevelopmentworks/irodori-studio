@@ -1,0 +1,109 @@
+{
+  "title": "Library & history",
+  "tabs": {
+    "history": "History",
+    "presets": "Presets"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "filters": {
+    "search": "Search",
+    "searchPlaceholder": "Search text or caption",
+    "voice": "Voice",
+    "voiceAll": "All",
+    "voiceNone": "No library voice",
+    "from": "From",
+    "to": "To",
+    "clear": "Clear filters"
+  },
+  "history": {
+    "empty": "Nothing generated yet. Audio made on the Quick screen stays here.",
+    "noMatch": "No history matches.",
+    "total_one": "{{count}} entry",
+    "total_other": "{{count}} entries",
+    "selected_one": "{{count}} selected (of {{total}})",
+    "selected_other": "{{count}} selected (of {{total}})",
+    "selectAll": "Select all shown",
+    "select": "Select this entry",
+    "more_one": "Load more ({{count}} left)",
+    "more_other": "Load more ({{count}} left)",
+    "seed": "Seed {{seed}}",
+    "caption": "Caption: {{caption}}",
+    "voiceDeleted": "Deleted voice",
+    "reference": {
+      "none": "No voice",
+      "voice": "Library voice",
+      "clips": "Reference audio",
+      "embedding": "Speaker embedding"
+    },
+    "candidate": "Candidate {{index}} ({{seconds}} s)",
+    "play": "Play candidate {{index}}",
+    "stop": "Stop candidate {{index}}",
+    "adopt": "Adopt",
+    "adopted": "Adopted",
+    "again": "Generate again",
+    "againNewSeed": "Again with a new seed",
+    "reuse": "Use these settings",
+    "save": "Save…",
+    "saveTitle": "Save audio",
+    "saved": "Saved: {{path}}",
+    "details": "Details",
+    "hideDetails": "Hide details",
+    "run": "{{device}} · {{precision}} · generated in {{seconds}} s",
+    "delete": "Delete",
+    "deleteConfirm": "Delete",
+    "deleteSelected_one": "Delete {{count}} entry",
+    "deleteSelected_other": "Delete {{count}} entries",
+    "queued": "Waiting…",
+    "running": "Generating…"
+  },
+  "export": {
+    "open": "Export…",
+    "title_one": "Export {{count}} entry",
+    "title_other": "Export {{count}} entries",
+    "hint": "Exports each entry's adopted candidate (else its first). Files of the same name are replaced.",
+    "template": "File name template",
+    "tokens": {
+      "date": "date and time",
+      "n": "number (1)",
+      "index": "number (001)",
+      "text_head": "start of the text",
+      "seed": "seed",
+      "id": "entry ID"
+    },
+    "export": "Export to a folder…",
+    "folderTitle": "Choose the export folder",
+    "done_one": "Exported {{count}} file.",
+    "done_other": "Exported {{count}} files."
+  },
+  "limits": {
+    "title": "History limits",
+    "usage": "now {{entries}} entries · {{size}}",
+    "hint": "Past either limit, the oldest entries are deleted automatically — right away when you lower a limit. Narration and script audio is not affected.",
+    "entries": "Most entries",
+    "size": "Most space (GB)",
+    "save": "Save limits",
+    "saved": "Saved.",
+    "invalid": "Use 1–100000 entries and at least 0.01 GB."
+  },
+  "presets": {
+    "hint": "Named sets of parameters. Save and load them from the advanced settings of the Quick, Narration and Script screens.",
+    "empty": "No presets yet.",
+    "name": "Preset name",
+    "updated": "Updated {{date}}",
+    "delete": "Delete",
+    "defaults": "All defaults",
+    "value": "{{name}}: {{value}}"
+  },
+  "presetBar": {
+    "label": "Preset",
+    "load": "Load…",
+    "none": "No saved presets",
+    "saveAs": "Save current values as a preset…",
+    "name": "Preset name",
+    "save": "Save",
+    "saved": "Saved “{{name}}”."
+  }
+}

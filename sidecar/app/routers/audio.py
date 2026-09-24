@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 
 from app.audio import export
+from app.audio.post import post_of
 from app.errors import ApiError, ErrorCode, not_found
 from app.routers.deps import services
 from app.schemas import SaveAudioRequest, SavedFile
@@ -35,8 +36,7 @@ def audio(audio_id: str, svc: ServicesDep) -> FileResponse:
 @router.post("/audio/{audio_id}/save", response_model=SavedFile)
 def save_audio(audio_id: str, body: SaveAudioRequest, svc: ServicesDep) -> SavedFile:
     """Save a copy at `path` (from the native save dialog, which already confirmed any
-    overwrite), as WAV or encoded by ffmpeg. Sample rate, loudness, tempo and gain arrive
-    with `POST /export` (Session 7)."""
+    overwrite), as WAV or encoded by ffmpeg, with optional post-processing (D20)."""
     source = _source(audio_id, svc)
     requested = Path(body.path)
     if not requested.is_absolute() or requested.is_dir():
@@ -46,7 +46,7 @@ def save_audio(audio_id: str, body: SaveAudioRequest, svc: ServicesDep) -> Saved
     if not dest.parent.is_dir() or dest.is_dir():
         raise ApiError(ErrorCode.SAVE_PATH_INVALID, "destination folder does not exist")
     try:
-        export.export_audio(source, dest, fmt, ffmpeg=svc.config.ffmpeg)
+        export.export_audio(source, dest, fmt, ffmpeg=svc.config.ffmpeg, post=post_of(body.post))
     except export.ExportError as exc:
         raise ApiError(ErrorCode.parse(exc.code), str(exc)) from exc
     size = dest.stat().st_size

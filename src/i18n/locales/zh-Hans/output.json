@@ -1,0 +1,30 @@
+{
+  "title": "导出设置",
+  "format": "格式",
+  "formats": {
+    "wav": "WAV（未压缩）",
+    "mp3": "MP3",
+    "m4a": "M4A（AAC）",
+    "flac": "FLAC（无损压缩）",
+    "opus": "Opus"
+  },
+  "sampleRate": "采样率",
+  "loudness": "响度标准化",
+  "loudnessOff": "不使用",
+  "loudnessPresets": {
+    "streaming": "-14 LUFS（流媒体）",
+    "podcast": "-16 LUFS（网络）",
+    "broadcast": "-23 LUFS（广播）"
+  },
+  "tempo": "语速（后期处理・倍）",
+  "gain": "音量（dB）",
+  "summary": {
+    "separator": "・",
+    "rate": "{{value}} kHz",
+    "loudness": "{{value}} LUFS",
+    "tempo": "语速 {{value}} 倍",
+    "gain": "{{value}} dB"
+  },
+  "hint": "所有界面的导出共用此设置。语速在不改变音高的情况下伸缩，字幕也随之调整。使用响度标准化时不使用音量。Opus 始终为 48 kHz。",
+  "needFfmpeg": "WAV 以外的格式和后期处理需要 ffmpeg。"
+}

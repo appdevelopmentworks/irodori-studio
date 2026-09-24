@@ -1,0 +1,11 @@
+{
+  "open": "Open project…",
+  "save": "Save project…",
+  "openTitle": "Open a project",
+  "saveTitle": "Save the project",
+  "filter": "irodori-studio project",
+  "saved": "Saved: {{path}}",
+  "missing": "These voices or LoRA adapters of the project are not on this computer, so they were left out: {{items}}",
+  "separator": ", ",
+  "dismiss": "Dismiss"
+}

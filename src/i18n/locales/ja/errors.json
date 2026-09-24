@@ -77,6 +77,8 @@
     "line_not_found": "行が見つかりません。",
     "script_busy": "この台本は生成中です。完了するかキャンセルしてから操作してください。",
     "script_incomplete": "未生成の行があります。すべて生成してから結合・書き出ししてください。",
-    "naming_template_invalid": "ファイル名のテンプレートに使えない項目があります。{index}・{n}・{speaker}・{text_head}・{title}・{id} を使ってください。"
+    "naming_template_invalid": "ファイル名のテンプレートに使えない項目があります。{index}・{n}・{speaker}・{text_head}・{title}・{id} を使ってください。",
+    "preset_not_found": "プリセットが見つかりません。",
+    "project_invalid": "プロジェクトファイルを読み込めませんでした。irodori-studio で保存した .iroproj ファイルか確認してください。"
   }
 }

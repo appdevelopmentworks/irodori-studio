@@ -14,8 +14,11 @@ from app.engine.registry import Registry, load_registry
 from app.services.clips import ClipStore
 from app.services.history import HistoryStore
 from app.services.job_manager import Job, JobManager
+from app.services.library import LibraryService
 from app.services.narration import NarrationService
 from app.services.preferences import PreferencesStore
+from app.services.presets import PresetService
+from app.services.projects import ProjectService
 from app.services.queue import SynthesisQueue
 from app.services.script import ScriptService
 from app.services.synthesis import SynthesisService
@@ -44,11 +47,15 @@ class Services:
     reader: Reader
     narration: NarrationService
     script: ScriptService
+    library: LibraryService
+    presets: PresetService
+    projects: ProjectService
     autoload: bool = True
 
     def start(self) -> None:
         """Begin loading the model (D4) and serving the queue."""
         self.clips.purge_unowned()
+        self.layout.projects.mkdir(parents=True, exist_ok=True)  # default place for projects
         if self.autoload:
             self.host.start()
         self.queue.start()
@@ -140,6 +147,17 @@ def build_services(
         queue=queue,
         ffmpeg=config.ffmpeg,
     )
+    library = LibraryService(history=history, synthesis=synthesis, ffmpeg=config.ffmpeg)
+    presets = PresetService(db=db, host=host)
+    projects = ProjectService(
+        host=host,
+        narration=narration,
+        script=script,
+        voices=voices,
+        clips=clips,
+        history=history,
+        app_version=config.app_version,
+    )
     return Services(
         config=config,
         registry=registry,
@@ -157,5 +175,8 @@ def build_services(
         reader=reader,
         narration=narration,
         script=script,
+        library=library,
+        presets=presets,
+        projects=projects,
         autoload=autoload,
     )

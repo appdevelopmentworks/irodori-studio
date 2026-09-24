@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
 import { button } from '@/components/ui';
+import { ProjectBar } from '@/features/projects/ProjectBar';
 import { codeOf } from '@/lib/jobs';
 import { useScriptStore } from '@/store/script';
 import { useSidecarStore } from '@/store/sidecar';
@@ -125,6 +126,7 @@ export function ScriptScreen() {
           ) : null}
         </div>
       </div>
+      <ProjectBar kind="script" id={script?.id ?? null} title={script?.title ?? ''} />
       {error ? <ErrorNotice error={{ code: error }} /> : null}
 
       <ImportSection model={model} />

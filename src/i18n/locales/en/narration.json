@@ -101,7 +101,6 @@
     "reassemble": "Join again",
     "assembled": "{{duration}} ({{cues}} subtitles)",
     "dialogTitle": "Export narration",
-    "format": "Audio format",
     "subtitles": "Subtitles",
     "srt": "SRT",
     "vtt": "WebVTT",

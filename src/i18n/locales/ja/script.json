@@ -163,7 +163,6 @@
     "assemble": "結合して試聴",
     "reassemble": "結合し直す",
     "assembled": "{{duration}}（字幕 {{cues}} 件）",
-    "format": "音声の形式",
     "perLine": "行別の音声ファイル",
     "merged": "結合したドラマ音声",
     "subtitles": "字幕",

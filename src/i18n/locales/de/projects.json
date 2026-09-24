@@ -1,0 +1,11 @@
+{
+  "open": "Projekt öffnen…",
+  "save": "Projekt speichern…",
+  "openTitle": "Projekt öffnen",
+  "saveTitle": "Projekt speichern",
+  "filter": "irodori-studio-Projekt",
+  "saved": "Gespeichert: {{path}}",
+  "missing": "Diese Stimmen oder LoRA-Adapter des Projekts sind auf diesem Computer nicht vorhanden und wurden weggelassen: {{items}}",
+  "separator": ", ",
+  "dismiss": "Schließen"
+}

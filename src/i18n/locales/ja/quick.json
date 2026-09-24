@@ -110,16 +110,7 @@
     "adopted": "採用中",
     "save": "保存…",
     "saveTitle": "音声を保存",
-    "saved": "保存しました: {{path}}",
-    "format": "保存形式",
-    "formats": {
-      "wav": "WAV（無圧縮）",
-      "mp3": "MP3",
-      "m4a": "M4A（AAC）",
-      "flac": "FLAC（可逆圧縮）",
-      "opus": "Opus"
-    },
-    "needFfmpeg": "WAV 以外の形式には ffmpeg が必要です。"
+    "saved": "保存しました: {{path}}"
   },
   "runLog": {
     "title": "実行ログ",

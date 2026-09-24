@@ -1,0 +1,30 @@
+{
+  "title": "Exporteinstellungen",
+  "format": "Format",
+  "formats": {
+    "wav": "WAV (unkomprimiert)",
+    "mp3": "MP3",
+    "m4a": "M4A (AAC)",
+    "flac": "FLAC (verlustfrei)",
+    "opus": "Opus"
+  },
+  "sampleRate": "Abtastrate",
+  "loudness": "Lautheitsnormalisierung",
+  "loudnessOff": "Aus",
+  "loudnessPresets": {
+    "streaming": "-14 LUFS (Streaming)",
+    "podcast": "-16 LUFS (Web)",
+    "broadcast": "-23 LUFS (Rundfunk)"
+  },
+  "tempo": "Tempo (Nachbearbeitung, ×)",
+  "gain": "Pegel (dB)",
+  "summary": {
+    "separator": " · ",
+    "rate": "{{value}} kHz",
+    "loudness": "{{value}} LUFS",
+    "tempo": "Tempo {{value}}×",
+    "gain": "{{value}} dB"
+  },
+  "hint": "Gilt für Exporte auf allen Bildschirmen. Das Tempo streckt das Audio, ohne die Tonhöhe zu ändern; Untertitel werden angepasst. Mit Lautheitsnormalisierung wird der Pegel nicht verwendet. Opus hat immer 48 kHz.",
+  "needFfmpeg": "Andere Formate als WAV und die Nachbearbeitung benötigen ffmpeg."
+}

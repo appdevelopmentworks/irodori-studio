@@ -6,16 +6,16 @@ import { useTranslation } from 'react-i18next';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
 import { button, card, primaryButton } from '@/components/ui';
+import { postOf, usableOutput } from '@/features/output/output';
+import { OutputSettings } from '@/features/output/OutputSettings';
 import { formatClock } from '@/lib/format';
 import { codeOf, isBusy } from '@/lib/jobs';
 import { pickSavePath } from '@/lib/tauri';
-import type { AudioFormat, ExportedFile, ModelCapabilities } from '@/lib/types';
+import type { ExportedFile, ModelCapabilities } from '@/lib/types';
 import { useNarrationStore } from '@/store/narration';
 import { useSidecarStore } from '@/store/sidecar';
 
 import { saveSettings } from './actions';
-
-const FORMATS: AudioFormat[] = ['wav', 'mp3', 'm4a', 'flac', 'opus'];
 
 /** Join the adopted takes with the pauses (or at the SRT cue times), listen, and export
  * one file with SRT / WebVTT subtitles and, optionally, one file per chunk. */
@@ -23,9 +23,9 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
   const { t } = useTranslation();
   const api = useSidecarStore((s) => s.api);
   const ffmpeg = useSidecarStore((s) => s.system?.ffmpeg_available ?? false);
+  const preferences = useSidecarStore((s) => s.preferences);
   const narration = useNarrationStore((s) => s.narration);
   const busyRender = useNarrationStore((s) => isBusy(s.job));
-  const [format, setFormat] = useState<AudioFormat>('wav');
   const [srt, setSrt] = useState(true);
   const [vtt, setVtt] = useState(false);
   const [perChunk, setPerChunk] = useState(false);
@@ -36,7 +36,8 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
   if (!api || !narration) return null;
 
   const missing = narration.chunks.filter((chunk) => !chunk.adopted_audio_id).length;
-  const chosen: AudioFormat = ffmpeg ? format : 'wav';
+  const output = usableOutput(preferences?.output, ffmpeg);
+  const chosen = output.format;
   const assembled = narration.assembled;
 
   const run = async (action: () => Promise<void>) => {
@@ -66,7 +67,7 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
       const path = await pickSavePath(
         t('narration.export.dialogTitle'),
         `${narration.title.replace(/[\\/:*?"<>|]/g, '_')}.${chosen}`,
-        [{ name: t(`quick.candidates.formats.${chosen}`), extensions: [chosen] }],
+        [{ name: t(`output.formats.${chosen}`), extensions: [chosen] }],
       );
       if (!path) return;
       const subtitles = [...(srt ? ['srt' as const] : []), ...(vtt ? ['vtt' as const] : [])];
@@ -75,6 +76,7 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
         format: chosen,
         subtitles,
         per_chunk: perChunk,
+        post: postOf(output),
       });
       setFiles(result.files);
       const fresh = await api.getNarration(narration.id);
@@ -116,20 +118,6 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        <label className="flex items-center gap-2">
-          <span className="text-zinc-500">{t('narration.export.format')}</span>
-          <select
-            value={chosen}
-            onChange={(event) => setFormat(event.target.value as AudioFormat)}
-            className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          >
-            {FORMATS.map((option) => (
-              <option key={option} value={option} disabled={option !== 'wav' && !ffmpeg}>
-                {t(`quick.candidates.formats.${option}`)}
-              </option>
-            ))}
-          </select>
-        </label>
         <span className="flex items-center gap-3">
           <span className="text-zinc-500">{t('narration.export.subtitles')}</span>
           <label className="flex items-center gap-1.5">
@@ -150,7 +138,7 @@ export function ExportSection({ model }: { model: ModelCapabilities }) {
           {t('narration.export.perChunk')}
         </label>
       </div>
-      {!ffmpeg ? <p className="text-xs text-zinc-500">{t('quick.candidates.needFfmpeg')}</p> : null}
+      <OutputSettings />
 
       <div className="flex flex-wrap items-center gap-3">
         <button

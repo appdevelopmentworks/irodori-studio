@@ -1,19 +1,22 @@
 """Saving generated audio in other formats (D20).
 
-WAV is copied as generated (48 kHz mono 16-bit); MP3, M4A (AAC), FLAC and Opus are
-encoded by ffmpeg — the bundled LGPL build in installed apps, the one on PATH in dev
-(`IRODORI_FFMPEG`, set by Rust). This is the plain-conversion part of Session 7's
-`POST /export`, which adds sample rate, loudness, tempo and gain.
+WAV is copied as generated (48 kHz mono 16-bit) unless post-processing changes it; MP3,
+M4A (AAC), FLAC and Opus — and any post-processing (`post.py`: sample rate, loudness,
+tempo, gain) — go through ffmpeg: the bundled LGPL build in installed apps, the one on
+PATH in dev (`IRODORI_FFMPEG`, set by Rust).
 """
 
 from __future__ import annotations
 
 import os
 import shutil
-import subprocess
-import sys
+from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Literal
+
+from app.audio import post as post_processing
+from app.audio.post import Post
 
 AudioFormat = Literal["wav", "mp3", "m4a", "flac", "opus"]
 
@@ -28,11 +31,15 @@ EXTENSIONS: dict[str, str] = {
 # (ffmpeg codec options, muxer). The muxer is explicit because the temporary file does
 # not end in the real extension.
 _ENCODERS: dict[str, tuple[tuple[str, ...], str]] = {
+    "wav": (("-c:a", "pcm_s16le"), "wav"),
     "mp3": (("-c:a", "libmp3lame", "-q:a", "2"), "mp3"),  # VBR, ~190 kbps
     "m4a": (("-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart"), "ipod"),
     "flac": (("-c:a", "flac"), "flac"),
     "opus": (("-c:a", "libopus", "-b:a", "128k"), "opus"),
 }
+
+# Files exported at once (one ffmpeg process each).
+PARALLEL_EXPORTS = 4
 
 
 class ExportError(Exception):
@@ -59,36 +66,50 @@ def destination(path: Path, fmt: str) -> Path:
     return path.with_name(path.name + ext)
 
 
-def export_audio(source: Path, dest: Path, fmt: str, *, ffmpeg: Path | None) -> None:
-    """Write `source` (a generated WAV) to `dest` in `fmt`, replacing `dest` atomically."""
+def export_audio(
+    source: Path, dest: Path, fmt: str, *, ffmpeg: Path | None, post: Post | None = None
+) -> None:
+    """Write `source` (a generated WAV) to `dest` in `fmt` with `post` applied, replacing
+    `dest` atomically."""
     partial = dest.with_name(f".{dest.name}.part")
     try:
-        if fmt == "wav":
+        if fmt == "wav" and (post is None or post.identity):
             shutil.copyfile(source, partial)
         else:
-            _encode(source, partial, fmt, ffmpeg)
+            _encode(source, partial, fmt, ffmpeg, post or Post())
         os.replace(partial, dest)
     except OSError as exc:
         raise ExportError("save_failed", str(exc)) from exc
+    except post_processing.PostError as exc:
+        raise ExportError(exc.code, str(exc)) from exc
     finally:
         partial.unlink(missing_ok=True)
 
 
-def _encode(source: Path, dest: Path, fmt: str, ffmpeg: Path | None) -> None:
+def export_many(
+    pairs: Sequence[tuple[Path, Path]], fmt: str, *, ffmpeg: Path | None, post: Post | None
+) -> None:
+    """`export_audio` for many (source, dest) pairs, a few ffmpeg processes at a time."""
+    if fmt == "wav" and (post is None or post.identity):
+        workers = 1  # plain copies
+    else:
+        workers = min(PARALLEL_EXPORTS, max(1, len(pairs)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [
+            pool.submit(export_audio, source, dest, fmt, ffmpeg=ffmpeg, post=post)
+            for source, dest in pairs
+        ]
+        for future in futures:
+            future.result()  # the first failure is raised
+
+
+def _encode(source: Path, dest: Path, fmt: str, ffmpeg: Path | None, post: Post) -> None:
     if ffmpeg is None or not ffmpeg.is_file():
         raise ExportError("ffmpeg_unavailable", "this format needs ffmpeg")
     options, muxer = _ENCODERS[fmt]
-    command = [
-        str(ffmpeg), "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-        "-i", str(source), "-vn", *options, "-f", muxer, str(dest),
-    ]  # fmt: skip
-    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
-    try:
-        result = subprocess.run(
-            command, capture_output=True, timeout=300, creationflags=flags, check=False
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise ExportError("save_failed", str(exc)) from exc
-    if result.returncode != 0:
-        message = result.stderr.decode("utf-8", errors="replace").strip()[-500:]
-        raise ExportError("save_failed", message or "ffmpeg failed")
+    chain = post_processing.filter_chain(ffmpeg, source, post)
+    args = ["-i", str(source), "-vn"]
+    if chain:
+        args += ["-af", ",".join(chain)]
+    args += ["-ar", str(post.output_rate(fmt)), *options, "-f", muxer, str(dest)]
+    post_processing.run(ffmpeg, args)

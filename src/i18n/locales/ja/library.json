@@ -1,0 +1,103 @@
+{
+  "title": "ライブラリ・履歴",
+  "tabs": {
+    "history": "履歴",
+    "presets": "プリセット"
+  },
+  "common": {
+    "cancel": "キャンセル",
+    "close": "閉じる"
+  },
+  "filters": {
+    "search": "検索",
+    "searchPlaceholder": "テキストやキャプションで検索",
+    "voice": "声",
+    "voiceAll": "すべて",
+    "voiceNone": "ライブラリの声なし",
+    "from": "開始日",
+    "to": "終了日",
+    "clear": "条件をクリア"
+  },
+  "history": {
+    "empty": "まだ生成していません。かんたん生成で作った音声がここに残ります。",
+    "noMatch": "条件に合う履歴はありません。",
+    "total_other": "{{count}} 件",
+    "selected_other": "{{count}} 件を選択中（全 {{total}} 件）",
+    "selectAll": "表示中をすべて選択",
+    "select": "この履歴を選択",
+    "more_other": "さらに読み込む（残り {{count}} 件）",
+    "seed": "シード {{seed}}",
+    "caption": "キャプション: {{caption}}",
+    "voiceDeleted": "削除された声",
+    "reference": {
+      "none": "声なし",
+      "voice": "ライブラリの声",
+      "clips": "参照音声",
+      "embedding": "話者埋め込み"
+    },
+    "candidate": "候補 {{index}}（{{seconds}} 秒）",
+    "play": "候補 {{index}} を再生",
+    "stop": "候補 {{index}} の再生を停止",
+    "adopt": "採用",
+    "adopted": "採用中",
+    "again": "同じ条件で再生成",
+    "againNewSeed": "シードを変えて再生成",
+    "reuse": "設定を使う",
+    "save": "保存…",
+    "saveTitle": "音声を保存",
+    "saved": "保存しました: {{path}}",
+    "details": "詳細",
+    "hideDetails": "詳細を閉じる",
+    "run": "{{device}}・{{precision}}・生成 {{seconds}} 秒",
+    "delete": "削除",
+    "deleteConfirm": "削除する",
+    "deleteSelected_other": "{{count}} 件を削除する",
+    "queued": "順番待ち…",
+    "running": "生成しています…"
+  },
+  "export": {
+    "open": "書き出し…",
+    "title_other": "{{count}} 件を書き出す",
+    "hint": "各履歴の採用した候補（未採用なら 1 番目）を書き出します。同じ名前のファイルは上書きします。",
+    "template": "ファイル名のテンプレート",
+    "tokens": {
+      "date": "日時",
+      "n": "番号（1）",
+      "index": "番号（001）",
+      "text_head": "テキストの先頭",
+      "seed": "シード",
+      "id": "履歴 ID"
+    },
+    "export": "フォルダーを選んで書き出す…",
+    "folderTitle": "書き出し先のフォルダーを選択",
+    "done_other": "{{count}} 個のファイルを書き出しました。"
+  },
+  "limits": {
+    "title": "履歴の上限",
+    "usage": "現在 {{entries}} 件・{{size}}",
+    "hint": "どちらかの上限を超えると、古い履歴から自動で削除します。上限を下げるとすぐに適用されます（ナレーションと台本の音声は対象外です）。",
+    "entries": "最大件数",
+    "size": "最大容量（GB）",
+    "save": "上限を保存",
+    "saved": "保存しました。",
+    "invalid": "件数は 1〜100000、容量は 0.01 GB 以上にしてください。"
+  },
+  "presets": {
+    "hint": "パラメーターの組み合わせを名前を付けて保存したものです。かんたん生成・ナレーション・台本の詳細設定から保存・読み込みできます。",
+    "empty": "プリセットはまだありません。",
+    "name": "プリセット名",
+    "updated": "更新 {{date}}",
+    "delete": "削除",
+    "defaults": "すべて既定値",
+    "value": "{{name}}: {{value}}"
+  },
+  "presetBar": {
+    "label": "プリセット",
+    "load": "読み込む…",
+    "none": "保存したプリセットはありません",
+    "saveAs": "現在の値をプリセットとして保存…",
+    "name": "プリセット名",
+    "save": "保存",
+    "saved": "「{{name}}」を保存しました。"
+  }
+}

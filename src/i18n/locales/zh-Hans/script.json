@@ -163,7 +163,6 @@
     "assemble": "合并并试听",
     "reassemble": "重新合并",
     "assembled": "{{duration}}（字幕 {{cues}} 条）",
-    "format": "音频格式",
     "perLine": "逐行音频文件",
     "merged": "合并后的广播剧音频",
     "subtitles": "字幕",

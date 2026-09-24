@@ -101,7 +101,6 @@
     "reassemble": "結合し直す",
     "assembled": "{{duration}}（字幕 {{cues}} 件）",
     "dialogTitle": "ナレーションを書き出す",
-    "format": "音声の形式",
     "subtitles": "字幕",
     "srt": "SRT",
     "vtt": "WebVTT",

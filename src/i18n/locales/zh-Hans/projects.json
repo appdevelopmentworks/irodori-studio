@@ -1,0 +1,11 @@
+{
+  "open": "打开项目…",
+  "save": "保存项目…",
+  "openTitle": "打开项目",
+  "saveTitle": "保存项目",
+  "filter": "irodori-studio 项目",
+  "saved": "已保存：{{path}}",
+  "missing": "此项目使用的以下声音或 LoRA 不在本电脑中，已取消指定后打开：{{items}}",
+  "separator": "、",
+  "dismiss": "关闭"
+}

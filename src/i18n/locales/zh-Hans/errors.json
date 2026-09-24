@@ -77,6 +77,8 @@
     "line_not_found": "找不到该行。",
     "script_busy": "此台本正在生成中。请等待完成或先取消。",
     "script_incomplete": "还有未生成的行。请全部生成后再合并或导出。",
-    "naming_template_invalid": "文件名模板中有无法使用的项目。请使用 {index}、{n}、{speaker}、{text_head}、{title}、{id}。"
+    "naming_template_invalid": "文件名模板中有无法使用的项目。请使用 {index}、{n}、{speaker}、{text_head}、{title}、{id}。",
+    "preset_not_found": "找不到该预设。",
+    "project_invalid": "无法读取项目文件。请确认它是由 irodori-studio 保存的 .iroproj 文件。"
   }
 }

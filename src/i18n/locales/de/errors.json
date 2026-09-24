@@ -77,6 +77,8 @@
     "line_not_found": "Die Zeile wurde nicht gefunden.",
     "script_busy": "Dieses Skript wird gerade erzeugt. Warten Sie, bis es fertig ist, oder brechen Sie es zuerst ab.",
     "script_incomplete": "Einige Zeilen sind noch nicht erzeugt. Erzeugen Sie alle, bevor Sie zusammenfügen oder exportieren.",
-    "naming_template_invalid": "Die Dateinamen-Vorlage enthält ein unbekanntes Feld. Verwenden Sie {index}, {n}, {speaker}, {text_head}, {title} oder {id}."
+    "naming_template_invalid": "Die Dateinamen-Vorlage enthält ein unbekanntes Feld. Verwenden Sie {index}, {n}, {speaker}, {text_head}, {title} oder {id}.",
+    "preset_not_found": "Die Voreinstellung wurde nicht gefunden.",
+    "project_invalid": "Die Projektdatei konnte nicht gelesen werden. Prüfen Sie, ob es eine von irodori-studio gespeicherte .iroproj-Datei ist."
   }
 }

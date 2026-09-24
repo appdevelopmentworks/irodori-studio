@@ -1,0 +1,30 @@
+{
+  "title": "Export settings",
+  "format": "Format",
+  "formats": {
+    "wav": "WAV (uncompressed)",
+    "mp3": "MP3",
+    "m4a": "M4A (AAC)",
+    "flac": "FLAC (lossless)",
+    "opus": "Opus"
+  },
+  "sampleRate": "Sample rate",
+  "loudness": "Loudness normalization",
+  "loudnessOff": "Off",
+  "loudnessPresets": {
+    "streaming": "-14 LUFS (streaming)",
+    "podcast": "-16 LUFS (web)",
+    "broadcast": "-23 LUFS (broadcast)"
+  },
+  "tempo": "Tempo (post-processing, ×)",
+  "gain": "Gain (dB)",
+  "summary": {
+    "separator": " · ",
+    "rate": "{{value}} kHz",
+    "loudness": "{{value}} LUFS",
+    "tempo": "tempo {{value}}×",
+    "gain": "{{value}} dB"
+  },
+  "hint": "Shared by exports on every screen. Tempo stretches the audio without changing its pitch, and subtitles follow. Gain is not used with loudness normalization. Opus is always 48 kHz.",
+  "needFfmpeg": "Formats other than WAV and post-processing need ffmpeg."
+}

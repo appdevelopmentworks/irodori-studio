@@ -1,0 +1,109 @@
+{
+  "title": "Bibliothek & Verlauf",
+  "tabs": {
+    "history": "Verlauf",
+    "presets": "Voreinstellungen"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "close": "Schließen"
+  },
+  "filters": {
+    "search": "Suche",
+    "searchPlaceholder": "Text oder Beschreibung durchsuchen",
+    "voice": "Stimme",
+    "voiceAll": "Alle",
+    "voiceNone": "Ohne Bibliotheksstimme",
+    "from": "Von",
+    "to": "Bis",
+    "clear": "Filter zurücksetzen"
+  },
+  "history": {
+    "empty": "Noch nichts erzeugt. Audio aus der Schnellgenerierung erscheint hier.",
+    "noMatch": "Kein Eintrag passt.",
+    "total_one": "{{count}} Eintrag",
+    "total_other": "{{count}} Einträge",
+    "selected_one": "{{count}} ausgewählt (von {{total}})",
+    "selected_other": "{{count}} ausgewählt (von {{total}})",
+    "selectAll": "Alle angezeigten auswählen",
+    "select": "Diesen Eintrag auswählen",
+    "more_one": "Mehr laden (noch {{count}})",
+    "more_other": "Mehr laden (noch {{count}})",
+    "seed": "Seed {{seed}}",
+    "caption": "Beschreibung: {{caption}}",
+    "voiceDeleted": "Gelöschte Stimme",
+    "reference": {
+      "none": "Keine Stimme",
+      "voice": "Bibliotheksstimme",
+      "clips": "Referenzaudio",
+      "embedding": "Sprecher-Embedding"
+    },
+    "candidate": "Kandidat {{index}} ({{seconds}} s)",
+    "play": "Kandidat {{index}} abspielen",
+    "stop": "Kandidat {{index}} stoppen",
+    "adopt": "Übernehmen",
+    "adopted": "Übernommen",
+    "again": "Erneut erzeugen",
+    "againNewSeed": "Mit neuem Seed erzeugen",
+    "reuse": "Einstellungen verwenden",
+    "save": "Speichern…",
+    "saveTitle": "Audio speichern",
+    "saved": "Gespeichert: {{path}}",
+    "details": "Details",
+    "hideDetails": "Details ausblenden",
+    "run": "{{device}} · {{precision}} · erzeugt in {{seconds}} s",
+    "delete": "Löschen",
+    "deleteConfirm": "Löschen",
+    "deleteSelected_one": "{{count}} Eintrag löschen",
+    "deleteSelected_other": "{{count}} Einträge löschen",
+    "queued": "Wartet…",
+    "running": "Wird erzeugt…"
+  },
+  "export": {
+    "open": "Exportieren…",
+    "title_one": "{{count}} Eintrag exportieren",
+    "title_other": "{{count}} Einträge exportieren",
+    "hint": "Exportiert den übernommenen Kandidaten jedes Eintrags (sonst den ersten). Gleichnamige Dateien werden überschrieben.",
+    "template": "Dateinamen-Vorlage",
+    "tokens": {
+      "date": "Datum und Uhrzeit",
+      "n": "Nummer (1)",
+      "index": "Nummer (001)",
+      "text_head": "Textanfang",
+      "seed": "Seed",
+      "id": "Eintrags-ID"
+    },
+    "export": "In einen Ordner exportieren…",
+    "folderTitle": "Exportordner wählen",
+    "done_one": "{{count}} Datei exportiert.",
+    "done_other": "{{count}} Dateien exportiert."
+  },
+  "limits": {
+    "title": "Grenzen des Verlaufs",
+    "usage": "derzeit {{entries}} Einträge · {{size}}",
+    "hint": "Über einer der Grenzen werden die ältesten Einträge automatisch gelöscht – sofort, wenn Sie eine Grenze senken. Audio von Erzählungen und Skripten ist nicht betroffen.",
+    "entries": "Höchstens Einträge",
+    "size": "Höchstens Speicher (GB)",
+    "save": "Grenzen speichern",
+    "saved": "Gespeichert.",
+    "invalid": "Verwenden Sie 1–100000 Einträge und mindestens 0,01 GB."
+  },
+  "presets": {
+    "hint": "Benannte Parametersätze. Speichern und laden Sie sie in den erweiterten Einstellungen von Schnellgenerierung, Erzählung und Skript.",
+    "empty": "Noch keine Voreinstellungen.",
+    "name": "Name der Voreinstellung",
+    "updated": "Geändert {{date}}",
+    "delete": "Löschen",
+    "defaults": "Alles Standard",
+    "value": "{{name}}: {{value}}"
+  },
+  "presetBar": {
+    "label": "Voreinstellung",
+    "load": "Laden…",
+    "none": "Keine gespeicherten Voreinstellungen",
+    "saveAs": "Aktuelle Werte als Voreinstellung speichern…",
+    "name": "Name der Voreinstellung",
+    "save": "Speichern",
+    "saved": "„{{name}}“ gespeichert."
+  }
+}

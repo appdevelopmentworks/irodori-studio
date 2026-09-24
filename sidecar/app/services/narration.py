@@ -20,6 +20,7 @@ import numpy as np
 
 from app.audio import assemble, export
 from app.audio.io import read_frames
+from app.audio.post import Post, post_of, retimed
 from app.engine.base import BackendError, SynthesisCancelled
 from app.engine.host import EngineHost
 from app.errors import ApiError, ErrorCode
@@ -50,7 +51,7 @@ from app.services.clips import ClipStore
 from app.services.job_manager import Job, JobManager, now_iso
 from app.services.queue import SynthesisQueue
 from app.services.synthesis import RunHooks, SynthesisService, Synthesized
-from app.services.takes import TakeStore
+from app.services.takes import TakeAudio, TakeStore
 from app.services.voices import VoiceService
 from app.storage.db import Database
 from app.storage.files import DataLayout, is_id, new_id, remove_tree
@@ -72,6 +73,14 @@ class RenderPayload:
     narration_id: str
     indices: tuple[int, ...]
     num_candidates: int | None
+
+
+@dataclass(frozen=True)
+class RestoredChunk:
+    """A chunk as a project file saved it, with its adopted take."""
+
+    draft: ChunkDraft
+    take: TakeAudio | None
 
 
 class NarrationService:
@@ -164,6 +173,43 @@ class NarrationService:
                 ),
             )  # fmt: skip
             _insert_chunks(conn, narration_id, drafts)
+        return self.require(narration_id)
+
+    def restore(
+        self,
+        *,
+        title: str,
+        fmt: str,
+        source: str,
+        rules: SplitRules,
+        settings: NarrationSettings,
+        warnings: list[NarrationWarning],
+        chunks: list[RestoredChunk],
+    ) -> Narration:
+        """A narration as a project file saved it: its chunks as they were (not split
+        again) and their adopted takes."""
+        narration_id = new_id()
+        now = now_iso()
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO narrations (id, title, created_at, updated_at, format, source,"
+                " rules_json, settings_json, warnings_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    narration_id, title, now, now, fmt, source, _dump(rules.model_dump()),
+                    _dump(_settings_dump(settings)), _dump([w.model_dump() for w in warnings]),
+                ),
+            )  # fmt: skip
+            _insert_chunks(conn, narration_id, [chunk.draft for chunk in chunks])
+        for index, chunk in enumerate(chunks):
+            if chunk.take is None:
+                continue
+            audio_id = self._takes.restore(narration_id, index, chunk.take)
+            with self._db.transaction() as conn:
+                conn.execute(
+                    "UPDATE narration_chunks SET adopted_audio_id = ?"
+                    " WHERE narration_id = ? AND idx = ?",
+                    (audio_id, narration_id, index),
+                )
         return self.require(narration_id)
 
     def resplit(self, narration_id: str, body: NarrationSplit) -> Narration:
@@ -402,10 +448,14 @@ class NarrationService:
         if not dest.parent.is_dir():
             raise ApiError(ErrorCode.SAVE_PATH_INVALID, "destination folder does not exist")
         assembled = narration.assembled or self.assemble(narration_id)
+        post = post_of(body.post)
         files: list[ExportedFile] = []
-        self._export_audio(self._audio_path(assembled.audio_id), dest, body.format)
+        self._export_audio(self._audio_path(assembled.audio_id), dest, body.format, post)
         files.append(ExportedFile(path=str(dest), bytes=dest.stat().st_size))
-        cues = [srt.Cue(c.start_ms, c.end_ms, c.text) for c in assembled.cues]
+        cues = [
+            srt.Cue(retimed(c.start_ms, post), retimed(c.end_ms, post), c.text)
+            for c in assembled.cues
+        ]
         for kind in dict.fromkeys(body.subtitles):
             text = srt.to_srt(cues) if kind == "srt" else srt.to_vtt(cues)
             path = dest.with_suffix(f".{kind}")
@@ -415,10 +465,15 @@ class NarrationService:
                 raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
             files.append(ExportedFile(path=str(path), bytes=path.stat().st_size))
         if body.per_chunk:
-            for chunk in narration.chunks:
-                path = dest.with_name(f"{dest.stem}_{chunk.index + 1:03d}{dest.suffix}")
-                self._export_audio(self._audio_path(chunk.adopted_audio_id), path, body.format)
-                files.append(ExportedFile(path=str(path), bytes=path.stat().st_size))
+            pairs = [
+                (
+                    self._audio_path(chunk.adopted_audio_id),
+                    dest.with_name(f"{dest.stem}_{chunk.index + 1:03d}{dest.suffix}"),
+                )
+                for chunk in narration.chunks
+            ]
+            self._export_many(pairs, body.format, post)
+            files += [ExportedFile(path=str(path), bytes=path.stat().st_size) for _, path in pairs]
         return NarrationExported(files=files)
 
     # --- Helpers --------------------------------------------------------------------------
@@ -606,9 +661,15 @@ class NarrationService:
     def _audio_path(self, audio_id: str | None) -> Path:
         return self._takes.path(audio_id)
 
-    def _export_audio(self, source: Path, dest: Path, fmt: str) -> None:
+    def _export_audio(self, source: Path, dest: Path, fmt: str, post: Post | None) -> None:
         try:
-            export.export_audio(source, dest, fmt, ffmpeg=self._ffmpeg)
+            export.export_audio(source, dest, fmt, ffmpeg=self._ffmpeg, post=post)
+        except export.ExportError as exc:
+            raise ApiError(ErrorCode.parse(exc.code), str(exc)) from exc
+
+    def _export_many(self, pairs: list[tuple[Path, Path]], fmt: str, post: Post | None) -> None:
+        try:
+            export.export_many(pairs, fmt, ffmpeg=self._ffmpeg, post=post)
         except export.ExportError as exc:
             raise ApiError(ErrorCode.parse(exc.code), str(exc)) from exc
 

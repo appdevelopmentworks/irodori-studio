@@ -7,10 +7,18 @@ import {
   type ParamValue,
   type ParamValues,
   type ReferenceKind,
+  valuesFrom,
   voiceValues,
 } from '@/features/params/schema';
 import { type JobFailure, type JobState, reduceJob, submittingJob, withFailure } from '@/lib/jobs';
-import type { AudioFormat, ClipInfo, JobEvent, ParamSchema, TtsResult, Voice } from '@/lib/types';
+import type {
+  ClipInfo,
+  JobEvent,
+  ParamSchema,
+  SynthesisRequest,
+  TtsResult,
+  Voice,
+} from '@/lib/types';
 
 export interface QuickJob extends JobState<TtsResult> {
   adoptedAudioId: string | null;
@@ -41,7 +49,6 @@ interface QuickStore {
   job: QuickJob | null;
   /** audio_id → path of the last saved copy. */
   saved: Record<string, string>;
-  saveFormat: AudioFormat;
 
   seedText: (text: string) => void;
   setText: (text: string) => void;
@@ -57,8 +64,12 @@ interface QuickStore {
   /** Choose a library voice and load its defaults (caption, parameters, seed, LoRA). */
   applyVoice: (voice: Voice, schema: ParamSchema[]) => void;
   clearVoice: () => void;
+  /** A request from the history, to generate from again (its clips as found). */
+  loadRequest: (request: SynthesisRequest, schema: ParamSchema[], clips: ClipInfo[]) => void;
   setLoraPath: (path: string | null) => void;
   setParam: (name: ParamName, value: ParamValue, defaultValue: ParamValue) => void;
+  /** Replace every parameter value (a preset). */
+  setValues: (values: ParamValues) => void;
   resetParams: () => void;
   setInvalid: (name: ParamName, invalid: boolean) => void;
   beginJob: () => void;
@@ -68,7 +79,6 @@ interface QuickStore {
   setAdopted: (audioId: string | null) => void;
   markSaved: (audioId: string, path: string) => void;
   consumeAutoplay: () => void;
-  setSaveFormat: (format: AudioFormat) => void;
 }
 
 const updateJob = (job: QuickJob | null, patch: Partial<QuickJob>): QuickJob | null =>
@@ -88,7 +98,6 @@ export const useQuickStore = create<QuickStore>((set) => ({
   invalid: {},
   job: null,
   saved: {},
-  saveFormat: 'wav',
 
   seedText: (text) => set((s) => (s.textSeeded ? {} : { text, textSeeded: true })),
   setText: (text) => set({ text, textSeeded: true }),
@@ -123,6 +132,21 @@ export const useQuickStore = create<QuickStore>((set) => ({
       invalid: {},
     }),
   clearVoice: () => set({ voiceId: null }),
+  loadRequest: (request, schema, clips) => {
+    const reference = request.reference ?? { kind: 'none' as const };
+    set({
+      text: request.text,
+      textSeeded: true,
+      caption: request.caption ?? '',
+      reference: reference.kind,
+      voiceId: reference.kind === 'voice' ? reference.voice_id : null,
+      clips: reference.kind === 'clips' ? clips : [],
+      embeddingPath: reference.kind === 'embedding' ? reference.path : null,
+      loraPath: request.lora_adapter ?? null,
+      values: valuesFrom(request.params ?? {}, schema),
+      invalid: {},
+    });
+  },
   setLoraPath: (loraPath) => set({ loraPath }),
   setParam: (name, value, defaultValue) =>
     set((s) => {
@@ -131,6 +155,7 @@ export const useQuickStore = create<QuickStore>((set) => ({
       else values[name] = value;
       return { values };
     }),
+  setValues: (values) => set({ values, invalid: {} }),
   resetParams: () => set({ values: {}, invalid: {} }),
   setInvalid: (name, invalid) =>
     set((s) => {
@@ -155,5 +180,4 @@ export const useQuickStore = create<QuickStore>((set) => ({
   setAdopted: (adoptedAudioId) => set((s) => ({ job: updateJob(s.job, { adoptedAudioId }) })),
   markSaved: (audioId, path) => set((s) => ({ saved: { ...s.saved, [audioId]: path } })),
   consumeAutoplay: () => set((s) => ({ job: updateJob(s.job, { autoplay: false }) })),
-  setSaveFormat: (saveFormat) => set({ saveFormat }),
 }));

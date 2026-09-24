@@ -49,11 +49,15 @@ irodori-studio/
 │  │  │                           template + preview, subtitles, parameters, dictionary), LinesSection + LineRow (table
 │  │  │                           editor, emoji at the caret, render / redo, takes, shared player), ExportSection (join,
 │  │  │                           per-line / merged / subtitles into a folder, CSV / TSV), actions.ts
-│  │  ├─ library/                 history, presets, projects
+│  │  ├─ library/                 LibraryScreen: HistoryPanel (filters, selection, export, delete) + HistoryRow
+│  │  │                           (play, adopt, again, reuse, save, details), LimitsPanel, PresetsPanel, actions.ts
+│  │  ├─ output/                  OutputSettings (shared export settings) + output.ts
+│  │  ├─ projects/                ProjectBar (save / open `.iroproj`)
 │  │  ├─ api-server/              config, status, request log
 │  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
 │  ├─ components/                 AppRoot (boot + routing by status), Startup/Error screens, AppShell (Sidebar + screen + StatusBar),
-│  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid, ProgressBar;
+│  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid, ProgressBar,
+│  │                              usePlayer (one shared audio player);
 │  │                              later WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
@@ -72,7 +76,7 @@ irodori-studio/
 │  │  ├─ wav.ts                   WAV writer for recordings
 │  │  ├─ textFile.ts              text files the user picks (UTF-8, else Shift_JIS)
 │  │  └─ format.ts                Intl formatting (bytes, memory, seconds, dates, percent)
-│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration, script
+│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration, script, library, presets, projects
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", entitlements, localized plist strings
 │  ├─ Info.plist                  merged into the macOS Info.plist (NSMicrophoneUsageDescription)
@@ -104,8 +108,8 @@ irodori-studio/
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
    │  ├─ routers/                 system, models (+ /emoji), tts, jobs (+ SSE, /queue), audio, clips, history, preferences, deps;
-   │  │                           voices, text (dictionary, reading), narration, script; later export, presets,
-   │  │                           projects, api_server
+   │  │                           voices, text (dictionary, reading), narration, script, presets, projects;
+   │  │                           later api_server
    │  ├─ compat/                  openai.py, voicevox.py (external API)
    │  ├─ engine/
    │  │  ├─ base.py               TtsBackend protocol (D6)
@@ -116,13 +120,14 @@ irodori-studio/
    │  ├─ services/                container (wiring), job_manager (events), queue (single FIFO), synthesis, policy (watermark),
    │  │                           clips, voices (library, encode jobs, packages), takes (chunk / line audio rows),
    │  │                           narration (split, render jobs, assemble, export), script (lines, speaker map, render
-   │  │                           jobs, assemble, export, tables), history, preferences, system_info; later presets, projects
+   │  │                           jobs, assemble, export, tables), history, library (regenerate, export), presets,
+   │  │                           projects (.iroproj), preferences, system_info
    │  ├─ text/                    dictionary.py (user dictionary), reading.py (pyopenjtalk-plus readings, length
    │  │                           estimates), chunker.py (D18, Markdown to text), srt.py (SRT/WebVTT in and out),
-   │  │                           script_parser.py ("話者：セリフ" text, CSV / TSV in and out)
-   │  ├─ audio/                   io.py (upload decode, WAV reading/writing), export.py (ffmpeg save formats),
-   │  │                           assemble.py (silence trim, joining takes);
-   │  │                           later concat.py, post.py (loudnorm/atempo/gain)
+   │  │                           script_parser.py ("話者：セリフ" text, CSV / TSV in and out), naming.py (file-name templates)
+   │  ├─ audio/                   io.py (upload decode, WAV reading/writing), export.py (formats, many files at once),
+   │  │                           post.py (sample rate, two-pass loudnorm, atempo, gain), assemble.py (silence trim,
+   │  │                           joining takes)
    │  └─ storage/                 db.py (SQLite + migrations), files.py (data-root layout, ULIDs)
    └─ tests/                      unit tests that do not need torch (fake backend in conftest.py: params, registry, policy, API, jobs)
                                   + test_gpu_smoke.py (marker `gpu`, real model; see coding-conventions.md)

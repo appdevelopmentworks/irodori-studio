@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
 import { button } from '@/components/ui';
+import { ProjectBar } from '@/features/projects/ProjectBar';
 import { codeOf } from '@/lib/jobs';
 import { useNarrationStore } from '@/store/narration';
 import { useSidecarStore } from '@/store/sidecar';
@@ -101,6 +102,7 @@ export function NarrationScreen() {
           ) : null}
         </div>
       </div>
+      <ProjectBar kind="narration" id={narration?.id ?? null} title={narration?.title ?? ''} />
       {error ? <ErrorNotice error={{ code: error }} /> : null}
 
       <ManuscriptSection model={model} />

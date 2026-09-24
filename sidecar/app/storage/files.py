@@ -63,6 +63,11 @@ class DataLayout:
         return self.root / "scripts"
 
     @property
+    def projects(self) -> Path:
+        """The default place for `.iroproj` project files (D23)."""
+        return self.root / "projects"
+
+    @property
     def tmp(self) -> Path:
         return self.root / "runtime" / "tmp"
 

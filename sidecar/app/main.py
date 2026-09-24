@@ -30,6 +30,8 @@ from app.routers import (
     models,
     narration,
     preferences,
+    presets,
+    projects,
     script,
     system,
     text,
@@ -79,6 +81,8 @@ def create_app(
         script,
         history,
         preferences,
+        presets,
+        projects,
     ):
         app.include_router(module.router)
     return app

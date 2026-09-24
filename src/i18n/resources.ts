@@ -8,8 +8,11 @@ import deDictionary from './locales/de/dictionary.json';
 import deEmoji from './locales/de/emoji.json';
 import deErrors from './locales/de/errors.json';
 import deHome from './locales/de/home.json';
+import deLibrary from './locales/de/library.json';
 import deNarration from './locales/de/narration.json';
+import deOutput from './locales/de/output.json';
 import deParams from './locales/de/params.json';
+import deProjects from './locales/de/projects.json';
 import deQuick from './locales/de/quick.json';
 import deScript from './locales/de/script.json';
 import deSetup from './locales/de/setup.json';
@@ -20,8 +23,11 @@ import enDictionary from './locales/en/dictionary.json';
 import enEmoji from './locales/en/emoji.json';
 import enErrors from './locales/en/errors.json';
 import enHome from './locales/en/home.json';
+import enLibrary from './locales/en/library.json';
 import enNarration from './locales/en/narration.json';
+import enOutput from './locales/en/output.json';
 import enParams from './locales/en/params.json';
+import enProjects from './locales/en/projects.json';
 import enQuick from './locales/en/quick.json';
 import enScript from './locales/en/script.json';
 import enSetup from './locales/en/setup.json';
@@ -32,8 +38,11 @@ import jaDictionary from './locales/ja/dictionary.json';
 import jaEmoji from './locales/ja/emoji.json';
 import jaErrors from './locales/ja/errors.json';
 import jaHome from './locales/ja/home.json';
+import jaLibrary from './locales/ja/library.json';
 import jaNarration from './locales/ja/narration.json';
+import jaOutput from './locales/ja/output.json';
 import jaParams from './locales/ja/params.json';
+import jaProjects from './locales/ja/projects.json';
 import jaQuick from './locales/ja/quick.json';
 import jaScript from './locales/ja/script.json';
 import jaSetup from './locales/ja/setup.json';
@@ -44,8 +53,11 @@ import zhHansDictionary from './locales/zh-Hans/dictionary.json';
 import zhHansEmoji from './locales/zh-Hans/emoji.json';
 import zhHansErrors from './locales/zh-Hans/errors.json';
 import zhHansHome from './locales/zh-Hans/home.json';
+import zhHansLibrary from './locales/zh-Hans/library.json';
 import zhHansNarration from './locales/zh-Hans/narration.json';
+import zhHansOutput from './locales/zh-Hans/output.json';
 import zhHansParams from './locales/zh-Hans/params.json';
+import zhHansProjects from './locales/zh-Hans/projects.json';
 import zhHansQuick from './locales/zh-Hans/quick.json';
 import zhHansScript from './locales/zh-Hans/script.json';
 import zhHansSetup from './locales/zh-Hans/setup.json';
@@ -60,8 +72,11 @@ export const resources = {
       emoji: jaEmoji,
       errors: jaErrors,
       home: jaHome,
+      library: jaLibrary,
       narration: jaNarration,
+      output: jaOutput,
       params: jaParams,
+      projects: jaProjects,
       quick: jaQuick,
       script: jaScript,
       setup: jaSetup,
@@ -76,8 +91,11 @@ export const resources = {
       emoji: enEmoji,
       errors: enErrors,
       home: enHome,
+      library: enLibrary,
       narration: enNarration,
+      output: enOutput,
       params: enParams,
+      projects: enProjects,
       quick: enQuick,
       script: enScript,
       setup: enSetup,
@@ -92,8 +110,11 @@ export const resources = {
       emoji: zhHansEmoji,
       errors: zhHansErrors,
       home: zhHansHome,
+      library: zhHansLibrary,
       narration: zhHansNarration,
+      output: zhHansOutput,
       params: zhHansParams,
+      projects: zhHansProjects,
       quick: zhHansQuick,
       script: zhHansScript,
       setup: zhHansSetup,
@@ -108,8 +129,11 @@ export const resources = {
       emoji: deEmoji,
       errors: deErrors,
       home: deHome,
+      library: deLibrary,
       narration: deNarration,
+      output: deOutput,
       params: deParams,
+      projects: deProjects,
       quick: deQuick,
       script: deScript,
       setup: deSetup,

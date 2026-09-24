@@ -6,13 +6,16 @@ import { useTranslation } from 'react-i18next';
 import { CandidateGrid } from '@/components/CandidateGrid';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { ChevronIcon, Spinner } from '@/components/icons';
+import { postOf, usableOutput } from '@/features/output/output';
+import { OutputSettings } from '@/features/output/OutputSettings';
 import { ParamField } from '@/features/params/ParamField';
 import { ParamPanel } from '@/features/params/ParamPanel';
+import { PresetBar } from '@/features/params/PresetBar';
 import { currentValue, isVisible, type ParamName } from '@/features/params/schema';
 import { ApiError } from '@/lib/api';
 import { isBusy } from '@/lib/jobs';
 import { pickSavePath } from '@/lib/tauri';
-import type { AudioFormat, AudioOutput } from '@/lib/types';
+import type { AudioOutput } from '@/lib/types';
 import { useQuickStore } from '@/store/quick';
 import { useSidecarStore } from '@/store/sidecar';
 
@@ -28,8 +31,6 @@ import { VoiceSection } from './VoiceSection';
 const card =
   'rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900';
 
-const SAVE_FORMATS: AudioFormat[] = ['wav', 'mp3', 'm4a', 'flac', 'opus'];
-
 /** かんたん生成: text → voice → emotion → generate → listen → save on one screen
  * (requirements §6.4), with every Space parameter one click away. */
 export function QuickScreen() {
@@ -38,6 +39,7 @@ export function QuickScreen() {
   const model = useSidecarStore((s) => s.capabilities);
   const loadError = useSidecarStore((s) => s.loadError);
   const ffmpeg = useSidecarStore((s) => s.system?.ffmpeg_available ?? false);
+  const preferences = useSidecarStore((s) => s.preferences);
   const values = useQuickStore((s) => s.values);
   const reference = useQuickStore((s) => s.reference);
   const job = useQuickStore((s) => s.job);
@@ -47,8 +49,6 @@ export function QuickScreen() {
   const setInvalid = useQuickStore((s) => s.setInvalid);
   const resetParams = useQuickStore((s) => s.resetParams);
   const consumeAutoplay = useQuickStore((s) => s.consumeAutoplay);
-  const saveFormat = useQuickStore((s) => s.saveFormat);
-  const setSaveFormat = useQuickStore((s) => s.setSaveFormat);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // Play a fresh result once, not again whenever the screen is revisited.
@@ -101,8 +101,9 @@ export function QuickScreen() {
     }
   };
 
-  // Formats other than WAV are encoded by ffmpeg (D20).
-  const format: AudioFormat = ffmpeg ? saveFormat : 'wav';
+  // The shared export settings (D20); formats other than WAV need ffmpeg.
+  const settings = usableOutput(preferences?.output, ffmpeg);
+  const format = settings.format;
   const save = async (output: AudioOutput) => {
     const stamp = new Date(job?.finishedAt ?? Date.now())
       .toISOString()
@@ -112,11 +113,11 @@ export function QuickScreen() {
     const path = await pickSavePath(
       t('quick.candidates.saveTitle'),
       `irodori_${stamp}_${output.index + 1}.${format}`,
-      [{ name: t(`quick.candidates.formats.${format}`), extensions: [format] }],
+      [{ name: t(`output.formats.${format}`), extensions: [format] }],
     );
     if (!path) return;
     try {
-      const file = await api.saveAudio(output.audio_id, path, format);
+      const file = await api.saveAudio(output.audio_id, path, format, postOf(settings));
       useQuickStore.getState().markSaved(output.audio_id, file.path);
       setActionError(null);
     } catch (err) {
@@ -171,6 +172,11 @@ export function QuickScreen() {
             ) : null}
           </summary>
           <div className="space-y-2 pt-2">
+            <PresetBar
+              schema={model.params}
+              values={values}
+              onLoad={(next) => useQuickStore.getState().setValues(next)}
+            />
             {changed > 0 ? (
               <button
                 type="button"
@@ -195,26 +201,8 @@ export function QuickScreen() {
       <div className="min-w-0 space-y-5 lg:sticky lg:top-6 lg:max-h-[calc(100vh-5rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-xl font-semibold tracking-tight">{t('quick.candidates.title')}</h2>
-          {result ? (
-            <label className="flex items-center gap-2 text-sm">
-              <span className="text-zinc-500">{t('quick.candidates.format')}</span>
-              <select
-                value={format}
-                onChange={(event) => setSaveFormat(event.target.value as AudioFormat)}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              >
-                {SAVE_FORMATS.map((option) => (
-                  <option key={option} value={option} disabled={option !== 'wav' && !ffmpeg}>
-                    {t(`quick.candidates.formats.${option}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
         </div>
-        {result && !ffmpeg ? (
-          <p className="text-xs text-zinc-500">{t('quick.candidates.needFfmpeg')}</p>
-        ) : null}
+        {result ? <OutputSettings /> : null}
         {actionError ? <ErrorNotice error={{ code: actionError }} /> : null}
         {result ? (
           <CandidateGrid

@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import soundfile as sf
 
 from app.audio.io import write_wav
 from app.errors import ApiError, ErrorCode
@@ -24,6 +26,16 @@ from app.storage.files import DataLayout, new_id
 TRUNCATION_SLACK_S = 0.05
 
 Commit = Callable[[sqlite3.Connection, list[Take]], bool]
+
+
+@dataclass(frozen=True)
+class TakeAudio:
+    """A take brought back from a project file: its 16-bit samples, kept bit for bit."""
+
+    samples: np.ndarray  # int16, mono
+    sample_rate: int
+    seed: int
+    truncated: bool
 
 
 class TakeStore:
@@ -105,6 +117,30 @@ class TakeStore:
                 (folder / f"{take.audio_id}.wav").unlink(missing_ok=True)
             return []
         return takes
+
+    def restore(self, owner_id: str, item: Any, take: TakeAudio) -> str:
+        """Store `take` for `item` (the caller records its adoption); returns its id."""
+        folder = self._root / owner_id
+        folder.mkdir(parents=True, exist_ok=True)
+        audio_id = new_id()
+        path = folder / f"{audio_id}.wav"
+        partial = path.with_name(path.name + ".part")
+        samples = np.asarray(take.samples, dtype=np.int16).reshape(-1)
+        sf.write(str(partial), samples, take.sample_rate, subtype="PCM_16", format="WAV")
+        partial.replace(path)
+        duration = round(len(samples) / take.sample_rate, 3)
+        with self._db.transaction() as conn:
+            conn.execute(
+                f"INSERT INTO audio (id, {self._owner}, {self._item}, idx, rel_path, duration_s,"
+                " sample_rate, bytes, seed, truncated, created_at)"
+                " VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    audio_id, owner_id, item, self._layout.to_rel(path), duration,
+                    take.sample_rate, path.stat().st_size, take.seed, int(take.truncated),
+                    now_iso(),
+                ),
+            )  # fmt: skip
+        return audio_id
 
     def drop(self, owner_id: str, which: Callable[[Any], bool]) -> int:
         """Delete the takes selected by `which(item)` (never the assembled file)."""

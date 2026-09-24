@@ -464,6 +464,8 @@ class HistorySummary(BaseModel):
     outputs: list[AudioOutput]
     # The candidate the user adopted (requirements §6.3), if any.
     adopted_audio_id: str | None = None
+    # The library voice of a `{kind: "voice"}` request.
+    voice_id: str | None = None
 
 
 class HistoryPatch(BaseModel):
@@ -473,6 +475,25 @@ class HistoryPatch(BaseModel):
 
 
 AudioFormat = Literal["wav", "mp3", "m4a", "flac", "opus"]
+SampleRate = Literal[48000, 44100]
+LoudnessTarget = Literal[-14, -16, -23]
+
+
+class PostOptions(BaseModel):
+    """Post-processing for exports (D20); the defaults change nothing."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sample_rate: SampleRate = 48000  # Opus stays at 48 kHz
+    loudness: LoudnessTarget | None = None  # integrated LUFS target (EBU R128), or off
+    tempo: float = Field(default=1.0, ge=0.5, le=2.0)  # time stretch, pitch kept
+    gain_db: float = Field(default=0.0, ge=-20.0, le=20.0)  # only when loudness is off
+
+
+class OutputOptions(PostOptions):
+    """Export settings the screens share (kept in preferences)."""
+
+    format: AudioFormat = "wav"
 
 
 class SaveAudioRequest(BaseModel):
@@ -481,6 +502,7 @@ class SaveAudioRequest(BaseModel):
     path: str  # absolute destination, normally from the native save dialog
     # None: from the path's extension, else WAV. Formats other than WAV need ffmpeg.
     format: AudioFormat | None = None
+    post: PostOptions | None = None
 
 
 class SavedFile(BaseModel):
@@ -501,6 +523,38 @@ class HistoryEntry(HistorySummary):
 class HistoryPage(BaseModel):
     items: list[HistorySummary]
     total: int
+
+
+class HistoryUsage(BaseModel):
+    entries: int
+    bytes: int
+
+
+class RegenerateRequest(BaseModel):
+    """The entry's request again. `seed` omitted: its used seed (the same request);
+    `null`: a new random seed."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    num_candidates: int | None = Field(default=None, ge=1, le=32)
+
+
+class HistoryExportRequest(BaseModel):
+    """Each entry's adopted candidate (else its first) into a folder."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    history_ids: list[str] = Field(min_length=1, max_length=1000)
+    folder: str  # absolute, from the native folder dialog
+    format: AudioFormat = "wav"
+    post: PostOptions | None = None
+    # {date} 20260925-143000 (local time), {n} 1, {index} 001, {text_head}, {seed}, {id}
+    naming_template: str = Field(default="{date}_{text_head}", max_length=200)
+
+
+class HistoryExported(BaseModel):
+    files: list[ExportedFile]
 
 
 # --- Text: user dictionary and reading preview (D19) ----------------------------------
@@ -694,6 +748,7 @@ class NarrationExportRequest(BaseModel):
     format: AudioFormat = "wav"
     subtitles: list[Literal["srt", "vtt"]] = Field(default_factory=lambda: ["srt"])
     per_chunk: bool = False
+    post: PostOptions | None = None  # subtitles follow a changed tempo
 
 
 class NarrationExported(BaseModel):
@@ -853,6 +908,7 @@ class ScriptExportRequest(BaseModel):
     per_line: bool = True
     merged: bool = True
     subtitles: list[Literal["srt", "vtt"]] = Field(default_factory=lambda: ["srt"])
+    post: PostOptions | None = None  # subtitles follow a changed tempo
 
 
 class ScriptTableRequest(BaseModel):
@@ -883,6 +939,7 @@ class Preferences(BaseModel):
     watermark_enabled: bool = True
     history_max_entries: int = Field(default=500, ge=1, le=100_000)
     history_max_bytes: int = Field(default=5_000_000_000, ge=10_000_000)
+    output: OutputOptions = Field(default_factory=OutputOptions)
 
 
 class PreferencesPatch(BaseModel):
@@ -891,3 +948,56 @@ class PreferencesPatch(BaseModel):
     watermark_enabled: bool | None = None
     history_max_entries: int | None = Field(default=None, ge=1, le=100_000)
     history_max_bytes: int | None = Field(default=None, ge=10_000_000)
+    output: OutputOptions | None = None
+
+
+# --- Presets (Session 7) -----------------------------------------------------------------
+
+
+class PresetInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=60)
+    params: SamplingParams = Field(default_factory=SamplingParams)
+
+
+class Preset(PresetInput):
+    id: str
+    created_at: str
+    updated_at: str
+
+
+class PresetPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=1, max_length=60)
+    params: SamplingParams | None = None
+
+
+# --- Projects (Session 7, D23) -----------------------------------------------------------
+
+ProjectKind = Literal["narration", "script"]
+
+
+class ProjectSaveRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: ProjectKind
+    id: str
+    path: str  # absolute, from the native save dialog; `.iroproj` is applied
+
+
+class ProjectOpenRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str  # absolute `.iroproj`, from the native open dialog
+
+
+class ProjectOpened(BaseModel):
+    """The narration or script created from a project. Library voices and LoRA
+    adapters it used that are not here are dropped (listed by name / path)."""
+
+    kind: ProjectKind
+    id: str
+    missing_voices: list[str] = []
+    missing_lora: list[str] = []

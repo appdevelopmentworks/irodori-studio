@@ -112,16 +112,7 @@
     "adopted": "Übernommen",
     "save": "Speichern …",
     "saveTitle": "Audio speichern",
-    "saved": "Gespeichert: {{path}}",
-    "format": "Speichern als",
-    "formats": {
-      "wav": "WAV (unkomprimiert)",
-      "mp3": "MP3",
-      "m4a": "M4A (AAC)",
-      "flac": "FLAC (verlustfrei)",
-      "opus": "Opus"
-    },
-    "needFfmpeg": "Andere Formate als WAV benötigen ffmpeg."
+    "saved": "Gespeichert: {{path}}"
   },
   "runLog": {
     "title": "Ausführungsprotokoll",

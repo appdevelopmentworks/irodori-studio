@@ -7,6 +7,7 @@ import { EmojiPalette } from '@/components/EmojiPalette';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { PlusIcon, Spinner } from '@/components/icons';
 import { ProgressBar } from '@/components/ProgressBar';
+import { usePlayer } from '@/components/usePlayer';
 import { button, primaryButton } from '@/components/ui';
 import { isBusy } from '@/lib/jobs';
 import type { ModelCapabilities } from '@/lib/types';
@@ -16,29 +17,6 @@ import { useVoicesStore } from '@/store/voices';
 
 import { cancelRender, render } from './actions';
 import { AddLineRow, LineRow, type LineStatus } from './LineRow';
-
-/** One shared player for the lines' takes, one at a time. Render `element` once; it
- * stops when the screen goes away (a removed media element pauses). */
-function usePlayer(url: ((audioId: string) => string) | null) {
-  const audio = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState<string | null>(null);
-
-  const toggle = (audioId: string) => {
-    const element = audio.current;
-    if (!element || !url) return;
-    if (playing === audioId && !element.paused) {
-      element.pause();
-      setPlaying(null);
-      return;
-    }
-    element.src = url(audioId);
-    setPlaying(audioId);
-    element.play().catch(() => setPlaying(null));
-  };
-  // Generated speech has no caption track; the text is on the line.
-  const element = <audio ref={audio} preload="none" hidden onEnded={() => setPlaying(null)} />;
-  return { playing, toggle, element };
-}
 
 /** The lines as an editable table: speaker, text (emoji at the caret) and caption,
  * candidates, seed, pause and file name per line; render, listen, pick takes, reorder,

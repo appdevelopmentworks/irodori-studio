@@ -26,6 +26,9 @@ interface SidecarStore {
   connect: (port: number) => Promise<void>;
   poll: () => Promise<void>;
   disconnect: () => void;
+  /** Change preferences right away (shown at once, then saved); resolves to an error
+   * code or null. */
+  updatePreferences: (patch: Partial<Preferences>) => Promise<string | null>;
 }
 
 const codeOf = (err: unknown) => (err instanceof ApiError ? err.code : 'internal');
@@ -64,6 +67,20 @@ export const useSidecarStore = create<SidecarStore>((set, get) => ({
       if (get().api === api) set({ system, engine: health.engine, unreachable: false });
     } catch {
       if (get().api === api) set({ unreachable: true });
+    }
+  },
+
+  updatePreferences: async (patch) => {
+    const { api, preferences } = get();
+    if (!api || !preferences) return 'internal';
+    set({ preferences: { ...preferences, ...patch } });
+    try {
+      const saved = await api.updatePreferences(patch);
+      if (get().api === api) set({ preferences: saved });
+      return null;
+    } catch (err) {
+      if (get().api === api) set({ preferences });
+      return codeOf(err);
     }
   },
 
