@@ -1,0 +1,112 @@
+{
+  "title": "Narration",
+  "empty": "Enter a manuscript and press “Split” to render it chunk by chunk.",
+  "common": {
+    "cancel": "Cancel"
+  },
+  "recent": {
+    "label": "Recent narrations",
+    "choose": "Open…",
+    "option": "{{title}} ({{rendered}} / {{total}})",
+    "new": "New manuscript"
+  },
+  "formats": {
+    "text": "Text",
+    "markdown": "Markdown",
+    "srt": "Subtitles (SRT, WebVTT)"
+  },
+  "manuscript": {
+    "title": "Manuscript",
+    "chars": "{{total}} characters",
+    "placeholder": "Paste the text to read, or open a file (.txt / .md / .srt / .vtt).",
+    "import": "Open file…",
+    "format": "Format",
+    "minChars": "Min. characters",
+    "maxChars": "Max. characters",
+    "rulesHint": "Sentences (split at full stops and line breaks) are grouped within this range. Chunks are kept under the {{seconds}}-second limit of one generation, and a paragraph (blank line) always ends a chunk.",
+    "srtHint": "Each subtitle becomes one chunk, generated to fit the subtitle's duration.",
+    "rulesInvalid": "The minimum must be at least 1, the maximum at least 20, and the minimum no larger than the maximum.",
+    "resplitConfirm": "Splitting again discards all rendered audio. Continue?",
+    "resplit": "Split again",
+    "split": "Split"
+  },
+  "settings": {
+    "title": "Voice and settings",
+    "voice": "Voice",
+    "voiceNone": "No voice (caption only)",
+    "voiceOption": "{{name}} ({{source}})",
+    "voiceHintReference": "This voice has reference audio (or a speaker embedding), so it stays the same across chunks.",
+    "voiceHintNone": "Without reference audio the voice may change from chunk to chunk. Choose a voice with reference audio, or use voice lock.",
+    "voiceLock": "Lock the voice",
+    "voiceLockHint": "The first chunk's audio becomes the reference audio for the chunks after it.",
+    "caption": "Caption (manner, emotion)",
+    "sentencePause": "Pause after sentences (ms)",
+    "paragraphPause": "Pause after paragraphs (ms)",
+    "pausesHint": "Silence inserted when the chunks are joined. A chunk split mid-sentence gets half the sentence pause.",
+    "advanced": "Advanced settings",
+    "dictionary": "Use the user dictionary",
+    "editDictionary": "Edit dictionary",
+    "closeDictionary": "Close dictionary",
+    "save": "Save settings",
+    "unsaved": "You have unsaved changes (saved automatically before rendering or joining)."
+  },
+  "chunks": {
+    "title": "Chunks",
+    "summary": "{{total}} chunks · about {{duration}} · rendered {{done}} / {{total}}",
+    "analyzerMissing": "The reading analyzer is not installed yet, so lengths are estimated from characters (it is added at the next start).",
+    "showReadings": "Show readings",
+    "readingsHint": "Estimated readings are a guide; the model may pronounce words differently. Words replaced by the dictionary are highlighted."
+  },
+  "warnings": {
+    "cue_too_long": "Subtitle {{index}} is longer than {{limit}} seconds and will be cut at {{limit}} seconds.",
+    "cue_overlap": "Subtitle {{index}} overlaps the previous one; it is placed after the previous subtitle's audio.",
+    "chunk_too_long": "Chunk {{index}} may exceed {{limit}} seconds. Shorten its text."
+  },
+  "render": {
+    "submitting": "Submitting…",
+    "queued": "Waiting in the queue ({{position}} ahead)",
+    "preparing": "Preparing…",
+    "running": "Rendering… {{done}} / {{total}} chunks done",
+    "start": "Render all",
+    "resume": "Render remaining chunks",
+    "redoAll": "Redo all",
+    "completed": "Rendered {{rendered}} chunks.",
+    "nothing": "No chunk needs rendering.",
+    "cancelled": "Cancelled. “Render remaining chunks” continues where it stopped."
+  },
+  "pause": {
+    "clause": "Mid-sentence",
+    "sentence": "Sentence end",
+    "paragraph": "Paragraph end",
+    "cue": "Subtitle"
+  },
+  "chunk": {
+    "cue": "{{start}} → {{end}}",
+    "estimated": "about {{seconds}} s",
+    "duration": "{{seconds}} s",
+    "pending": "Not rendered",
+    "edit": "Edit",
+    "redo": "Redo",
+    "render": "Render",
+    "editHint": "Changing the text discards this chunk's audio.",
+    "saveText": "Save",
+    "takes": "Takes",
+    "take": "Take {{index}} ({{seconds}} s)",
+    "truncated": "Reached the {{limit}}-second limit; the end may be cut off."
+  },
+  "export": {
+    "title": "Join and export",
+    "incomplete": "{{missing}} chunks are not rendered yet. Render them all to join.",
+    "assemble": "Join and listen",
+    "reassemble": "Join again",
+    "assembled": "{{duration}} ({{cues}} subtitles)",
+    "dialogTitle": "Export narration",
+    "format": "Audio format",
+    "subtitles": "Subtitles",
+    "srt": "SRT",
+    "vtt": "WebVTT",
+    "perChunk": "Also export one audio file per chunk",
+    "export": "Export…",
+    "done": "Exported:"
+  }
+}

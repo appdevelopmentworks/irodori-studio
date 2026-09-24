@@ -6,7 +6,7 @@ Two listeners (D21):
 - **Internal API** — `http://127.0.0.1:<random>`; used only by the app UI. No auth (localhost, random port).
 - **External API** — optional; `<bind>:<port>` (default `127.0.0.1:50221`); OpenAI- and VOICEVOX-compatible routes for other apps. Bearer API key required when bound to a non-loopback address.
 
-Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4).
+Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4); the user dictionary, reading preview and narrations (S5).
 
 ---
 
@@ -71,7 +71,7 @@ type SynthesisRequest = {
   reference?: ReferenceInput;       // default { kind: "none" }
   lora_adapter?: string | null;     // absolute adapter directory (with adapter_config.json)
   params?: SamplingParams;
-  apply_dictionary?: boolean;       // default true (dictionary: Session 5)
+  apply_dictionary?: boolean;       // default true: rewrite the text with the user dictionary first
 };
 
 // Milliseconds per stage: upstream stage names (prepare_lora, tokenize_text,
@@ -201,15 +201,16 @@ type JobAccepted = { job_id: string; queue_position: number }; // jobs ahead of 
 type AudioOutput = { index: number; audio_id: string; duration_s: number };
 type TtsResult = { history_id: string; used_seed: number; timings: Timings; outputs: AudioOutput[]; watermarked: boolean };
 type EncodeResult = { voice_id: string; encoded: number }; // clips encoded by an "encode" job
+type NarrationResult = { narration_id: string; rendered: number }; // chunks rendered by a "narration" job
 type JobInfo = {
-  job_id: string; kind: "tts" | "encode";
+  job_id: string; kind: "tts" | "encode" | "narration";
   state: "queued" | "running" | "completed" | "failed" | "cancelled";
   queue_position: number | null;       // while queued
   created_at: string; started_at: string | null; finished_at: string | null;
   error: { code: string; message: string } | null;
-  result: TtsResult | EncodeResult | null;
+  result: TtsResult | EncodeResult | NarrationResult | null;
 };
-type QueueItem = { job_id: string; kind: "tts" | "encode"; source: "ui" | "api"; state: "queued" | "running"; created_at: string };
+type QueueItem = { job_id: string; kind: "tts" | "encode" | "narration"; source: "ui" | "api"; state: "queued" | "running"; created_at: string };
 type QueueSnapshot = { running: QueueItem | null; queued: QueueItem[] };
 ```
 
@@ -220,13 +221,14 @@ SSE (`text/event-stream`): each event has `event: <type>`, `id: <sequence number
 | `queued` | `{position}`: on submit and whenever the position changes |
 | `started` | `{}` |
 | `log` | `{line}`: upstream and sidecar log lines (developer text) |
-| `progress` | `{done, total, unit}`: `unit` is `"step"` (sampling steps) for single generations, `"clip"` for encode jobs (after each clip); `"chunk"` / `"line"` for narration and script jobs later |
+| `progress` | `{done, total, unit}`: `unit` is `"step"` (sampling steps) for single generations and for the chunk being rendered, `"clip"` for encode jobs (after each clip), `"chunk"` for narration jobs (after each chunk); `"line"` for script jobs later |
 | `candidate` | `AudioOutput`, one per candidate, before `completed` |
-| `completed` | `TtsResult`, or `EncodeResult` for an encode job (terminal) |
+| `chunk` | narration jobs: `{index, takes: NarrationTake[], adopted_audio_id}` — a chunk's new takes (the first one adopted) |
+| `completed` | `TtsResult`, `EncodeResult` for an encode job, `NarrationResult` for a narration job (terminal) |
 | `failed` | `{code, message}` (terminal) |
 | `cancelled` | `{}` (terminal) |
 
-A single generation streams `queued → started → log / progress … → candidate × N → completed`; an encode job `queued → started → log / progress (unit "clip") … → completed`. Failures detected only at run time include `watermark_unavailable` (the watermark is on but SilentCipher did not load, D12), `model_load_failed` / `model_files_missing`, `out_of_memory`, `invalid_params` (rejected upstream) and `synthesis_failed`.
+A single generation streams `queued → started → log / progress … → candidate × N → completed`; an encode job `queued → started → log / progress (unit "clip") … → completed`; a narration job `queued → started → (progress "step" … → chunk → progress "chunk") × chunks → completed`. Failures detected only at run time include `watermark_unavailable` (the watermark is on but SilentCipher did not load, D12), `model_load_failed` / `model_files_missing`, `out_of_memory`, `invalid_params` (rejected upstream) and `synthesis_failed`.
 
 ### Clips
 Reference audio: ad-hoc clips for `ReferenceInput.kind = "clips"`, and the clips a library voice owns (upload first, then list them in `POST /voices` / `PATCH /voices/{id}`). A clip is stored once as float WAV with its encoded latents cached per model/codec/normalization. Edits never change a clip: trim and split create new clips that take its place (inside its voice too) and delete it. Clips no voice owns are deleted a day after upload, at sidecar start (D13).
@@ -280,10 +282,24 @@ type Preferences = {
 ```
 
 ### Text
+The user dictionary rewrites text before it reaches the model (`apply_dictionary`, default true, in `SynthesisRequest` and narration settings): at each position the longest surface wins, matches never overlap, and a surface also matches its full-width / half-width form. History keeps the text as submitted and notes the replacement count in `messages`. The reading preview estimates katakana with pyopenjtalk-plus (D19) — a hint, not what the model will say.
+
 | Method | Path | Notes |
 | --- | --- | --- |
-| POST | `/text/reading` | `{text}` → tokens with estimated kana + dictionary hits (hint only, D19) |
-| GET / PUT | `/dictionary` | `[{surface, reading, enabled, note}]` |
+| GET | `/dictionary` | `DictionaryEntry[]` in order |
+| PUT | `/dictionary` | `DictionaryEntryInput[]` (the whole list, ≤ 5000) → `DictionaryEntry[]`; `422 dictionary_invalid` with `detail {reason: "surface" \| "reading" \| "duplicate" \| "too_many", index, other?}` (two enabled entries may not share a surface) |
+| POST | `/text/reading` | `{text (≤ 20000), apply_dictionary?: true}` → `ReadingResult` |
+
+```ts
+type DictionaryEntryInput = { surface: string; reading: string; enabled: boolean; note: string | null }; // 1–64 / 1–128 / ≤ 200 chars
+type DictionaryEntry = DictionaryEntryInput & { id: string };
+type ReadingToken = {
+  surface: string; reading: string;    // estimated katakana; a dictionary token's reading is its replacement
+  moras: number;
+  source: "analyzer" | "dictionary" | "symbol" | "text";   // "text": no analyzer installed
+};
+type ReadingResult = { tokens: ReadingToken[]; moras: number; estimated_seconds: number; analyzer: boolean };
+```
 
 ### Voices
 The voice library (requirements §6.5). A voice is a speaker identity — ordered clips, a speaker embedding, or only a caption — plus defaults the client applies to a generation (the sidecar uses only the identity for `{kind: "voice"}`). Voices from real people's audio need recorded consent (D13): `source` `imported` / `recorded`, or any clip with origin `upload` / `recording`. Saving queues an `encode` job on the synthesis queue when clips lack latents for the active model ("encode on save"), so generations skip the encoder.
@@ -335,12 +351,55 @@ Speaker embeddings must be a safetensors file whose `speaker_embedding` tensor i
 `.irovoice` (D22) is a zip: `voice.json` (`format: "irovoice"`, `version: 1`, name, source, model id, defaults, consent, clip entries `{file, filename, origin}`), `clips/NN.flac` (24-bit), and `voice.speaker.safetensors` for embedding voices. Latents are not included; they are re-encoded on import.
 
 ### Narration
+Long-form manuscripts (requirements §6.6, D18) kept in the sidecar: split into chunks, rendered chunk by chunk as one queue job, joined with pauses into one file with subtitles. Takes are audio rows owned by the narration (never pruned with the history) and play or save through `/audio/{id}`.
+
 | Method | Path | Notes |
 | --- | --- | --- |
-| POST | `/narration/split` | `{text | srt, rules: {min_chars, max_chars, split_on}, apply_dictionary}` → chunks with reading hints and estimated seconds |
-| POST | `/narration/render` | `{chunks[], voice/reference, caption?, params, pauses: {sentence_ms, paragraph_ms}, voice_lock, srt_timing?}` → job |
-| POST | `/narration/{render_id}/chunks/{index}/regenerate` | job |
-| POST | `/narration/{render_id}/assemble` | `{adopted: {index: audio_id}}` → assembled audio + subtitle ids |
+| GET | `/narrations` | `NarrationSummary[]`, most recently changed first |
+| POST | `/narrations` | `NarrationCreate` → `201 Narration`: the manuscript is split now. `422 subtitle_invalid` (format `srt` without cues), `422 text_empty`, `422 text_too_long` (> 2000 chunks), `422 invalid_request` (`min_chars` > `max_chars`) |
+| GET / DELETE | `/narrations/{id}` | `Narration` / `204` (with its audio) |
+| PATCH | `/narrations/{id}` | `{title?, settings?}` → `Narration`; settings are validated like a request (consent, LoRA, parameters) and clear the assembled file |
+| POST | `/narrations/{id}/split` | `NarrationSplit` → `Narration`: split again, every take is discarded; `409 narration_busy` while rendering |
+| PATCH | `/narrations/{id}/chunks/{index}` | `{text}` (the chunk's takes are discarded) or `{adopted_audio_id}` (one of its takes) → `Narration`; `404 chunk_not_found` / `audio_not_found` |
+| POST | `/narrations/{id}/render` | `RenderRequest` → `JobAccepted` (kind `narration`), or `null` when nothing needs rendering; `409 narration_busy` if one is queued or running. Default: every chunk without an adopted take, in order — resuming after a cancel; `redo` adds and adopts a new take |
+| POST | `/narrations/{id}/assemble` | → `AssembledNarration`; `409 narration_incomplete` (`detail.missing`: indices without a take) |
+| POST | `/narrations/{id}/export` | `NarrationExportRequest` → `{files: ExportedFile[]}`: the joined file (assembled first if needed; formats as `/audio/{id}/save`), `.srt` / `.vtt` beside it, and optionally `<name>_NNN.<ext>` per chunk |
+
+```ts
+type NarrationFormat = "text" | "markdown" | "srt";    // "srt" also reads WebVTT
+type PauseKind = "clause" | "sentence" | "paragraph" | "cue";
+type SplitRules = { min_chars: number; max_chars: number }; // 1–400 / 20–400, default 80 / 150
+type NarrationSettings = {
+  reference: ReferenceInput; caption: string | null; lora_adapter: string | null;
+  params: SamplingParams;              // as in a request; the client loads a library voice's defaults
+  pauses: { sentence_ms: number; paragraph_ms: number };  // default 400 / 900; a clause gets half the sentence pause
+  voice_lock: boolean;                 // default true: without speaker audio, chunk 1's take is the others' reference
+  apply_dictionary: boolean;           // default true
+};
+type NarrationTake = { audio_id: string; duration_s: number; seed: number; truncated: boolean; created_at: string };
+type NarrationChunk = {
+  index: number; text: string; pause_after: PauseKind; estimated_seconds: number;
+  cue: { start_ms: number; end_ms: number } | null;   // SRT input: generated at the cue's length
+  takes: NarrationTake[]; adopted_audio_id: string | null;
+};
+type SubtitleCue = { index: number; start_ms: number; end_ms: number; text: string };
+type Narration = {
+  id: string; title: string; created_at: string; updated_at: string;
+  format: NarrationFormat; source: string; rules: SplitRules; settings: NarrationSettings;
+  chunks: NarrationChunk[];
+  warnings: { code: "cue_too_long" | "cue_overlap" | "chunk_too_long"; index: number }[];
+  assembled: { audio_id: string; duration_s: number; cues: SubtitleCue[] } | null;
+  analyzer: boolean;                   // estimates from mora counts (else from characters)
+  render_job_id: string | null;        // a render queued or running, to follow
+};
+type NarrationSummary = { id: string; title: string; created_at: string; updated_at: string; format: NarrationFormat; chunks: number; rendered: number };
+type NarrationCreate = { title?: string | null; source: string; format?: NarrationFormat; rules?: SplitRules; settings?: NarrationSettings };
+type NarrationSplit = { source: string; format?: NarrationFormat; rules?: SplitRules };
+type RenderRequest = { indices?: number[] | null; redo?: boolean; num_candidates?: number | null };
+type NarrationExportRequest = { path: string; format?: AudioFormat; subtitles?: ("srt" | "vtt")[]; per_chunk?: boolean };
+```
+
+Assembly trims each adopted take's silence (keeping 30 ms before and 60 ms after the sound, threshold −50 dBFS) and places it after the previous one plus the pause (text) or at its cue start (SRT; after the previous take if that one runs long). Subtitle cues are the takes' exact positions; SRT input keeps its cue end when the take starts on time.
 
 ### Script
 | Method | Path | Notes |

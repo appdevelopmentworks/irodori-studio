@@ -59,6 +59,13 @@ class ErrorCode(str, Enum):
     CONSENT_REQUIRED = "consent_required"
     EMBEDDING_INVALID = "embedding_invalid"
     PACKAGE_INVALID = "package_invalid"
+    # Text and narration (Session 5).
+    DICTIONARY_INVALID = "dictionary_invalid"
+    SUBTITLE_INVALID = "subtitle_invalid"
+    NARRATION_NOT_FOUND = "narration_not_found"
+    CHUNK_NOT_FOUND = "chunk_not_found"
+    NARRATION_BUSY = "narration_busy"
+    NARRATION_INCOMPLETE = "narration_incomplete"
     # Jobs and stored results.
     JOB_NOT_FOUND = "job_not_found"
     AUDIO_NOT_FOUND = "audio_not_found"

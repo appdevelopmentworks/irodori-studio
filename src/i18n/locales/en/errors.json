@@ -65,6 +65,12 @@
     "voice_invalid": "The voice is incomplete. Check its name and reference audio.",
     "consent_required": "Using a real person's voice requires confirming their consent.",
     "embedding_invalid": "The speaker embedding file is invalid or does not fit this model.",
-    "package_invalid": "The voice package (.irovoice) could not be read."
+    "package_invalid": "The voice package (.irovoice) could not be read.",
+    "dictionary_invalid": "The dictionary has an invalid row. Check the words and readings (each word only once).",
+    "subtitle_invalid": "The file could not be read as subtitles. Check that it is SRT or WebVTT.",
+    "narration_not_found": "The narration was not found.",
+    "chunk_not_found": "The chunk was not found.",
+    "narration_busy": "This narration is being rendered. Wait for it to finish or cancel it first.",
+    "narration_incomplete": "Some chunks are not rendered yet. Render them all before joining."
   }
 }

@@ -10,6 +10,14 @@ dependencies = [
     "uvicorn==0.53.0",
     "python-multipart==0.0.32",
 
+    # --- Text analysis (D19): reading preview and mora counts (MIT; OpenJTalk and its
+    # bundled dictionary are BSD). Sudachi (Apache-2.0) is pyopenjtalk-plus's reading
+    # disambiguation; pinned to the versions it was released against (sudachipy 0.7.0
+    # appeared on 2026-09-24).
+    "pyopenjtalk-plus==0.4.1.post9",
+    "sudachipy==0.6.11",
+    "sudachidict-core==20260723",
+
     # --- Runtime deps of upstream irodori_tts (third_party/Irodori-TTS/pyproject.toml),
     # pinned to upstream's uv.lock at the submodule commit. Deliberately left out
     # (docs/decisions.md, "Resolved during implementation", S0):

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+import { NarrationScreen } from '@/features/narration/NarrationScreen';
 import { QuickScreen } from '@/features/quick/QuickScreen';
 import { VoiceStudioScreen } from '@/features/voice-studio/VoiceStudioScreen';
 import { getSidecarPort } from '@/lib/tauri';
@@ -48,6 +49,8 @@ export function AppShell() {
             <QuickScreen />
           ) : screen === 'voices' ? (
             <VoiceStudioScreen />
+          ) : screen === 'narration' ? (
+            <NarrationScreen />
           ) : (
             <ComingSoon screen={screen} />
           )}

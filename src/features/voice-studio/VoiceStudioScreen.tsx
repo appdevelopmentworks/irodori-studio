@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
+import { card } from '@/components/ui';
 import { useSidecarStore } from '@/store/sidecar';
 import { useVoicesStore } from '@/store/voices';
 
 import { NewClipVoice } from './NewClipVoice';
 import { NewDesignVoice } from './NewDesignVoice';
 import { NewEmbeddingVoice } from './NewEmbeddingVoice';
-import { card } from './ui';
 import { VoiceEditor } from './VoiceEditor';
 import { VoiceList } from './VoiceList';
 

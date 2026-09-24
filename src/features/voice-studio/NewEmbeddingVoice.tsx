@@ -4,13 +4,13 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
+import { button, card, input, primaryButton } from '@/components/ui';
 import { useEmbeddingPicker } from '@/features/quick/useEmbeddingPicker';
 import { codeOf } from '@/lib/jobs';
 import { useSidecarStore } from '@/store/sidecar';
 import { useVoicesStore } from '@/store/voices';
 
 import { applySaved } from './jobs';
-import { button, card, input, primaryButton } from './ui';
 
 /** (d) A voice from a Speaker Inversion embedding (`.speaker.safetensors`); the file is
  * copied into the library. */

@@ -1,7 +1,13 @@
 // Pure helpers over the served parameter schema (GET /models/active/capabilities).
 // Components never list parameters themselves: which controls exist, their ranges,
 // defaults, groups and visibility all come from the schema (D5, D26).
-import type { ParamGroup, ParamSchema, ReferenceInput, SamplingParams } from '@/lib/types';
+import type {
+  ParamGroup,
+  ParamSchema,
+  ReferenceInput,
+  SamplingParams,
+  Voice,
+} from '@/lib/types';
 
 export type ParamName = keyof SamplingParams;
 export type ParamValue = number | boolean | string | null;
@@ -73,4 +79,20 @@ export function requestParams(schema: ParamSchema[], values: ParamValues): Sampl
     if (value !== undefined && value !== param.default) params[param.name] = value;
   }
   return params as SamplingParams;
+}
+
+/** Parameter values from a stored request or a voice's defaults: values equal to the
+ * schema default are left out, like values the user never touched. */
+export function valuesFrom(params: SamplingParams, schema: ParamSchema[]): ParamValues {
+  const values: ParamValues = {};
+  for (const param of schema) {
+    const value = params[param.name];
+    if (value !== undefined && value !== param.default) values[param.name] = value;
+  }
+  return values;
+}
+
+/** A voice's defaults as parameter values: `params_default` plus `seed_default`. */
+export function voiceValues(voice: Voice, schema: ParamSchema[]): ParamValues {
+  return valuesFrom({ ...voice.params_default, seed: voice.seed_default }, schema);
 }

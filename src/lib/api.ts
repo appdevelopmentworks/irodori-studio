@@ -1,10 +1,14 @@
 // ALL internal-API (sidecar) calls go through this module. The port comes from the
 // `get_sidecar_port` Tauri command via the app store (D10); never write a port literal.
 import type {
+  AssembledNarration,
   AudioFormat,
   CancelResponse,
+  ChunkPatch,
   ClipInfo,
   ClipOrigin,
+  DictionaryEntry,
+  DictionaryEntryInput,
   EmojiItem,
   ExportedFile,
   ErrorResponse,
@@ -16,8 +20,17 @@ import type {
   JobInfo,
   ModelCapabilities,
   ModelInfo,
+  Narration,
+  NarrationCreate,
+  NarrationExported,
+  NarrationExportRequest,
+  NarrationPatch,
+  NarrationSplit,
+  NarrationSummary,
   Preferences,
   QueueSnapshot,
+  ReadingResult,
+  RenderRequest,
   SavedFile,
   SynthesisRequest,
   SystemInfo,
@@ -114,6 +127,37 @@ export function createApi(port: number) {
       form.append('file', file, filename);
       return send<VoiceSaved>(`${base}/voices/import`, { method: 'POST', body: form });
     },
+
+    getDictionary: () => send<DictionaryEntry[]>(`${base}/dictionary`),
+    /** Replaces the whole dictionary. */
+    putDictionary: (entries: DictionaryEntryInput[]) =>
+      send<DictionaryEntry[]>(`${base}/dictionary`, json('PUT', entries)),
+    getReading: (text: string, applyDictionary = true) =>
+      send<ReadingResult>(
+        `${base}/text/reading`,
+        json('POST', { text, apply_dictionary: applyDictionary }),
+      ),
+
+    listNarrations: () => send<NarrationSummary[]>(`${base}/narrations`),
+    createNarration: (body: NarrationCreate) =>
+      send<Narration>(`${base}/narrations`, json('POST', body)),
+    getNarration: (id: string) => send<Narration>(`${base}/narrations/${id}`),
+    updateNarration: (id: string, patch: NarrationPatch) =>
+      send<Narration>(`${base}/narrations/${id}`, json('PATCH', patch)),
+    deleteNarration: (id: string) =>
+      send<void>(`${base}/narrations/${id}`, { method: 'DELETE' }),
+    /** Split again: every take is discarded. */
+    splitNarration: (id: string, body: NarrationSplit) =>
+      send<Narration>(`${base}/narrations/${id}/split`, json('POST', body)),
+    updateChunk: (id: string, index: number, patch: ChunkPatch) =>
+      send<Narration>(`${base}/narrations/${id}/chunks/${index}`, json('PATCH', patch)),
+    /** `null` when no chunk needs rendering. */
+    renderNarration: (id: string, body: RenderRequest = {}) =>
+      send<JobAccepted | null>(`${base}/narrations/${id}/render`, json('POST', body)),
+    assembleNarration: (id: string) =>
+      send<AssembledNarration>(`${base}/narrations/${id}/assemble`, { method: 'POST' }),
+    exportNarration: (id: string, body: NarrationExportRequest) =>
+      send<NarrationExported>(`${base}/narrations/${id}/export`, json('POST', body)),
 
     getHistory: (params: { limit?: number; offset?: number; q?: string } = {}) => {
       const query = new URLSearchParams();

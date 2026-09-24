@@ -65,6 +65,12 @@
     "voice_invalid": "声の内容が正しくありません。名前と参照音声を確認してください。",
     "consent_required": "実在の人の声を使うには、本人の同意の確認が必要です。",
     "embedding_invalid": "話者埋め込みファイルの形式が正しくないか、このモデルに対応していません。",
-    "package_invalid": "声パッケージ（.irovoice）を読み込めませんでした。"
+    "package_invalid": "声パッケージ（.irovoice）を読み込めませんでした。",
+    "dictionary_invalid": "辞書に正しくない行があります。表記と読みを確認してください（同じ表記は 1 つまで）。",
+    "subtitle_invalid": "字幕ファイルとして読み込めませんでした。SRT または WebVTT の形式か確認してください。",
+    "narration_not_found": "ナレーションが見つかりません。",
+    "chunk_not_found": "チャンクが見つかりません。",
+    "narration_busy": "このナレーションは生成中です。完了するかキャンセルしてから操作してください。",
+    "narration_incomplete": "未生成のチャンクがあります。すべて生成してから結合してください。"
   }
 }

@@ -53,6 +53,11 @@ class DataLayout:
         return self.root / "clips"
 
     @property
+    def narrations(self) -> Path:
+        """Narration audio: chunk takes and the assembled file."""
+        return self.root / "narrations"
+
+    @property
     def tmp(self) -> Path:
         return self.root / "runtime" / "tmp"
 

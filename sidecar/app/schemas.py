@@ -223,7 +223,7 @@ class SynthesisRequest(BaseModel):
     reference: ReferenceInput = Field(default_factory=ReferenceNone)
     lora_adapter: str | None = None
     params: SamplingParams = Field(default_factory=SamplingParams)
-    # User dictionary (D19, Session 5); accepted now so clients need not change later.
+    # The user dictionary (D19) rewrites the text before it reaches the model.
     apply_dictionary: bool = True
 
 
@@ -249,12 +249,22 @@ class TtsResult(BaseModel):
     watermarked: bool
 
 
+class EncodeResult(BaseModel):
+    voice_id: str
+    encoded: int
+
+
+class NarrationResult(BaseModel):
+    narration_id: str
+    rendered: int
+
+
 class JobError(BaseModel):
     code: str
     message: str
 
 
-JobKind = Literal["tts", "encode"]
+JobKind = Literal["tts", "encode", "narration"]
 
 
 class JobInfo(BaseModel):
@@ -266,7 +276,7 @@ class JobInfo(BaseModel):
     started_at: str | None = None
     finished_at: str | None = None
     error: JobError | None = None
-    result: TtsResult | None = None
+    result: TtsResult | EncodeResult | NarrationResult | None = None
 
 
 class CancelResponse(BaseModel):
@@ -473,6 +483,201 @@ class HistoryEntry(HistorySummary):
 class HistoryPage(BaseModel):
     items: list[HistorySummary]
     total: int
+
+
+# --- Text: user dictionary and reading preview (D19) ----------------------------------
+
+
+class DictionaryEntryInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    surface: str = Field(min_length=1, max_length=64)  # as written in the text
+    reading: str = Field(min_length=1, max_length=128)  # what the model is given instead
+    enabled: bool = True
+    note: str | None = Field(default=None, max_length=200)
+
+
+class DictionaryEntry(DictionaryEntryInput):
+    id: str
+
+
+class ReadingRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(max_length=20_000)
+    apply_dictionary: bool = True
+
+
+class ReadingToken(BaseModel):
+    surface: str
+    reading: str  # estimated katakana (a hint, not what the model will say)
+    moras: int
+    source: Literal["analyzer", "dictionary", "symbol", "text"]
+
+
+class ReadingResult(BaseModel):
+    tokens: list[ReadingToken]
+    moras: int
+    estimated_seconds: float
+    analyzer: bool  # false: no analyzer available, tokens are plain text
+
+
+# --- Narration (Session 5, D18) ---------------------------------------------------------
+
+NarrationFormat = Literal["text", "markdown", "srt"]
+PauseKind = Literal["clause", "sentence", "paragraph", "cue"]
+
+
+class SplitRules(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    min_chars: int = Field(default=80, ge=1, le=400)  # 1: one sentence per chunk
+    max_chars: int = Field(default=150, ge=20, le=400)
+
+
+class Pauses(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sentence_ms: int = Field(default=400, ge=0, le=5000)
+    paragraph_ms: int = Field(default=900, ge=0, le=10_000)
+
+
+class NarrationSettings(BaseModel):
+    """How every chunk is generated. The reference and caption follow SynthesisRequest;
+    the client applies a library voice's defaults, as on the Quick screen."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    reference: ReferenceInput = Field(default_factory=ReferenceNone)
+    caption: str | None = Field(default=None, max_length=1000)
+    lora_adapter: str | None = None
+    params: SamplingParams = Field(default_factory=SamplingParams)
+    pauses: Pauses = Field(default_factory=Pauses)
+    # D18: without speaker audio, chunk 1's take becomes the reference for the others.
+    voice_lock: bool = True
+    apply_dictionary: bool = True
+
+
+class Cue(BaseModel):
+    start_ms: int
+    end_ms: int
+
+
+class SubtitleCue(Cue):
+    index: int
+    text: str
+
+
+class NarrationTake(BaseModel):
+    audio_id: str
+    duration_s: float
+    seed: int
+    truncated: bool  # the take hit the output limit; the chunk text may be cut off
+    created_at: str
+
+
+class NarrationChunk(BaseModel):
+    index: int
+    text: str
+    pause_after: PauseKind
+    estimated_seconds: float
+    cue: Cue | None = None  # SRT input: the cue this chunk must fit
+    takes: list[NarrationTake] = []
+    adopted_audio_id: str | None = None
+
+
+class NarrationWarning(BaseModel):
+    code: Literal["cue_too_long", "cue_overlap", "chunk_too_long"]
+    index: int
+
+
+class AssembledNarration(BaseModel):
+    audio_id: str
+    duration_s: float
+    cues: list[SubtitleCue]
+
+
+class Narration(BaseModel):
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+    format: NarrationFormat
+    source: str
+    rules: SplitRules
+    settings: NarrationSettings
+    chunks: list[NarrationChunk]
+    warnings: list[NarrationWarning] = []
+    assembled: AssembledNarration | None = None
+    analyzer: bool  # estimates come from mora counts (true) or characters
+    render_job_id: str | None = None  # the render job queued or running, to follow
+
+
+class NarrationSummary(BaseModel):
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+    format: NarrationFormat
+    chunks: int
+    rendered: int
+
+
+class NarrationCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(default=None, max_length=100)
+    source: str = Field(min_length=1, max_length=200_000)
+    format: NarrationFormat = "text"
+    rules: SplitRules = Field(default_factory=SplitRules)
+    settings: NarrationSettings = Field(default_factory=NarrationSettings)
+
+
+class NarrationPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(default=None, min_length=1, max_length=100)
+    settings: NarrationSettings | None = None
+
+
+class NarrationSplit(BaseModel):
+    """Split again (new manuscript or rules): every take is discarded."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str = Field(min_length=1, max_length=200_000)
+    format: NarrationFormat = "text"
+    rules: SplitRules = Field(default_factory=SplitRules)
+
+
+class ChunkPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str | None = Field(default=None, min_length=1, max_length=1000)
+    adopted_audio_id: str | None = None
+
+
+class RenderRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Chunks to render; omitted = every chunk without an adopted take (resume).
+    indices: list[int] | None = Field(default=None, max_length=5000)
+    # Render chunks that already have takes too (a new take is added and adopted).
+    redo: bool = False
+    num_candidates: int | None = Field(default=None, ge=1, le=8)
+
+
+class NarrationExportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str  # absolute, from the native save dialog
+    format: AudioFormat = "wav"
+    subtitles: list[Literal["srt", "vtt"]] = Field(default_factory=lambda: ["srt"])
+    per_chunk: bool = False
+
+
+class NarrationExported(BaseModel):
+    files: list[ExportedFile]
 
 
 # --- Preferences -----------------------------------------------------------------------

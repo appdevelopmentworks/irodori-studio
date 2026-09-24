@@ -13,9 +13,12 @@ import logging
 import secrets
 import shutil
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from app.engine import params as param_table
 from app.engine.base import BackendError, BackendHooks, BackendRequest, SynthesisCancelled
@@ -29,6 +32,7 @@ from app.services.policy import watermark_policy
 from app.services.preferences import PreferencesStore
 from app.services.queue import SynthesisQueue
 from app.services.voices import VoiceService, inspect_embedding
+from app.text.dictionary import DictionaryStore
 
 log = logging.getLogger("irodori.synthesis")
 
@@ -39,12 +43,31 @@ MAX_CAPTION_CHARS = 1000
 @dataclass(frozen=True)
 class PreparedSynthesis:
     request: SynthesisRequest
-    text: str
+    text: str  # as submitted (stripped)
+    spoken: str  # what the model is given: `text` after the user dictionary
     caption: str | None
     params: dict[str, object]  # resolved, incl. `seed` (None = draw one at run time)
     clip_ids: tuple[str, ...] = ()
     embedding: Path | None = None
     lora: Path | None = None
+    replacements: int = 0  # user dictionary hits
+
+
+@dataclass(frozen=True)
+class Synthesized:
+    audios: list[np.ndarray]
+    sample_rate: int
+    used_seed: int
+    timings: dict[str, float]  # milliseconds
+    messages: list[str]
+    watermarked: bool
+
+
+@dataclass(frozen=True)
+class RunHooks:
+    on_log: Callable[[str], None]
+    on_progress: Callable[[int, int], None]
+    is_cancelled: Callable[[], bool]
 
 
 class SynthesisService:
@@ -58,6 +81,7 @@ class SynthesisService:
         jobs: JobManager,
         queue: SynthesisQueue,
         voices: VoiceService,
+        dictionary: DictionaryStore,
         tmp_dir: Path,
     ) -> None:
         self._host = host
@@ -67,6 +91,7 @@ class SynthesisService:
         self._jobs = jobs
         self._queue = queue
         self._voices = voices
+        self._dictionary = dictionary
         self._tmp_dir = tmp_dir
 
     # --- Submit (request thread) --------------------------------------------------------
@@ -84,6 +109,12 @@ class SynthesisService:
             raise ApiError(ErrorCode.TEXT_EMPTY, "text is empty", status_code=422)
         if len(text) > MAX_TEXT_CHARS:
             raise _too_long("text", MAX_TEXT_CHARS)
+        spoken, replacements = text, 0
+        if request.apply_dictionary:
+            applied = self._dictionary.apply(text)
+            spoken, replacements = applied.text.strip(), applied.replacements
+            if not spoken:
+                raise ApiError(ErrorCode.TEXT_EMPTY, "text is empty", status_code=422)
         caption = (request.caption or "").strip() or None
         if caption is not None:
             if not caps.caption:
@@ -146,11 +177,13 @@ class SynthesisService:
         return PreparedSynthesis(
             request=request,
             text=text,
+            spoken=spoken,
             caption=caption,
             params=values,
             clip_ids=clip_ids,
             embedding=embedding,
             lora=lora,
+            replacements=replacements,
         )
 
     # --- Execute (worker thread) --------------------------------------------------------
@@ -185,26 +218,64 @@ class SynthesisService:
         job.mark_completed(result.model_dump())
 
     def _run(self, job: Job, prepared: PreparedSynthesis) -> TtsResult | None:
-        backend = self._host.backend()
-        spec = self._host.spec
-        options = self._host.options
-        preferences = self._preferences.get()
-        watermark = watermark_policy(prepared.request, preferences)
-        if watermark and not backend.watermark_ready:
-            # D12: default ON must never lapse silently.
-            raise BackendError(ErrorCode.WATERMARK_UNAVAILABLE.value, "watermarker not loaded")
-
         def on_log(line: str) -> None:
             log.info("[%s] %s", job.id, line)
             job.emit("log", line=line)
 
-        hooks = BackendHooks(
-            on_log=on_log,
-            on_progress=lambda done, total: job.emit(
-                "progress", done=done, total=total, unit="step"
+        done = self.synthesize(
+            prepared,
+            RunHooks(
+                on_log=on_log,
+                on_progress=lambda n, total: job.emit("progress", done=n, total=total, unit="step"),
+                is_cancelled=job.cancel_requested.is_set,
             ),
-            is_cancelled=job.cancel_requested.is_set,
         )
+        if done is None:
+            return None
+        timings = dict(done.timings)
+        started = time.perf_counter()
+        # As submitted (unset fields stay absent); `params` holds every value actually used.
+        request_dump: dict[str, Any] = prepared.request.model_dump(mode="json", exclude_unset=True)
+        history_id, outputs = self._history.record(
+            NewEntry(
+                model_id=self._host.spec.id,
+                text=prepared.text,
+                caption=prepared.caption,
+                reference_kind=prepared.request.reference.kind,
+                request=request_dump,
+                params={**prepared.params, "seed": done.used_seed},
+                used_seed=done.used_seed,
+                timings=timings,
+                messages=done.messages,
+                watermarked=done.watermarked,
+                device=self._host.options.device,
+                precision=self._host.options.model_precision,
+            ),
+            done.audios,
+            done.sample_rate,
+        )
+        timings["write_audio"] = (time.perf_counter() - started) * 1000.0
+        self._history.prune(self._preferences.get())
+        return TtsResult(
+            history_id=history_id,
+            used_seed=done.used_seed,
+            timings={name: round(ms, 1) for name, ms in timings.items()},
+            outputs=outputs,
+            watermarked=done.watermarked,
+        )
+
+    def synthesize(self, prepared: PreparedSynthesis, hooks: RunHooks) -> Synthesized | None:
+        """Run a prepared request on the resident model (worker thread): reference latents
+        from the cache (encoded on a miss), the watermark decision, the backend call.
+        None when cancelled. Recording the result is the caller's business."""
+        backend = self._host.backend()
+        spec = self._host.spec
+        options = self._host.options
+        watermark = watermark_policy(prepared.request, self._preferences.get())
+        if watermark and not backend.watermark_ready:
+            # D12: default ON must never lapse silently.
+            raise BackendError(ErrorCode.WATERMARK_UNAVAILABLE.value, "watermarker not loaded")
+
         timings: dict[str, float] = {}
         ref_latents: list[Path] = []
         if prepared.clip_ids:
@@ -216,11 +287,11 @@ class SynthesisService:
                 options=options,
                 normalize_db=prepared.params.get("ref_normalize_db"),  # type: ignore[arg-type]
                 ensure_max=bool(prepared.params.get("ref_ensure_max", True)),
-                on_log=on_log,
+                on_log=hooks.on_log,
             )
             if encoded:  # absent when every clip came from the latent cache
                 timings["encode_reference"] = (time.perf_counter() - started) * 1000.0
-        if job.cancel_requested.is_set():
+        if hooks.is_cancelled():
             return None
 
         values = dict(prepared.params)
@@ -229,7 +300,7 @@ class SynthesisService:
             seed = secrets.randbelow(param_table.MAX_SEED + 1)
         result = backend.synthesize(
             BackendRequest(
-                text=prepared.text,
+                text=prepared.spoken,
                 caption=prepared.caption,
                 ref_latents=tuple(ref_latents),
                 ref_embed=prepared.embedding,
@@ -238,40 +309,24 @@ class SynthesisService:
                 seed=int(seed),  # type: ignore[arg-type]
                 watermark=watermark,
             ),
-            hooks,
+            BackendHooks(
+                on_log=hooks.on_log,
+                on_progress=hooks.on_progress,
+                is_cancelled=hooks.is_cancelled,
+            ),
         )
-        if job.cancel_requested.is_set():
+        if hooks.is_cancelled():
             return None
         timings.update(result.timings)
-
-        started = time.perf_counter()
-        # As submitted (unset fields stay absent); `params` holds every value actually used.
-        request_dump: dict[str, Any] = prepared.request.model_dump(mode="json", exclude_unset=True)
-        history_id, outputs = self._history.record(
-            NewEntry(
-                model_id=spec.id,
-                text=prepared.text,
-                caption=prepared.caption,
-                reference_kind=prepared.request.reference.kind,
-                request=request_dump,
-                params={**prepared.params, "seed": result.used_seed},
-                used_seed=result.used_seed,
-                timings=timings,
-                messages=result.messages,
-                watermarked=result.watermarked,
-                device=options.device,
-                precision=options.model_precision,
-            ),
-            result.audios,
-            result.sample_rate,
-        )
-        timings["write_audio"] = (time.perf_counter() - started) * 1000.0
-        self._history.prune(preferences)
-        return TtsResult(
-            history_id=history_id,
+        messages = list(result.messages)
+        if prepared.replacements:
+            messages.append(f"info: user dictionary replaced {prepared.replacements} word(s).")
+        return Synthesized(
+            audios=list(result.audios),
+            sample_rate=result.sample_rate,
             used_seed=result.used_seed,
-            timings={name: round(ms, 1) for name, ms in timings.items()},
-            outputs=outputs,
+            timings=timings,
+            messages=messages,
             watermarked=result.watermarked,
         )
 

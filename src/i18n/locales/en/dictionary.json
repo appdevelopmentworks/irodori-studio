@@ -1,0 +1,17 @@
+{
+  "hint": "Words are replaced by their readings before the text reaches the model (Quick generation and narration). Katakana readings work best.",
+  "surface": "Word",
+  "reading": "Reading",
+  "note": "Note",
+  "enabled": "On",
+  "surfacePlaceholder": "e.g. 明日",
+  "readingPlaceholder": "e.g. アシタ",
+  "remove": "Remove",
+  "empty": "No words yet.",
+  "badRow": "Check row {{row}}.",
+  "add": "Add row",
+  "save": "Save dictionary",
+  "revert": "Revert",
+  "unsaved": "You have unsaved changes.",
+  "saved": "Saved."
+}

@@ -54,6 +54,7 @@ export function reduceJob<R, J extends JobState<R>>(job: J, event: JobEvent<R>):
     case 'log':
       return { ...job, logs: [...job.logs.slice(-(MAX_LOG_LINES - 1)), event.data.line] };
     case 'candidate':
+    case 'chunk':
       return job;
     case 'completed':
       return { ...job, phase: 'completed', result: event.data, finishedAt: Date.now() };

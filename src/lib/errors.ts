@@ -71,6 +71,12 @@ const KNOWN_CODES = new Set<string>([
   'consent_required',
   'embedding_invalid',
   'package_invalid',
+  'dictionary_invalid',
+  'subtitle_invalid',
+  'narration_not_found',
+  'chunk_not_found',
+  'narration_busy',
+  'narration_incomplete',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

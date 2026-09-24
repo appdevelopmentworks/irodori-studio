@@ -65,6 +65,12 @@
     "voice_invalid": "Die Stimme ist unvollständig. Prüfen Sie Namen und Referenzaudio.",
     "consent_required": "Für die Stimme einer realen Person muss deren Einwilligung bestätigt werden.",
     "embedding_invalid": "Die Sprecher-Embedding-Datei ist ungültig oder passt nicht zu diesem Modell.",
-    "package_invalid": "Das Stimmpaket (.irovoice) konnte nicht gelesen werden."
+    "package_invalid": "Das Stimmpaket (.irovoice) konnte nicht gelesen werden.",
+    "dictionary_invalid": "Das Wörterbuch enthält eine ungültige Zeile. Prüfen Sie Wörter und Lesungen (jedes Wort nur einmal).",
+    "subtitle_invalid": "Die Datei konnte nicht als Untertitel gelesen werden. Prüfen Sie, ob sie im SRT- oder WebVTT-Format vorliegt.",
+    "narration_not_found": "Die Erzählung wurde nicht gefunden.",
+    "chunk_not_found": "Der Abschnitt wurde nicht gefunden.",
+    "narration_busy": "Diese Erzählung wird gerade erzeugt. Warten Sie, bis sie fertig ist, oder brechen Sie sie zuerst ab.",
+    "narration_incomplete": "Einige Abschnitte sind noch nicht erzeugt. Erzeugen Sie alle, bevor Sie sie zusammenfügen."
   }
 }

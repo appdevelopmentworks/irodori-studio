@@ -65,6 +65,12 @@
     "voice_invalid": "声音信息不完整。请检查名称和参考音频。",
     "consent_required": "使用真实人物的声音需要确认本人的同意。",
     "embedding_invalid": "说话人嵌入文件格式不正确，或与此模型不兼容。",
-    "package_invalid": "无法读取声音包（.irovoice）。"
+    "package_invalid": "无法读取声音包（.irovoice）。",
+    "dictionary_invalid": "词典中有无效的行。请检查词语和读音（同一词语只能登记一次）。",
+    "subtitle_invalid": "无法作为字幕文件读取。请确认格式为 SRT 或 WebVTT。",
+    "narration_not_found": "找不到该旁白。",
+    "chunk_not_found": "找不到该片段。",
+    "narration_busy": "此旁白正在生成中。请等待完成或先取消。",
+    "narration_incomplete": "还有未生成的片段。请全部生成后再连接。"
   }
 }

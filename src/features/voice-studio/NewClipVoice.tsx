@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
+import { button, card, input, primaryButton } from '@/components/ui';
 import { codeOf } from '@/lib/jobs';
 import type { ModelCapabilities } from '@/lib/types';
 import { useSidecarStore } from '@/store/sidecar';
@@ -19,7 +20,6 @@ import {
 } from './clipOps';
 import { ConsentBox, useConsentInput } from './ConsentBox';
 import { applySaved } from './jobs';
-import { button, card, input, primaryButton } from './ui';
 
 let takes = 0;
 

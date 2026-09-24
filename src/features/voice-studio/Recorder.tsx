@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { button } from '@/components/ui';
 import { formatSeconds } from '@/lib/format';
 
 import { type MicError, micErrorOf, type MicLevel, MicRecorder } from './mic';
-import { button } from './ui';
 
 /** Guide sentences to read aloud (`voiceStudio.record.sentences.<id>`, per locale). */
 const SENTENCES = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10'] as const;

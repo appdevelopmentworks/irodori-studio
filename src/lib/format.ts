@@ -46,3 +46,12 @@ export function formatDateTime(iso: string, locale: string): string {
     new Date(iso),
   );
 }
+
+/** A duration as a clock: "3:05", or "1:02:03" from an hour on. */
+export function formatClock(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = String(total % 60).padStart(2, '0');
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${secs}` : `${minutes}:${secs}`;
+}

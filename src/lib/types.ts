@@ -56,7 +56,13 @@ export type SidecarErrorCode =
   | 'voice_invalid'
   | 'consent_required'
   | 'embedding_invalid'
-  | 'package_invalid';
+  | 'package_invalid'
+  | 'dictionary_invalid'
+  | 'subtitle_invalid'
+  | 'narration_not_found'
+  | 'chunk_not_found'
+  | 'narration_busy'
+  | 'narration_incomplete';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -237,6 +243,7 @@ export interface SynthesisRequest {
   reference?: ReferenceInput;
   lora_adapter?: string | null;
   params?: SamplingParams;
+  /** Rewrite the text with the user dictionary first (default true, D19). */
   apply_dictionary?: boolean;
 }
 
@@ -269,7 +276,7 @@ export interface JobError {
   message: string;
 }
 
-export type JobKind = 'tts' | 'encode';
+export type JobKind = 'tts' | 'encode' | 'narration';
 
 export interface JobInfo {
   job_id: string;
@@ -280,7 +287,7 @@ export interface JobInfo {
   started_at: string | null;
   finished_at: string | null;
   error: JobError | null;
-  result: TtsResult | EncodeResult | null;
+  result: TtsResult | EncodeResult | NarrationResult | null;
 }
 
 export interface CancelResponse {
@@ -307,6 +314,19 @@ export interface EncodeResult {
   encoded: number;
 }
 
+/** Result of a `narration` render job. */
+export interface NarrationResult {
+  narration_id: string;
+  rendered: number;
+}
+
+/** `chunk` event of a narration render: a chunk's new takes (the first one adopted). */
+export interface ChunkRendered {
+  index: number;
+  takes: NarrationTake[];
+  adopted_audio_id: string;
+}
+
 export type ProgressUnit = 'step' | 'clip' | 'candidate' | 'chunk' | 'line';
 
 /** `GET /jobs/{id}/events` (SSE); the event name is `type`. `R` is the job's result. */
@@ -316,6 +336,7 @@ export type JobEvent<R = TtsResult> =
   | { type: 'log'; data: { line: string } }
   | { type: 'progress'; data: { done: number; total: number; unit: ProgressUnit } }
   | { type: 'candidate'; data: AudioOutput }
+  | { type: 'chunk'; data: ChunkRendered }
   | { type: 'completed'; data: R }
   | { type: 'failed'; data: JobError }
   | { type: 'cancelled'; data: Record<string, never> };
@@ -465,6 +486,175 @@ export interface HistoryEntry extends HistorySummary {
 export interface HistoryPage {
   items: HistorySummary[];
   total: number;
+}
+
+// Text: the user dictionary and the reading preview (D19).
+
+export interface DictionaryEntryInput {
+  /** As written in the text. */
+  surface: string;
+  /** What the model is given instead (usually katakana). */
+  reading: string;
+  enabled: boolean;
+  note: string | null;
+}
+
+export interface DictionaryEntry extends DictionaryEntryInput {
+  id: string;
+}
+
+export interface ReadingToken {
+  surface: string;
+  /** Estimated katakana: a hint, not what the model will say. */
+  reading: string;
+  moras: number;
+  source: 'analyzer' | 'dictionary' | 'symbol' | 'text';
+}
+
+export interface ReadingResult {
+  tokens: ReadingToken[];
+  moras: number;
+  estimated_seconds: number;
+  /** False: no analyzer yet; tokens are the plain text. */
+  analyzer: boolean;
+}
+
+// Narration (D18).
+
+export type NarrationFormat = 'text' | 'markdown' | 'srt';
+export type PauseKind = 'clause' | 'sentence' | 'paragraph' | 'cue';
+
+export interface SplitRules {
+  min_chars: number;
+  max_chars: number;
+}
+
+export interface Pauses {
+  sentence_ms: number;
+  paragraph_ms: number;
+}
+
+export interface NarrationSettings {
+  reference: ReferenceInput;
+  caption: string | null;
+  lora_adapter: string | null;
+  params: SamplingParams;
+  pauses: Pauses;
+  /** Without speaker audio, chunk 1's take becomes the others' reference. */
+  voice_lock: boolean;
+  apply_dictionary: boolean;
+}
+
+export interface Cue {
+  start_ms: number;
+  end_ms: number;
+}
+
+export interface SubtitleCue extends Cue {
+  index: number;
+  text: string;
+}
+
+export interface NarrationTake {
+  audio_id: string;
+  duration_s: number;
+  seed: number;
+  /** Hit the output limit: the chunk text may be cut off. */
+  truncated: boolean;
+  created_at: string;
+}
+
+export interface NarrationChunk {
+  index: number;
+  text: string;
+  pause_after: PauseKind;
+  estimated_seconds: number;
+  /** SRT input: the cue this chunk must fit. */
+  cue: Cue | null;
+  takes: NarrationTake[];
+  adopted_audio_id: string | null;
+}
+
+export interface NarrationWarning {
+  code: 'cue_too_long' | 'cue_overlap' | 'chunk_too_long';
+  index: number;
+}
+
+export interface AssembledNarration {
+  audio_id: string;
+  duration_s: number;
+  cues: SubtitleCue[];
+}
+
+export interface Narration {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  format: NarrationFormat;
+  source: string;
+  rules: SplitRules;
+  settings: NarrationSettings;
+  chunks: NarrationChunk[];
+  warnings: NarrationWarning[];
+  assembled: AssembledNarration | null;
+  /** Estimates come from mora counts (true) or characters. */
+  analyzer: boolean;
+  /** The render job queued or running, to follow. */
+  render_job_id: string | null;
+}
+
+export interface NarrationSummary {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  format: NarrationFormat;
+  chunks: number;
+  rendered: number;
+}
+
+export interface NarrationCreate {
+  title?: string | null;
+  source: string;
+  format?: NarrationFormat;
+  rules?: SplitRules;
+  settings?: NarrationSettings;
+}
+
+export interface NarrationPatch {
+  title?: string;
+  settings?: NarrationSettings;
+}
+
+export interface NarrationSplit {
+  source: string;
+  format?: NarrationFormat;
+  rules?: SplitRules;
+}
+
+export interface ChunkPatch {
+  text?: string;
+  adopted_audio_id?: string | null;
+}
+
+export interface RenderRequest {
+  /** Omitted: every chunk without an adopted take (resume). */
+  indices?: number[] | null;
+  /** Also chunks that have takes (a new take is added and adopted). */
+  redo?: boolean;
+  num_candidates?: number | null;
+}
+
+export interface NarrationExportRequest {
+  path: string;
+  format?: AudioFormat;
+  subtitles?: ('srt' | 'vtt')[];
+  per_chunk?: boolean;
+}
+
+export interface NarrationExported {
+  files: ExportedFile[];
 }
 
 export interface Preferences {

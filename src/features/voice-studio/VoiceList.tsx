@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { WarningIcon } from '@/components/icons';
+import { button, card } from '@/components/ui';
 import { formatSeconds } from '@/lib/format';
 import { codeOf } from '@/lib/jobs';
 import type { ModelCapabilities, Voice, VoiceSource } from '@/lib/types';
@@ -13,7 +14,6 @@ import { useVoicesStore } from '@/store/voices';
 
 import { EncodeBadge } from './EncodeBadge';
 import { applySaved } from './jobs';
-import { button, card } from './ui';
 
 const SOURCES: VoiceSource[] = ['designed', 'imported', 'recorded', 'embedding'];
 

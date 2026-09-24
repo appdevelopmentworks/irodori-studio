@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
+import { button, card, dangerButton } from '@/components/ui';
 import { useEmbeddingPicker } from '@/features/quick/useEmbeddingPicker';
 import { formatDateTime } from '@/lib/format';
 import { codeOf } from '@/lib/jobs';
@@ -17,7 +18,6 @@ import { editVoiceClip, moved, setVoiceClips } from './clipOps';
 import { ConsentBox, ConsentRecord, useConsentInput } from './ConsentBox';
 import { EncodeBadge } from './EncodeBadge';
 import { applySaved, encodeVoice } from './jobs';
-import { button, card, dangerButton } from './ui';
 import { VoiceDefaults } from './VoiceDefaults';
 
 let counter = 0;

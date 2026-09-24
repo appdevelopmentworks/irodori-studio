@@ -4,6 +4,7 @@ import { useCallback, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
+import { card, input, primaryButton, textarea } from '@/components/ui';
 import { ParamField } from '@/features/params/ParamField';
 import {
   currentValue,
@@ -20,7 +21,6 @@ import { useSidecarStore } from '@/store/sidecar';
 import { useVoicesStore } from '@/store/voices';
 
 import { applySaved, cancelJob, startDesign } from './jobs';
-import { card, input, primaryButton, textarea } from './ui';
 
 /** (a) Design a voice by caption: generate candidates, pick the one that sounds right,
  * save it — usually with that candidate as the voice's reference clip. */

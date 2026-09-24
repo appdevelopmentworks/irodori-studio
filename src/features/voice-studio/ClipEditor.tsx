@@ -5,9 +5,8 @@ import { useTranslation } from 'react-i18next';
 import type WaveSurfer from 'wavesurfer.js';
 import type { Region } from 'wavesurfer.js/plugins/regions';
 
+import { button } from '@/components/ui';
 import { formatSeconds } from '@/lib/format';
-
-import { button } from './ui';
 
 // Pieces shorter than this are refused by the sidecar (MIN_CLIP_SECONDS).
 const MIN_PIECE_SECONDS = 0.1;

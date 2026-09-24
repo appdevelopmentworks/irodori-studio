@@ -1,0 +1,112 @@
+{
+  "title": "Erzählung",
+  "empty": "Geben Sie ein Manuskript ein und drücken Sie „Aufteilen“, um es Abschnitt für Abschnitt zu erzeugen.",
+  "common": {
+    "cancel": "Abbrechen"
+  },
+  "recent": {
+    "label": "Zuletzt verwendet",
+    "choose": "Öffnen …",
+    "option": "{{title}} ({{rendered}} / {{total}})",
+    "new": "Neues Manuskript"
+  },
+  "formats": {
+    "text": "Text",
+    "markdown": "Markdown",
+    "srt": "Untertitel (SRT, WebVTT)"
+  },
+  "manuscript": {
+    "title": "Manuskript",
+    "chars": "{{total}} Zeichen",
+    "placeholder": "Fügen Sie den vorzulesenden Text ein oder öffnen Sie eine Datei (.txt / .md / .srt / .vtt).",
+    "import": "Datei öffnen …",
+    "format": "Format",
+    "minChars": "Min. Zeichen",
+    "maxChars": "Max. Zeichen",
+    "rulesHint": "Sätze (getrennt an Satzzeichen und Zeilenumbrüchen) werden in diesem Bereich zusammengefasst. Abschnitte bleiben unter der Grenze einer Erzeugung ({{seconds}} Sekunden), und ein Absatz (Leerzeile) beendet immer einen Abschnitt.",
+    "srtHint": "Jeder Untertitel wird ein Abschnitt und passend zu seiner Anzeigedauer erzeugt.",
+    "rulesInvalid": "Das Minimum muss mindestens 1 sein, das Maximum mindestens 20, und das Minimum darf das Maximum nicht übersteigen.",
+    "resplitConfirm": "Beim erneuten Aufteilen wird das gesamte erzeugte Audio verworfen. Fortfahren?",
+    "resplit": "Neu aufteilen",
+    "split": "Aufteilen"
+  },
+  "settings": {
+    "title": "Stimme und Einstellungen",
+    "voice": "Stimme",
+    "voiceNone": "Keine Stimme (nur Beschreibung)",
+    "voiceOption": "{{name}} ({{source}})",
+    "voiceHintReference": "Diese Stimme hat Referenzaudio (oder ein Sprecher-Embedding) und bleibt daher über alle Abschnitte gleich.",
+    "voiceHintNone": "Ohne Referenzaudio kann sich die Stimme von Abschnitt zu Abschnitt ändern. Wählen Sie eine Stimme mit Referenzaudio oder nutzen Sie „Stimme fixieren“.",
+    "voiceLock": "Stimme fixieren",
+    "voiceLockHint": "Das Audio des ersten Abschnitts dient den folgenden Abschnitten als Referenz.",
+    "caption": "Beschreibung (Sprechweise, Gefühl)",
+    "sentencePause": "Pause nach Sätzen (ms)",
+    "paragraphPause": "Pause nach Absätzen (ms)",
+    "pausesHint": "Stille, die beim Zusammenfügen der Abschnitte eingefügt wird. Ein mitten im Satz getrennter Abschnitt erhält die halbe Satzpause.",
+    "advanced": "Erweiterte Einstellungen",
+    "dictionary": "Benutzerwörterbuch verwenden",
+    "editDictionary": "Wörterbuch bearbeiten",
+    "closeDictionary": "Wörterbuch schließen",
+    "save": "Einstellungen speichern",
+    "unsaved": "Es gibt ungespeicherte Änderungen (sie werden vor dem Erzeugen oder Zusammenfügen automatisch gespeichert)."
+  },
+  "chunks": {
+    "title": "Abschnitte",
+    "summary": "{{total}} Abschnitte · etwa {{duration}} · erzeugt {{done}} / {{total}}",
+    "analyzerMissing": "Die Lesungsanalyse ist noch nicht installiert, daher werden Längen aus der Zeichenzahl geschätzt (sie wird beim nächsten Start hinzugefügt).",
+    "showReadings": "Lesungen anzeigen",
+    "readingsHint": "Geschätzte Lesungen sind ein Anhaltspunkt; das Modell kann Wörter anders aussprechen. Vom Wörterbuch ersetzte Wörter sind hervorgehoben."
+  },
+  "warnings": {
+    "cue_too_long": "Untertitel {{index}} ist länger als {{limit}} Sekunden und wird nach {{limit}} Sekunden abgeschnitten.",
+    "cue_overlap": "Untertitel {{index}} überschneidet sich mit dem vorherigen; er wird nach dessen Audio platziert.",
+    "chunk_too_long": "Abschnitt {{index}} könnte länger als {{limit}} Sekunden sein. Kürzen Sie den Text."
+  },
+  "render": {
+    "submitting": "Wird gesendet …",
+    "queued": "In der Warteschlange ({{position}} davor)",
+    "preparing": "Wird vorbereitet …",
+    "running": "Wird erzeugt … {{done}} / {{total}} Abschnitte fertig",
+    "start": "Alle erzeugen",
+    "resume": "Fehlende Abschnitte erzeugen",
+    "redoAll": "Alle neu erzeugen",
+    "completed": "{{rendered}} Abschnitte erzeugt.",
+    "nothing": "Kein Abschnitt muss erzeugt werden.",
+    "cancelled": "Abgebrochen. „Fehlende Abschnitte erzeugen“ setzt an der Stelle fort."
+  },
+  "pause": {
+    "clause": "Satzmitte",
+    "sentence": "Satzende",
+    "paragraph": "Absatzende",
+    "cue": "Untertitel"
+  },
+  "chunk": {
+    "cue": "{{start}} → {{end}}",
+    "estimated": "etwa {{seconds}} s",
+    "duration": "{{seconds}} s",
+    "pending": "Nicht erzeugt",
+    "edit": "Bearbeiten",
+    "redo": "Neu erzeugen",
+    "render": "Erzeugen",
+    "editHint": "Wenn Sie den Text ändern, wird das Audio dieses Abschnitts verworfen.",
+    "saveText": "Speichern",
+    "takes": "Takes",
+    "take": "Take {{index}} ({{seconds}} s)",
+    "truncated": "Die Grenze von {{limit}} Sekunden wurde erreicht; das Ende ist womöglich abgeschnitten."
+  },
+  "export": {
+    "title": "Zusammenfügen und exportieren",
+    "incomplete": "{{missing}} Abschnitte sind noch nicht erzeugt. Erzeugen Sie alle, um sie zusammenzufügen.",
+    "assemble": "Zusammenfügen und anhören",
+    "reassemble": "Neu zusammenfügen",
+    "assembled": "{{duration}} ({{cues}} Untertitel)",
+    "dialogTitle": "Erzählung exportieren",
+    "format": "Audioformat",
+    "subtitles": "Untertitel",
+    "srt": "SRT",
+    "vtt": "WebVTT",
+    "perChunk": "Zusätzlich eine Audiodatei pro Abschnitt exportieren",
+    "export": "Exportieren …",
+    "done": "Exportiert:"
+  }
+}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
+import { button, card, input, link, primaryButton, textarea } from '@/components/ui';
 import { ParamField } from '@/features/params/ParamField';
 import { ParamPanel } from '@/features/params/ParamPanel';
 import {
@@ -12,6 +13,7 @@ import {
   type ParamName,
   type ParamValues,
   requestParams,
+  voiceValues,
 } from '@/features/params/schema';
 import { GenerateBar } from '@/features/quick/GenerateBar';
 import { STYLE_PRESETS } from '@/features/quick/stylePresets';
@@ -29,18 +31,6 @@ import { useSidecarStore } from '@/store/sidecar';
 import { useVoicesStore } from '@/store/voices';
 
 import { applySaved, cancelJob, startAudition } from './jobs';
-import { button, card, input, link, primaryButton, textarea } from './ui';
-
-/** A voice's defaults as parameter values: `params_default` plus `seed_default` (the
- * schema's seed). Values equal to the schema default are left out, as in the Quick form. */
-export function voiceValues(voice: Voice, schema: ParamSchema[]): ParamValues {
-  const values: ParamValues = {};
-  for (const param of schema) {
-    const value = param.name === 'seed' ? voice.seed_default : voice.params_default[param.name];
-    if (value !== undefined && value !== param.default) values[param.name] = value;
-  }
-  return values;
-}
 
 const sameValues = (a: ParamValues, b: ParamValues) => {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<ParamName>;

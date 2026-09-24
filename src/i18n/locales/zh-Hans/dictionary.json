@@ -1,0 +1,17 @@
+{
+  "hint": "在文本交给模型之前，将词语替换为其读音（适用于快速生成和旁白）。建议用片假名书写读音。",
+  "surface": "词语",
+  "reading": "读音",
+  "note": "备注",
+  "enabled": "启用",
+  "surfacePlaceholder": "例如：明日",
+  "readingPlaceholder": "例如：アシタ",
+  "remove": "删除",
+  "empty": "尚未登记任何词语。",
+  "badRow": "请检查第 {{row}} 行。",
+  "add": "添加行",
+  "save": "保存词典",
+  "revert": "还原",
+  "unsaved": "有尚未保存的更改。",
+  "saved": "已保存。"
+}

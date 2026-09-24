@@ -1,4 +1,4 @@
-// Class strings shared by the Voice Studio components.
+// Class strings shared by the app screens (buttons, cards, inputs).
 
 export const card =
   'rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900';

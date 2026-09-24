@@ -40,7 +40,10 @@ irodori-studio/
 │  │  │                           NewClipVoice (files / recording), NewEmbeddingVoice, VoiceEditor (reference, consent,
 │  │  │                           export, delete), VoiceDefaults (+ audition), ClipList, ClipEditor (wavesurfer regions),
 │  │  │                           Recorder + mic.ts (AudioWorklet), ConsentBox, EncodeBadge, jobs.ts, clipOps.ts
-│  │  ├─ narration/               editor, reading preview, chunk list, render, assemble
+│  │  ├─ narration/               NarrationScreen: ManuscriptSection (paste / file, format, rules), SettingsSection
+│  │  │                           (voice + lock, caption, parameters, pauses, dictionary), ChunkSection (render / resume,
+│  │  │                           takes, edit, readings), ExportSection (join, export + subtitles), actions.ts
+│  │  ├─ dictionary/              DictionaryEditor (the user dictionary, D19)
 │  │  ├─ script/                  table editor, parser, speaker map, takes, export
 │  │  ├─ library/                 history, presets, projects
 │  │  ├─ api-server/              config, status, request log
@@ -64,7 +67,7 @@ irodori-studio/
 │  │  ├─ jobs.ts                  client job state advanced by SSE events (shared by screens)
 │  │  ├─ wav.ts                   WAV writer for recordings
 │  │  └─ format.ts                Intl formatting (bytes, memory, seconds, dates, percent)
-│  └─ store/                      zustand: app, nav, sidecar, quick, voices; later narration, script
+│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration; later script
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", entitlements, localized plist strings
 │  ├─ Info.plist                  merged into the macOS Info.plist (NSMicrophoneUsageDescription)
@@ -96,7 +99,8 @@ irodori-studio/
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
    │  ├─ routers/                 system, models (+ /emoji), tts, jobs (+ SSE, /queue), audio, clips, history, preferences, deps;
-   │  │                           voices; later text, narration, script, export, presets, projects, api_server
+   │  │                           voices, text (dictionary, reading), narration; later script, export, presets,
+   │  │                           projects, api_server
    │  ├─ compat/                  openai.py, voicevox.py (external API)
    │  ├─ engine/
    │  │  ├─ base.py               TtsBackend protocol (D6)
@@ -105,10 +109,13 @@ irodori-studio/
    │  │  ├─ irodori_adapter.py    TorchBackend → upstream InferenceRuntime (ONLY upstream import site)
    │  │  └─ host.py               resident EngineHost singleton
    │  ├─ services/                container (wiring), job_manager (events), queue (single FIFO), synthesis, policy (watermark),
-   │  │                           clips, voices (library, encode jobs, packages), history, preferences, system_info;
-   │  │                           later narration, script, presets, projects
-   │  ├─ text/                    dictionary.py, reading.py, chunker.py, srt.py, script_parser.py
-   │  ├─ audio/                   io.py (upload decode, WAV reading/writing), export.py (ffmpeg save formats);
+   │  │                           clips, voices (library, encode jobs, packages), narration (split, render jobs,
+   │  │                           assemble, export), history, preferences, system_info; later script, presets, projects
+   │  ├─ text/                    dictionary.py (user dictionary), reading.py (pyopenjtalk-plus readings, length
+   │  │                           estimates), chunker.py (D18, Markdown to text), srt.py (SRT/WebVTT in and out);
+   │  │                           later script_parser.py
+   │  ├─ audio/                   io.py (upload decode, WAV reading/writing), export.py (ffmpeg save formats),
+   │  │                           assemble.py (silence trim, joining takes);
    │  │                           later concat.py, post.py (loudnorm/atempo/gain)
    │  └─ storage/                 db.py (SQLite + migrations), files.py (data-root layout, ULIDs)
    └─ tests/                      unit tests that do not need torch (fake backend in conftest.py: params, registry, policy, API, jobs)

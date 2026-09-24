@@ -1,0 +1,17 @@
+{
+  "hint": "Wörter werden durch ihre Lesung ersetzt, bevor der Text das Modell erreicht (Schnellgenerierung und Erzählung). Lesungen in Katakana funktionieren am besten.",
+  "surface": "Wort",
+  "reading": "Lesung",
+  "note": "Notiz",
+  "enabled": "Aktiv",
+  "surfacePlaceholder": "z. B. 明日",
+  "readingPlaceholder": "z. B. アシタ",
+  "remove": "Entfernen",
+  "empty": "Noch keine Wörter.",
+  "badRow": "Prüfen Sie Zeile {{row}}.",
+  "add": "Zeile hinzufügen",
+  "save": "Wörterbuch speichern",
+  "revert": "Zurücksetzen",
+  "unsaved": "Es gibt ungespeicherte Änderungen.",
+  "saved": "Gespeichert."
+}

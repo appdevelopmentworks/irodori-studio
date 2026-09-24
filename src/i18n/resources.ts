@@ -4,36 +4,44 @@
 // file is not registered here.
 import type { Locale } from './config';
 import deCommon from './locales/de/common.json';
+import deDictionary from './locales/de/dictionary.json';
 import deEmoji from './locales/de/emoji.json';
 import deErrors from './locales/de/errors.json';
 import deHome from './locales/de/home.json';
+import deNarration from './locales/de/narration.json';
 import deParams from './locales/de/params.json';
 import deQuick from './locales/de/quick.json';
 import deSetup from './locales/de/setup.json';
 import deShell from './locales/de/shell.json';
 import deVoiceStudio from './locales/de/voiceStudio.json';
 import enCommon from './locales/en/common.json';
+import enDictionary from './locales/en/dictionary.json';
 import enEmoji from './locales/en/emoji.json';
 import enErrors from './locales/en/errors.json';
 import enHome from './locales/en/home.json';
+import enNarration from './locales/en/narration.json';
 import enParams from './locales/en/params.json';
 import enQuick from './locales/en/quick.json';
 import enSetup from './locales/en/setup.json';
 import enShell from './locales/en/shell.json';
 import enVoiceStudio from './locales/en/voiceStudio.json';
 import jaCommon from './locales/ja/common.json';
+import jaDictionary from './locales/ja/dictionary.json';
 import jaEmoji from './locales/ja/emoji.json';
 import jaErrors from './locales/ja/errors.json';
 import jaHome from './locales/ja/home.json';
+import jaNarration from './locales/ja/narration.json';
 import jaParams from './locales/ja/params.json';
 import jaQuick from './locales/ja/quick.json';
 import jaSetup from './locales/ja/setup.json';
 import jaShell from './locales/ja/shell.json';
 import jaVoiceStudio from './locales/ja/voiceStudio.json';
 import zhHansCommon from './locales/zh-Hans/common.json';
+import zhHansDictionary from './locales/zh-Hans/dictionary.json';
 import zhHansEmoji from './locales/zh-Hans/emoji.json';
 import zhHansErrors from './locales/zh-Hans/errors.json';
 import zhHansHome from './locales/zh-Hans/home.json';
+import zhHansNarration from './locales/zh-Hans/narration.json';
 import zhHansParams from './locales/zh-Hans/params.json';
 import zhHansQuick from './locales/zh-Hans/quick.json';
 import zhHansSetup from './locales/zh-Hans/setup.json';
@@ -44,9 +52,11 @@ export const resources = {
   ja: {
     translation: {
       common: jaCommon,
+      dictionary: jaDictionary,
       emoji: jaEmoji,
       errors: jaErrors,
       home: jaHome,
+      narration: jaNarration,
       params: jaParams,
       quick: jaQuick,
       setup: jaSetup,
@@ -57,9 +67,11 @@ export const resources = {
   en: {
     translation: {
       common: enCommon,
+      dictionary: enDictionary,
       emoji: enEmoji,
       errors: enErrors,
       home: enHome,
+      narration: enNarration,
       params: enParams,
       quick: enQuick,
       setup: enSetup,
@@ -70,9 +82,11 @@ export const resources = {
   'zh-Hans': {
     translation: {
       common: zhHansCommon,
+      dictionary: zhHansDictionary,
       emoji: zhHansEmoji,
       errors: zhHansErrors,
       home: zhHansHome,
+      narration: zhHansNarration,
       params: zhHansParams,
       quick: zhHansQuick,
       setup: zhHansSetup,
@@ -83,9 +97,11 @@ export const resources = {
   de: {
     translation: {
       common: deCommon,
+      dictionary: deDictionary,
       emoji: deEmoji,
       errors: deErrors,
       home: deHome,
+      narration: deNarration,
       params: deParams,
       quick: deQuick,
       setup: deSetup,

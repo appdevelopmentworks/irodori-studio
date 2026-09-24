@@ -1,0 +1,112 @@
+{
+  "title": "旁白",
+  "empty": "输入文稿并点击“分割”，即可分成片段逐一生成。",
+  "common": {
+    "cancel": "取消"
+  },
+  "recent": {
+    "label": "最近的旁白",
+    "choose": "打开…",
+    "option": "{{title}}（{{rendered}} / {{total}}）",
+    "new": "新文稿"
+  },
+  "formats": {
+    "text": "文本",
+    "markdown": "Markdown",
+    "srt": "字幕（SRT、WebVTT）"
+  },
+  "manuscript": {
+    "title": "文稿",
+    "chars": "{{total}} 个字符",
+    "placeholder": "粘贴要朗读的文本，或打开文件（.txt / .md / .srt / .vtt）。",
+    "import": "打开文件…",
+    "format": "格式",
+    "minChars": "最少字符数",
+    "maxChars": "最多字符数",
+    "rulesHint": "按句号和换行分句，并在此字符数范围内合并。会自动控制在单次生成上限（{{seconds}} 秒）以内，段落（空行）处一定会分开。",
+    "srtHint": "每条字幕作为一个片段，按字幕的显示时长生成。",
+    "rulesInvalid": "最少字符数需至少为 1，最多字符数需至少为 20，且最少不能超过最多。",
+    "resplitConfirm": "重新分割会丢弃所有已生成的音频。确定吗？",
+    "resplit": "重新分割",
+    "split": "分割"
+  },
+  "settings": {
+    "title": "声音与设置",
+    "voice": "声音",
+    "voiceNone": "不指定声音（仅描述文字）",
+    "voiceOption": "{{name}}（{{source}}）",
+    "voiceHintReference": "此声音带有参考音频（或说话人嵌入），因此各片段之间的声音会保持一致。",
+    "voiceHintNone": "没有参考音频时，各片段的声音可能不同。请选择带参考音频的声音，或使用“固定声音”。",
+    "voiceLock": "固定声音",
+    "voiceLockHint": "将第一个片段的音频用作后续片段的参考音频。",
+    "caption": "描述文字（说话方式、情感）",
+    "sentencePause": "句末停顿（毫秒）",
+    "paragraphPause": "段落停顿（毫秒）",
+    "pausesHint": "连接片段时插入的静音长度。在句子中间分开的片段使用句末停顿的一半。",
+    "advanced": "高级设置",
+    "dictionary": "使用用户词典",
+    "editDictionary": "编辑词典",
+    "closeDictionary": "关闭词典",
+    "save": "保存设置",
+    "unsaved": "有尚未保存的更改（生成或连接前会自动保存）。"
+  },
+  "chunks": {
+    "title": "片段",
+    "summary": "{{total}} 个片段 · 预计 {{duration}} · 已生成 {{done}} / {{total}}",
+    "analyzerMissing": "读音分析库尚未安装，时长按字符数粗略估算（将在下次启动时添加）。",
+    "showReadings": "显示读音",
+    "readingsHint": "推测的读音仅供参考，模型的实际发音可能不同。被词典替换的词语会以颜色标出。"
+  },
+  "warnings": {
+    "cue_too_long": "字幕 {{index}} 超过 {{limit}} 秒，将在 {{limit}} 秒处截断。",
+    "cue_overlap": "字幕 {{index}} 与上一条字幕重叠，将放在上一条字幕的音频之后。",
+    "chunk_too_long": "片段 {{index}} 可能超过 {{limit}} 秒，请缩短文本。"
+  },
+  "render": {
+    "submitting": "正在提交…",
+    "queued": "正在排队（前面还有 {{position}} 个）",
+    "preparing": "正在准备…",
+    "running": "正在生成… 已完成 {{done}} / {{total}} 个片段",
+    "start": "全部生成",
+    "resume": "生成未完成的片段",
+    "redoAll": "全部重做",
+    "completed": "已生成 {{rendered}} 个片段。",
+    "nothing": "没有需要生成的片段。",
+    "cancelled": "已取消。可通过“生成未完成的片段”从中断处继续。"
+  },
+  "pause": {
+    "clause": "句中",
+    "sentence": "句末",
+    "paragraph": "段落末尾",
+    "cue": "字幕"
+  },
+  "chunk": {
+    "cue": "{{start}} → {{end}}",
+    "estimated": "预计 {{seconds}} 秒",
+    "duration": "{{seconds}} 秒",
+    "pending": "未生成",
+    "edit": "编辑",
+    "redo": "重做",
+    "render": "生成",
+    "editHint": "修改文本会丢弃此片段的音频。",
+    "saveText": "保存",
+    "takes": "录音版本",
+    "take": "版本 {{index}}（{{seconds}} 秒）",
+    "truncated": "已达到 {{limit}} 秒上限，结尾可能被截断。"
+  },
+  "export": {
+    "title": "连接与导出",
+    "incomplete": "还有 {{missing}} 个片段未生成。全部生成后即可连接。",
+    "assemble": "连接并试听",
+    "reassemble": "重新连接",
+    "assembled": "{{duration}}（{{cues}} 条字幕）",
+    "dialogTitle": "导出旁白",
+    "format": "音频格式",
+    "subtitles": "字幕",
+    "srt": "SRT",
+    "vtt": "WebVTT",
+    "perChunk": "同时按片段导出音频文件",
+    "export": "导出…",
+    "done": "已导出："
+  }
+}

@@ -28,8 +28,10 @@ from app.routers import (
     history,
     jobs,
     models,
+    narration,
     preferences,
     system,
+    text,
     tts,
     voices,
 )
@@ -63,7 +65,19 @@ def create_app(
         allow_headers=["*"],
     )
     register_error_handlers(app)
-    for module in (system, models, tts, jobs, audio, clips, voices, history, preferences):
+    for module in (
+        system,
+        models,
+        tts,
+        jobs,
+        audio,
+        clips,
+        voices,
+        text,
+        narration,
+        history,
+        preferences,
+    ):
         app.include_router(module.router)
     return app
 

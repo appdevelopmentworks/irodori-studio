@@ -46,7 +46,7 @@ The frontend never talks to upstream directly. Rust owns lifecycle and settings;
 
 - `output: 'export'`; served by Tauri. No runtime Node server (D11).
 - Base URL of the internal API from the `get_sidecar_port` Tauri command. No port literals.
-- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs); later `narration`, `script`. Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
+- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs), `narration` (manuscript, settings draft, render job, reading previews); later `script`. Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
 - **Capability-driven parameter UI.** The parameter panel is generated from `GET /models/active/capabilities` (a JSON schema-like list of parameters with type, range, default, group, `simple|advanced` tier, `visible_when`). No component hardcodes which parameters a model supports.
 - i18n via `react-i18next` (D17). Locale JSON under `src/i18n/locales/<locale>/`. Sidecar errors arrive as codes and are translated in the frontend.
 - Audio: playback via `<audio>` with blob URLs fetched from `/audio/{id}`; waveform editing (trim/split) with `wavesurfer.js` (regions plugin).
@@ -164,9 +164,10 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 | Data root | user-selected | default `<local-app-data>/data` (not roaming) |
 | Runtime | `<data-root>/runtime/` | `venv/` (recreated if broken), `python/` (uv-managed), `uv-cache/`, `pycache/`, `setup.json` marker |
 | Models | `<data-root>/models` | `HF_HOME`; pinned repos in `pinned/<owner>--<name>/<commit>/`, SilentCipher in `hub/` |
-| Database | `<data-root>/irodori-studio.db` | SQLite (WAL), sidecar-owned: preferences, history + audio, clips, voices; migrations via `PRAGMA user_version` |
+| Database | `<data-root>/irodori-studio.db` | SQLite (WAL), sidecar-owned: preferences, history + audio, clips, voices, dictionary, narrations; migrations via `PRAGMA user_version` |
 | Voices | `<data-root>/voices/<voice-id>/` | `voice.speaker.safetensors` for embedding voices; the rest of a voice is database rows and its clips |
 | History audio | `<data-root>/history/<history-id>/<audio-id>.wav` | 48 kHz mono PCM16; pruned by D23 |
+| Narration audio | `<data-root>/narrations/<narration-id>/<audio-id>.wav` | chunk takes and the joined file; deleted with the narration, never pruned |
 | Reference clips | `<data-root>/clips/<clip-id>/` | ad-hoc uploads and library voices' clips: `audio.wav` (float32) + cached `latents/` per model setting; unowned clips are purged after a day |
 | Projects | `<data-root>/projects/` | `.iroproj` |
 | Exports | user-selected default | |
@@ -179,7 +180,7 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 1. Frontend `POST /tts/generate` → validated (text, reference, parameters against the capability schema) → `{job_id, queue_position}`.
 2. SSE `GET /jobs/{id}/events`: `queued` → `started` → `log` / `progress` (sampling steps) … → `candidate` (per candidate, with `audio_id`) → `completed {history_id, used_seed, timings, outputs}`.
 3. Reference resolution: clips or a library voice's clips → cached latents for the active model (encoded on a miss; library voices are encoded when saved); an embedding (a voice's or an ad-hoc path) is passed as a `.speaker.safetensors` file.
-4. Text pipeline: user dictionary (Session 5) → upstream (which normalizes internally).
+4. Text pipeline: user dictionary (longest match first, `apply_dictionary`) → upstream (which normalizes internally).
 5. Result written to history (audio + request as submitted + resolved parameters + seed + timings), then pruned to the limits.
 
 ### Voice library (Voice Studio)
@@ -191,7 +192,7 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 
 ### Narration
 
-`POST /narration/split` (preview chunks, reading hints) → user edits → `POST /narration/render` (job). Chunks are synthesized sequentially through the queue; events report `chunk_done {index, audio_id}`. Voice lock (D18) captures chunk 1's audio as the reference for the rest. Final assembly: concatenate with configured pauses → post-process → export + SRT/VTT built from chunk durations. Per-chunk regenerate re-runs one chunk and re-assembles.
+`POST /narrations` splits the manuscript (text, Markdown or SRT/WebVTT; `text/chunker.py`, estimates from `text/reading.py`) and stores the chunks → the user edits chunk texts, previews readings (`POST /text/reading`) and the dictionary → `POST /narrations/{id}/render` queues one `narration` job that synthesizes the chunks needing a take in order (`SynthesisService.prepare` + `synthesize`, the same path as single generations), emitting `chunk {index, takes}` and chunk progress; cancelling keeps finished chunks and a new render resumes. Voice lock (D18) turns chunk 1's adopted take into the reference clip of the rest. `POST /narrations/{id}/assemble` trims each adopted take's silence and joins them with the configured pauses (or at SRT cue times) into one WAV with exact subtitle cues; `/export` writes it in the chosen format plus SRT/VTT and optional per-chunk files. Per-chunk redo (`render {indices, redo}`) adds a take; any take can be adopted again.
 
 ### Script
 

@@ -621,12 +621,15 @@ dependencies = [
     { name = "llvmlite" },
     { name = "numba" },
     { name = "peft" },
+    { name = "pyopenjtalk-plus" },
     { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "safetensors" },
     { name = "sentencepiece" },
     { name = "silentcipher" },
     { name = "soundfile" },
+    { name = "sudachidict-core" },
+    { name = "sudachipy" },
     { name = "tqdm" },
     { name = "transformers" },
     { name = "uvicorn" },
@@ -647,12 +650,15 @@ requires-dist = [
     { name = "llvmlite", specifier = "==0.46.0" },
     { name = "numba", specifier = "==0.63.1" },
     { name = "peft", specifier = "==0.18.1" },
+    { name = "pyopenjtalk-plus", specifier = "==0.4.1.post9" },
     { name = "python-multipart", specifier = "==0.0.32" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "safetensors", specifier = "==0.7.0" },
     { name = "sentencepiece", specifier = "==0.1.99" },
     { name = "silentcipher", url = "https://github.com/SesameAILabs/silentcipher/archive/d46d7d0893a583d8968ab3a6626e2289faec9152.tar.gz" },
     { name = "soundfile", specifier = "==0.13.1" },
+    { name = "sudachidict-core", specifier = "==20260723" },
+    { name = "sudachipy", specifier = "==0.6.11" },
     { name = "tqdm", specifier = "==4.67.3" },
     { name = "transformers", specifier = "==5.12.1" },
     { name = "uvicorn", specifier = "==0.53.0" },
@@ -1198,6 +1204,25 @@ wheels = [
 ]
 
 [[package]]
+name = "pyopenjtalk-plus"
+version = "0.4.1.post9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pydantic" },
+    { name = "sudachidict-core" },
+    { name = "sudachipy" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1a/e7/03cc1d971260ae90cc35370965d6d8e612cc8b8588d2f81db7cd2accf9ad/pyopenjtalk_plus-0.4.1.post9.tar.gz", hash = "sha256:cdcb0746659857554c6dad23956cad77e21f76c9f3dfa000ea2f8d4f0ba11d99", size = 25023543, upload-time = "2026-08-11T21:13:31.021Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fc/b6/faca99e7015b81706f819fb7239e1e1d73d941ba6c9b420e63d6a245a911/pyopenjtalk_plus-0.4.1.post9-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:1f0de887a624b86109464d9ec819e705d7412ebeda87a6abc0f828fc48091932", size = 25654409, upload-time = "2026-08-11T21:12:00.274Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/32/ebfe5a5153ec7fb468142ed674418ba1381afcb2f50d5fb3f6f2e64e569e/pyopenjtalk_plus-0.4.1.post9-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5b0e6ddebf2cf60ef480e1a9861ff2f08e6b04e70fe3ca62f349f601af6adb5b", size = 31198254, upload-time = "2026-08-11T21:12:05.602Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/4d/a95e20214716b07ba89260c24bab157ff3f3b91a0a41c5e04ff103a2d844/pyopenjtalk_plus-0.4.1.post9-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5acf59e7a0750a5a35e1a76a724f257e995a71f8c06ff945f8436b8f9b62b5b9", size = 31281542, upload-time = "2026-08-11T21:12:10.513Z" },
+    { url = "https://files.pythonhosted.org/packages/40/02/939abaa07066337ce1a9e405159f186b2b383fd4ab89754c68af6af29026/pyopenjtalk_plus-0.4.1.post9-cp310-cp310-win_amd64.whl", hash = "sha256:c2624815bef0528628bbdc52dec298b0eb577df261f19088b7bb5018c5ca0b51", size = 25064332, upload-time = "2026-08-11T21:12:14.817Z" },
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1565,6 +1590,32 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/7b/2b/3850dc6bf7ef71b088962eba31dafc6cffd2f96e577ebb0bb316df96da3e/starlette-1.7.0.tar.gz", hash = "sha256:c79f74ea63cff761804fbbfb182f1e0b440c2d07b164d24700c5a1bab5d6ff5d", size = 2736246, upload-time = "2026-09-23T07:30:26.35Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4e/d6/1ec1b290f9e0fb067899b61e1d37a30c923068bad260b216dbe37a7d2967/starlette-1.7.0-py3-none-any.whl", hash = "sha256:67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e", size = 78980, upload-time = "2026-09-23T07:30:24.567Z" },
+]
+
+[[package]]
+name = "sudachidict-core"
+version = "20260723"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sudachipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2f/69/e8df4402744319080f9db9f20dc40a0cc3f2042db82ab7c040b785becf14/sudachidict_core-20260723.tar.gz", hash = "sha256:d50c302f907c0bb9b048b9d224abc3b24cdbeb8416a73942de00b74235798fe7", size = 9119, upload-time = "2026-07-24T05:40:57.315Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/fe/68a146fced55319af40d25a4fe19b94c3a988406ce4674a8b2f0237fbc9f/sudachidict_core-20260723-py3-none-any.whl", hash = "sha256:b3869ce6b12b4bfa09575dc19030703bb669ab41bac12a74cafcbb28c6be2498", size = 72275897, upload-time = "2026-07-24T05:41:52.52Z" },
+]
+
+[[package]]
+name = "sudachipy"
+version = "0.6.11"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/34/a52dc020e1ac67ffe2469d22771a850589a1184e0d91d48addd364ee02ba/sudachipy-0.6.11.tar.gz", hash = "sha256:4f03310fd3fc779b3000f49395c939d18a30081632d3cb14488426f7c07cc526", size = 180616, upload-time = "2026-04-13T05:27:26.857Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/04/433c86f0de93298a99e90591a87b67023e636c8550165d88fdc499dee7a8/sudachipy-0.6.11-cp310-cp310-macosx_10_12_universal2.whl", hash = "sha256:7764933f190e480886df2c6ddb0c1d9171833f23d40d278c65250031232779af", size = 2967486, upload-time = "2026-04-13T05:26:21.151Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/e1/70c1dcae497e2847f97edf567ed46bbf1f1e97eaf4854666794f40c89f5b/sudachipy-0.6.11-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:72c2f91ab3693013709a9fb42f94954e98cecfed4bcba77c9afdd3eb85d8628d", size = 1527688, upload-time = "2026-04-13T05:26:22.609Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/7a/54b541e6c0a30e3dbca68fac6c2eaf4aa55a970b363f494db0dbed3e5ac6/sudachipy-0.6.11-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:ec915f0784d4ee1bf2ea58e50ee7193a4336b6cf9ee1103782771684a3967081", size = 1462309, upload-time = "2026-04-13T05:26:24.273Z" },
+    { url = "https://files.pythonhosted.org/packages/26/77/db396bc1b57c74d0e8d3b08f62616fa372321d64df70df5d048e9cb68178/sudachipy-0.6.11-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:c6b2ad953530963a55968762cc6fd359211f4f98fc90fac2ece2f04e60efdc17", size = 1586258, upload-time = "2026-04-13T05:26:25.75Z" },
+    { url = "https://files.pythonhosted.org/packages/35/df/374d05965bd636f0c18fcc1a22ed26cb92ff0035342025203264ee87578c/sudachipy-0.6.11-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:2f266faf29125a9d2b26a62683ebf872b248ac5d3b24542a3c016f496fb7d5f2", size = 1629665, upload-time = "2026-04-13T05:26:26.848Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/18/89f4e5b3d828db0d7c518f3e7b8221e6d7170d395d2bdeb59f27ee20ab2d/sudachipy-0.6.11-cp310-cp310-win_amd64.whl", hash = "sha256:e0963d1f06162bdb640f0f21210d9c08c5854985f4dbec089dcf9e0cd91cf716", size = 1327948, upload-time = "2026-04-13T05:26:28.184Z" },
 ]
 
 [[package]]

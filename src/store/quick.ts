@@ -2,7 +2,13 @@
 // current generation job, kept while the user switches screens. Memory only (D11).
 import { create } from 'zustand';
 
-import type { ParamName, ParamValue, ParamValues, ReferenceKind } from '@/features/params/schema';
+import {
+  type ParamName,
+  type ParamValue,
+  type ParamValues,
+  type ReferenceKind,
+  voiceValues,
+} from '@/features/params/schema';
 import { type JobFailure, type JobState, reduceJob, submittingJob, withFailure } from '@/lib/jobs';
 import type { AudioFormat, ClipInfo, JobEvent, ParamSchema, TtsResult, Voice } from '@/lib/types';
 
@@ -109,19 +115,12 @@ export const useQuickStore = create<QuickStore>((set) => ({
   removeClip: (clipId) => set((s) => ({ clips: s.clips.filter((c) => c.clip_id !== clipId) })),
   setEmbeddingPath: (embeddingPath) => set({ embeddingPath }),
   applyVoice: (voice, schema) =>
-    set(() => {
-      const values: ParamValues = {};
-      for (const param of schema) {
-        const value = param.name === 'seed' ? voice.seed_default : voice.params_default[param.name];
-        if (value !== undefined && value !== param.default) values[param.name] = value;
-      }
-      return {
-        voiceId: voice.id,
-        caption: voice.caption_default ?? '',
-        loraPath: voice.lora_path,
-        values,
-        invalid: {},
-      };
+    set({
+      voiceId: voice.id,
+      caption: voice.caption_default ?? '',
+      loraPath: voice.lora_path,
+      values: voiceValues(voice, schema),
+      invalid: {},
     }),
   clearVoice: () => set({ voiceId: null }),
   setLoraPath: (loraPath) => set({ loraPath }),

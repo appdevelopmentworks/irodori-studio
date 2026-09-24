@@ -25,6 +25,7 @@ Sources:
 
 - **Japanese text only.**
 - **~30 s per generation** (trained max 750 latent frames at 25 fps). ~40 chars → 7.8 s, ~100 chars → 18 s, ~210 chars → truncated at 30.00 s. Keep chunks ≤ ~150 chars (D18).
+- **Speaking rate (measured S5, v4.1-Small):** ≈ 6.2–8.4 morae per second of articulation plus ≈ 1.4–1.9 s at each sentence end, depending on the voice (a slow reference voice ≈ 5 morae/s overall, no reference ≈ 5.8). 122 characters with a slow voice already reached 29.96 s — size chunks by estimated seconds, not characters (decisions.md, S5).
 - Reference audio: up to **120 s** combined; **multiple clean short clips of one speaker** recommended; ~30 s captures most of the similarity gain; a single long recording is accepted but unevaluated. Short single clip → speaker similarity slightly below v3.
 - Caption + reference conflicts (e.g. both describing voice timbre) can destabilize output → use caption for emotion/style/scene, reference for identity. Surface this as a UI hint.
 - Emoji control: 45 emojis defined in the model repo's `EMOJI_ANNOTATIONS.md`; effect varies with context; repeating an emoji strengthens it; emojis lengthen output (~+1 s for two).

@@ -91,6 +91,64 @@ MIGRATIONS: tuple[str, ...] = (
     ALTER TABLE clips ADD COLUMN origin TEXT NOT NULL DEFAULT 'upload';
     CREATE INDEX clips_voice ON clips (voice_id, idx);
     """,
+    # 4 — Session 5: the user dictionary and narrations. `audio` is rebuilt so a row can
+    # belong to a narration (chunk takes, the assembled file) instead of a history entry:
+    # history pruning never touches narration audio.
+    """
+    CREATE TABLE dictionary (
+        id         TEXT PRIMARY KEY,         -- ULID
+        position   INTEGER NOT NULL,
+        surface    TEXT NOT NULL,
+        reading    TEXT NOT NULL,
+        enabled    INTEGER NOT NULL,
+        note       TEXT,
+        updated_at TEXT NOT NULL
+    );
+    CREATE TABLE narrations (
+        id             TEXT PRIMARY KEY,     -- ULID
+        title          TEXT NOT NULL,
+        created_at     TEXT NOT NULL,
+        updated_at     TEXT NOT NULL,
+        format         TEXT NOT NULL,        -- text | markdown | srt
+        source         TEXT NOT NULL,        -- the manuscript as given
+        rules_json     TEXT NOT NULL,
+        settings_json  TEXT NOT NULL,
+        warnings_json  TEXT NOT NULL,
+        assembled_json TEXT,                 -- {audio_id, duration_s, cues}
+        lock_json      TEXT                  -- voice lock source {audio_id, clip_id}
+    );
+    CREATE TABLE narration_chunks (
+        narration_id      TEXT NOT NULL REFERENCES narrations (id) ON DELETE CASCADE,
+        idx               INTEGER NOT NULL,
+        text              TEXT NOT NULL,
+        pause_after       TEXT NOT NULL,     -- clause | sentence | paragraph | cue
+        estimated_seconds REAL NOT NULL,
+        cue_start_ms      INTEGER,
+        cue_end_ms        INTEGER,
+        adopted_audio_id  TEXT,
+        PRIMARY KEY (narration_id, idx)
+    );
+    CREATE TABLE audio_new (
+        id           TEXT PRIMARY KEY,       -- ULID
+        history_id   TEXT REFERENCES history (id) ON DELETE CASCADE,
+        narration_id TEXT REFERENCES narrations (id) ON DELETE CASCADE,
+        chunk_idx    INTEGER,                -- a narration take's chunk (NULL: assembled)
+        idx          INTEGER NOT NULL,
+        rel_path     TEXT NOT NULL,
+        duration_s   REAL NOT NULL,
+        sample_rate  INTEGER NOT NULL,
+        bytes        INTEGER NOT NULL,
+        seed         INTEGER,
+        truncated    INTEGER NOT NULL DEFAULT 0,
+        created_at   TEXT
+    );
+    INSERT INTO audio_new (id, history_id, idx, rel_path, duration_s, sample_rate, bytes)
+        SELECT id, history_id, idx, rel_path, duration_s, sample_rate, bytes FROM audio;
+    DROP TABLE audio;
+    ALTER TABLE audio_new RENAME TO audio;
+    CREATE INDEX audio_history ON audio (history_id);
+    CREATE INDEX audio_narration ON audio (narration_id, chunk_idx);
+    """,
 )
 
 

@@ -14,12 +14,15 @@ from app.engine.registry import Registry, load_registry
 from app.services.clips import ClipStore
 from app.services.history import HistoryStore
 from app.services.job_manager import Job, JobManager
+from app.services.narration import NarrationService
 from app.services.preferences import PreferencesStore
 from app.services.queue import SynthesisQueue
 from app.services.synthesis import SynthesisService
 from app.services.voices import VoiceService
 from app.storage.db import Database
 from app.storage.files import DataLayout
+from app.text.dictionary import DictionaryStore
+from app.text.reading import Reader
 
 
 @dataclass
@@ -36,6 +39,9 @@ class Services:
     queue: SynthesisQueue
     synthesis: SynthesisService
     voices: VoiceService
+    dictionary: DictionaryStore
+    reader: Reader
+    narration: NarrationService
     autoload: bool = True
 
     def start(self) -> None:
@@ -67,15 +73,20 @@ def build_services(
     preferences = PreferencesStore(db)
     clips = ClipStore(db, layout, config.ffmpeg)
     history = HistoryStore(db, layout)
+    dictionary = DictionaryStore(db)
+    reader = Reader()
     jobs = JobManager()
     synthesis: SynthesisService | None = None
     voices: VoiceService | None = None
+    narration: NarrationService | None = None
 
     def execute(job: Job) -> None:
-        # One queue for all GPU work (D24): generations and voice encoding.
-        assert synthesis is not None and voices is not None
+        # One queue for all GPU work (D24): generations, voice encoding, narrations.
+        assert synthesis is not None and voices is not None and narration is not None
         if job.kind == "encode":
             voices.execute_encode(job)
+        elif job.kind == "narration":
+            narration.execute_render(job)
         else:
             synthesis.execute(job)
 
@@ -98,7 +109,21 @@ def build_services(
         jobs=jobs,
         queue=queue,
         voices=voices,
+        dictionary=dictionary,
         tmp_dir=layout.tmp,
+    )
+    narration = NarrationService(
+        db=db,
+        layout=layout,
+        host=host,
+        synthesis=synthesis,
+        clips=clips,
+        voices=voices,
+        dictionary=dictionary,
+        reader=reader,
+        jobs=jobs,
+        queue=queue,
+        ffmpeg=config.ffmpeg,
     )
     return Services(
         config=config,
@@ -113,5 +138,8 @@ def build_services(
         queue=queue,
         synthesis=synthesis,
         voices=voices,
+        dictionary=dictionary,
+        reader=reader,
+        narration=narration,
         autoload=autoload,
     )

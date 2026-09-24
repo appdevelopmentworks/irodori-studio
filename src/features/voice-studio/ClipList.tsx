@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { CrossIcon } from '@/components/icons';
+import { button, iconButton } from '@/components/ui';
 import { formatSeconds } from '@/lib/format';
 import type { ClipInfo } from '@/lib/types';
 import type { PendingClip } from '@/store/voices';
 
 import { ClipEditor } from './ClipEditor';
 import { Recorder, TARGET_SECONDS } from './Recorder';
-import { button, iconButton } from './ui';
 
 export interface ClipActions {
   move: (clipId: string, delta: -1 | 1) => void;

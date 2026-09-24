@@ -1,0 +1,112 @@
+{
+  "title": "ナレーション",
+  "empty": "原稿を入力して「分割する」を押すと、チャンクに分けて 1 つずつ生成できます。",
+  "common": {
+    "cancel": "キャンセル"
+  },
+  "recent": {
+    "label": "最近のナレーション",
+    "choose": "開く…",
+    "option": "{{title}}（{{rendered}} / {{total}}）",
+    "new": "新しい原稿"
+  },
+  "formats": {
+    "text": "テキスト",
+    "markdown": "Markdown",
+    "srt": "字幕（SRT・WebVTT）"
+  },
+  "manuscript": {
+    "title": "原稿",
+    "chars": "{{total}} 文字",
+    "placeholder": "読み上げる文章を貼り付けるか、ファイル（.txt / .md / .srt / .vtt）を読み込みます。",
+    "import": "ファイルを読み込む…",
+    "format": "形式",
+    "minChars": "最小文字数",
+    "maxChars": "最大文字数",
+    "rulesHint": "句点と改行で文に分け、この文字数の範囲にまとめます。1 回の生成の上限（{{seconds}} 秒）を超えないよう自動で調整し、段落（空行）では必ず区切ります。",
+    "srtHint": "字幕 1 つを 1 チャンクとし、字幕の表示時間に合わせた長さで生成します。",
+    "rulesInvalid": "最小文字数は 1 以上、最大文字数は 20 以上で、最小が最大を超えないようにしてください。",
+    "resplitConfirm": "分割し直すと、生成済みの音声はすべて破棄されます。よろしいですか？",
+    "resplit": "分割し直す",
+    "split": "分割する"
+  },
+  "settings": {
+    "title": "声と設定",
+    "voice": "声",
+    "voiceNone": "声を指定しない（キャプションのみ）",
+    "voiceOption": "{{name}}（{{source}}）",
+    "voiceHintReference": "参照音声（または話者埋め込み）のある声なので、チャンクをまたいでも声が安定します。",
+    "voiceHintNone": "参照音声がないと、チャンクごとに声が変わることがあります。参照音声つきの声を選ぶか、「声を固定」を使ってください。",
+    "voiceLock": "声を固定する",
+    "voiceLockHint": "最初のチャンクの音声を、以降のチャンクの参照音声として使います。",
+    "caption": "キャプション（話し方・感情）",
+    "sentencePause": "文末の間（ミリ秒）",
+    "paragraphPause": "段落の間（ミリ秒）",
+    "pausesHint": "チャンクをつなぐときに挟む無音の長さです。文の途中で区切ったチャンクには文末の半分の間を入れます。",
+    "advanced": "詳細設定",
+    "dictionary": "ユーザー辞書を使う",
+    "editDictionary": "辞書を編集",
+    "closeDictionary": "辞書を閉じる",
+    "save": "設定を保存",
+    "unsaved": "保存していない変更があります（生成や結合の前に自動で保存します）。"
+  },
+  "chunks": {
+    "title": "チャンク",
+    "summary": "{{total}} チャンク・推定 {{duration}}・生成済み {{done}} / {{total}}",
+    "analyzerMissing": "読み推定ライブラリが未インストールのため、推定時間は文字数からの概算です（次回の起動時に追加されます）。",
+    "showReadings": "読みを表示",
+    "readingsHint": "推定の読みは目安です。モデルが実際に読む音とは異なることがあります。辞書で置き換えた語は色付きで表示します。"
+  },
+  "warnings": {
+    "cue_too_long": "字幕 {{index}} は {{limit}} 秒を超えるため、{{limit}} 秒で打ち切られます。",
+    "cue_overlap": "字幕 {{index}} が前の字幕と重なっています。前の字幕の音声の後ろに配置します。",
+    "chunk_too_long": "チャンク {{index}} は {{limit}} 秒を超えるおそれがあります。テキストを短くしてください。"
+  },
+  "render": {
+    "submitting": "送信しています…",
+    "queued": "順番待ちです（前に {{position}} 件）",
+    "preparing": "準備しています…",
+    "running": "生成しています… {{done}} / {{total}} チャンク完了",
+    "start": "すべて生成",
+    "resume": "未生成のチャンクを生成",
+    "redoAll": "すべて作り直す",
+    "completed": "{{rendered}} チャンクを生成しました。",
+    "nothing": "生成が必要なチャンクはありません。",
+    "cancelled": "キャンセルしました。「未生成のチャンクを生成」で続きから再開できます。"
+  },
+  "pause": {
+    "clause": "文の途中",
+    "sentence": "文末",
+    "paragraph": "段落の終わり",
+    "cue": "字幕"
+  },
+  "chunk": {
+    "cue": "{{start}} → {{end}}",
+    "estimated": "推定 {{seconds}} 秒",
+    "duration": "{{seconds}} 秒",
+    "pending": "未生成",
+    "edit": "編集",
+    "redo": "作り直す",
+    "render": "生成",
+    "editHint": "テキストを変えると、このチャンクの音声は破棄されます。",
+    "saveText": "保存",
+    "takes": "テイク",
+    "take": "テイク {{index}}（{{seconds}} 秒）",
+    "truncated": "{{limit}} 秒の上限に達したため、最後が切れている可能性があります。"
+  },
+  "export": {
+    "title": "結合と書き出し",
+    "incomplete": "未生成のチャンクが {{missing}} 個あります。すべて生成すると結合できます。",
+    "assemble": "結合して試聴",
+    "reassemble": "結合し直す",
+    "assembled": "{{duration}}（字幕 {{cues}} 件）",
+    "dialogTitle": "ナレーションを書き出す",
+    "format": "音声の形式",
+    "subtitles": "字幕",
+    "srt": "SRT",
+    "vtt": "WebVTT",
+    "perChunk": "チャンク別の音声ファイルも書き出す",
+    "export": "書き出し…",
+    "done": "書き出しました:"
+  }
+}
