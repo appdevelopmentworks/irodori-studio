@@ -59,6 +59,12 @@
     "out_of_memory": "Nicht genügend Speicher. Verringern Sie die Anzahl der Kandidaten oder kürzen Sie den Text und versuchen Sie es erneut.",
     "save_path_invalid": "Der Speicherort ist ungültig. Bitte einen anderen wählen.",
     "save_failed": "Die Datei konnte nicht gespeichert werden.",
-    "ffmpeg_unavailable": "Zum Speichern in diesem Format wird ffmpeg benötigt. Bitte WAV wählen."
+    "ffmpeg_unavailable": "Zum Speichern in diesem Format wird ffmpeg benötigt. Bitte WAV wählen.",
+    "clip_range_invalid": "Der ausgewählte Bereich ist ungültig. Wählen Sie den Bereich erneut aus.",
+    "clip_in_use": "Dieser Clip gehört zu einer Stimme. Entfernen Sie ihn im Stimmenstudio im Editor der Stimme.",
+    "voice_invalid": "Die Stimme ist unvollständig. Prüfen Sie Namen und Referenzaudio.",
+    "consent_required": "Für die Stimme einer realen Person muss deren Einwilligung bestätigt werden.",
+    "embedding_invalid": "Die Sprecher-Embedding-Datei ist ungültig oder passt nicht zu diesem Modell.",
+    "package_invalid": "Das Stimmpaket (.irovoice) konnte nicht gelesen werden."
   }
 }

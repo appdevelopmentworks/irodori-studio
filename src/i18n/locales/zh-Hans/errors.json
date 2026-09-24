@@ -59,6 +59,12 @@
     "out_of_memory": "内存不足。请减少候选数量或缩短文本后重试。",
     "save_path_invalid": "保存位置无效。请选择其他位置。",
     "save_failed": "无法保存文件。",
-    "ffmpeg_unavailable": "以此格式保存需要 ffmpeg。请改选 WAV。"
+    "ffmpeg_unavailable": "以此格式保存需要 ffmpeg。请改选 WAV。",
+    "clip_range_invalid": "所选范围无效，请重新选择。",
+    "clip_in_use": "此片段正被某个声音使用。请在声音工作室的声音编辑中删除。",
+    "voice_invalid": "声音信息不完整。请检查名称和参考音频。",
+    "consent_required": "使用真实人物的声音需要确认本人的同意。",
+    "embedding_invalid": "说话人嵌入文件格式不正确，或与此模型不兼容。",
+    "package_invalid": "无法读取声音包（.irovoice）。"
   }
 }

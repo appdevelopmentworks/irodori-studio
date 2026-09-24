@@ -27,6 +27,8 @@ interface ParamPanelProps {
   onValidity: (name: ParamName, valid: boolean) => void;
   /** Custom widgets appended to a group (e.g. the LoRA picker in "advanced"). */
   extras?: Partial<Record<ParamGroup, ReactNode>>;
+  /** Show the resident model's runtime options (not per request) at the end. */
+  runtime?: boolean;
 }
 
 /** The advanced tier: every advanced parameter the model supports, by group. */
@@ -37,6 +39,7 @@ export function ParamPanel({
   onChange,
   onValidity,
   extras = {},
+  runtime = true,
 }: ParamPanelProps) {
   const { t } = useTranslation();
   const groups = GROUP_ORDER.map((group) => ({
@@ -74,7 +77,7 @@ export function ParamPanel({
           </div>
         </details>
       ))}
-      <RuntimeGroup />
+      {runtime ? <RuntimeGroup /> : null}
     </div>
   );
 }

@@ -43,8 +43,13 @@ class DataLayout:
         return self.root / "history"
 
     @property
+    def voices(self) -> Path:
+        """Per-voice files that are not clips (the Speaker Inversion embedding)."""
+        return self.root / "voices"
+
+    @property
     def clips(self) -> Path:
-        """Ad-hoc reference clips uploaded for single generations (not library voices)."""
+        """Reference clips: ad-hoc uploads and the clips library voices own."""
         return self.root / "clips"
 
     @property

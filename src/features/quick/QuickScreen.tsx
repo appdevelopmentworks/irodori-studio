@@ -10,14 +10,15 @@ import { ParamField } from '@/features/params/ParamField';
 import { ParamPanel } from '@/features/params/ParamPanel';
 import { currentValue, isVisible, type ParamName } from '@/features/params/schema';
 import { ApiError } from '@/lib/api';
+import { isBusy } from '@/lib/jobs';
 import { pickSavePath } from '@/lib/tauri';
 import type { AudioFormat, AudioOutput } from '@/lib/types';
 import { useQuickStore } from '@/store/quick';
 import { useSidecarStore } from '@/store/sidecar';
 
 import { CaptionSection } from './CaptionSection';
-import { GenerateBar, isBusy } from './GenerateBar';
-import { startGeneration } from './generation';
+import { GenerateBar } from './GenerateBar';
+import { cancelGeneration, startGeneration } from './generation';
 import { LoraField } from './LoraField';
 import { buildRequest, requestProblem } from './request';
 import { RunLog } from './RunLog';
@@ -129,7 +130,7 @@ export function QuickScreen() {
         <h1 className="text-xl font-semibold tracking-tight">{t('quick.title')}</h1>
         <div className={`${card} space-y-5`}>
           <TextSection maxChars={model.limits.max_text_chars} onSubmit={generate} />
-          <VoiceSection capabilities={model.capabilities} limits={model.limits} />
+          <VoiceSection model={model} />
           {model.capabilities.caption ? (
             <CaptionSection maxChars={model.limits.max_caption_chars} />
           ) : null}
@@ -152,7 +153,12 @@ export function QuickScreen() {
           </div>
         ) : null}
 
-        <GenerateBar problem={busy ? null : problem} onGenerate={generate} />
+        <GenerateBar
+          job={job}
+          problem={busy || !problem ? null : t(`quick.generate.${problem}`)}
+          onGenerate={generate}
+          onCancel={() => void cancelGeneration()}
+        />
 
         <details className="group space-y-2">
           <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium select-none [&::-webkit-details-marker]:hidden">

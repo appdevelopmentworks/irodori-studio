@@ -1,6 +1,6 @@
 // Starts, follows and cancels the Quick screen's generation job. The SSE stream lives
 // outside React so the job keeps updating while the user is on another screen.
-import { ApiError } from '@/lib/api';
+import { failureOf } from '@/lib/jobs';
 import { subscribeJob } from '@/lib/sse';
 import type { SynthesisRequest } from '@/lib/types';
 import { useQuickStore } from '@/store/quick';
@@ -23,9 +23,7 @@ export async function startGeneration(request: SynthesisRequest): Promise<void> 
       onError: () => useQuickStore.getState().failJob({ code: 'job_not_found' }),
     });
   } catch (err) {
-    quick.failJob(
-      err instanceof ApiError ? { code: err.code, detail: err.detail } : { code: 'internal' },
-    );
+    quick.failJob(failureOf(err));
   }
 }
 

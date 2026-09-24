@@ -39,3 +39,10 @@ export function formatPercent(done: number, total: number, locale: string): stri
     ratio,
   );
 }
+
+/** A timestamp (ISO 8601) as a medium date and short time in the active locale. */
+export function formatDateTime(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
+    new Date(iso),
+  );
+}

@@ -34,9 +34,12 @@ irodori-studio/
 │  ├─ features/
 │  │  ├─ setup/                   first-run wizard (language, terms, probe, data root, install, download, smoke test)
 │  │  ├─ quick/                   QuickScreen + sections (text, voice, caption, generate, run log), request building,
-│  │  │                           generation (job stream), style presets, LoRA picker
+│  │  │                           generation (job stream), style presets, LoRA picker, library voice picker
 │  │  ├─ params/                  capability-driven ParamPanel / ParamField (schema helpers, texts, read-only Runtime group)
-│  │  ├─ voice-studio/            design, import, record, waveform edit, consent, package import/export
+│  │  ├─ voice-studio/            VoiceStudioScreen: VoiceList (library, new-voice buttons, package import), NewDesignVoice,
+│  │  │                           NewClipVoice (files / recording), NewEmbeddingVoice, VoiceEditor (reference, consent,
+│  │  │                           export, delete), VoiceDefaults (+ audition), ClipList, ClipEditor (wavesurfer regions),
+│  │  │                           Recorder + mic.ts (AudioWorklet), ConsentBox, EncodeBadge, jobs.ts, clipOps.ts
 │  │  ├─ narration/               editor, reading preview, chunk list, render, assemble
 │  │  ├─ script/                  table editor, parser, speaker map, takes, export
 │  │  ├─ library/                 history, presets, projects
@@ -58,10 +61,15 @@ irodori-studio/
 │  │  ├─ tauri.ts                 typed invoke wrappers
 │  │  ├─ types.ts                 mirrors api-spec.md (+ Tauri IPC types)
 │  │  ├─ errors.ts                error code → i18n key
-│  │  └─ format.ts                Intl formatting (bytes, memory, percent)
-│  └─ store/                      zustand: app, nav, sidecar, quick; later voices, narration, script
+│  │  ├─ jobs.ts                  client job state advanced by SSE events (shared by screens)
+│  │  ├─ wav.ts                   WAV writer for recordings
+│  │  └─ format.ts                Intl formatting (bytes, memory, seconds, dates, percent)
+│  └─ store/                      zustand: app, nav, sidecar, quick, voices; later narration, script
 ├─ src-tauri/
-│  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", mic usage string
+│  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", entitlements, localized plist strings
+│  ├─ Info.plist                  merged into the macOS Info.plist (NSMicrophoneUsageDescription)
+│  ├─ Entitlements.plist          com.apple.security.device.audio-input (hardened runtime)
+│  ├─ macos/<locale>.lproj/InfoPlist.strings   localized macOS permission prompt
 │  ├─ icons/                      generated
 │  └─ src/
 │     ├─ main.rs / lib.rs
@@ -88,7 +96,7 @@ irodori-studio/
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
    │  ├─ routers/                 system, models (+ /emoji), tts, jobs (+ SSE, /queue), audio, clips, history, preferences, deps;
-   │  │                           later text, voices, narration, script, export, presets, projects, api_server
+   │  │                           voices; later text, narration, script, export, presets, projects, api_server
    │  ├─ compat/                  openai.py, voicevox.py (external API)
    │  ├─ engine/
    │  │  ├─ base.py               TtsBackend protocol (D6)
@@ -97,9 +105,11 @@ irodori-studio/
    │  │  ├─ irodori_adapter.py    TorchBackend → upstream InferenceRuntime (ONLY upstream import site)
    │  │  └─ host.py               resident EngineHost singleton
    │  ├─ services/                container (wiring), job_manager (events), queue (single FIFO), synthesis, policy (watermark),
-   │  │                           clips, history, preferences, system_info; later voices, narration, script, presets, projects
+   │  │                           clips, voices (library, encode jobs, packages), history, preferences, system_info;
+   │  │                           later narration, script, presets, projects
    │  ├─ text/                    dictionary.py, reading.py, chunker.py, srt.py, script_parser.py
-   │  ├─ audio/                   io.py (upload decode, WAV writing); later concat.py, export.py (ffmpeg), post.py (loudnorm/atempo/gain)
+   │  ├─ audio/                   io.py (upload decode, WAV reading/writing), export.py (ffmpeg save formats);
+   │  │                           later concat.py, post.py (loudnorm/atempo/gain)
    │  └─ storage/                 db.py (SQLite + migrations), files.py (data-root layout, ULIDs)
    └─ tests/                      unit tests that do not need torch (fake backend in conftest.py: params, registry, policy, API, jobs)
                                   + test_gpu_smoke.py (marker `gpu`, real model; see coding-conventions.md)

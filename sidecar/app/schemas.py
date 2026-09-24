@@ -254,9 +254,12 @@ class JobError(BaseModel):
     message: str
 
 
+JobKind = Literal["tts", "encode"]
+
+
 class JobInfo(BaseModel):
     job_id: str
-    kind: Literal["tts"]
+    kind: JobKind
     state: JobState
     queue_position: int | None = None
     created_at: str
@@ -273,7 +276,7 @@ class CancelResponse(BaseModel):
 
 class QueueItem(BaseModel):
     job_id: str
-    kind: Literal["tts"]
+    kind: JobKind
     source: Literal["ui", "api"]
     state: Literal["queued", "running"]
     created_at: str
@@ -287,6 +290,9 @@ class QueueSnapshot(BaseModel):
 # --- Clips -----------------------------------------------------------------------------
 
 
+ClipOrigin = Literal["upload", "recording", "generated"]
+
+
 class ClipInfo(BaseModel):
     clip_id: str
     filename: str
@@ -294,6 +300,125 @@ class ClipInfo(BaseModel):
     sample_rate: int
     channels: int
     created_at: str
+    # Uploaded and recorded audio may be a real person's voice (consent, D13).
+    origin: ClipOrigin = "upload"
+    voice_id: str | None = None  # the library voice that owns the clip
+
+
+class TrimRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    start_s: float = Field(ge=0)
+    end_s: float = Field(gt=0)
+
+
+class SplitRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    at_s: list[float] = Field(min_length=1, max_length=31)
+
+
+# --- Voices (Session 4) ----------------------------------------------------------------
+
+VoiceSource = Literal["designed", "imported", "recorded", "embedding"]
+ParamValue = int | float | bool | str | None
+
+
+class ConsentInput(BaseModel):
+    """The statement the user confirmed, in the words and language they saw (D13)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    statement: str = Field(min_length=10, max_length=2000)
+    locale: str = Field(min_length=2, max_length=20)
+
+
+class Consent(BaseModel):
+    confirmed_at: str
+    statement: str
+    locale: str
+    version: int = 1
+
+
+class EmbeddingInfo(BaseModel):
+    filename: str
+    tokens: int
+    dim: int
+
+
+class Voice(BaseModel):
+    id: str
+    name: str
+    source: VoiceSource
+    created_at: str
+    updated_at: str
+    model_id: str
+    caption_default: str | None = None
+    params_default: dict[str, ParamValue] = {}
+    seed_default: int | None = None
+    lora_path: str | None = None
+    test_text: str | None = None
+    design_caption: str | None = None
+    clips: list[ClipInfo] = []
+    total_seconds: float = 0.0
+    embedding: EmbeddingInfo | None = None
+    consent: Consent | None = None
+    # Real-voice audio (uploaded or recorded) needs recorded consent (D13).
+    consent_required: bool = False
+    # Reference latents are cached for the active model (Session 4, "encode on save").
+    encoded: bool = False
+
+
+class VoiceCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=100)
+    source: VoiceSource
+    clip_ids: list[str] = Field(default_factory=list, max_length=32)
+    # designed: keep this generated candidate (GET /audio/{id}) as the voice's clip.
+    from_audio_id: str | None = None
+    # embedding: absolute path of a `.speaker.safetensors` to copy into the library.
+    embedding_path: str | None = None
+    consent: ConsentInput | None = None
+    caption_default: str | None = Field(default=None, max_length=1000)
+    params_default: SamplingParams = Field(default_factory=SamplingParams)
+    seed_default: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    lora_path: str | None = None
+    test_text: str | None = Field(default=None, max_length=2000)
+    design_caption: str | None = Field(default=None, max_length=1000)
+
+
+class VoicePatch(BaseModel):
+    """Partial update: only the fields sent change (`null` clears a nullable field)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    clip_ids: list[str] | None = Field(default=None, max_length=32)
+    embedding_path: str | None = None
+    consent: ConsentInput | None = None
+    caption_default: str | None = Field(default=None, max_length=1000)
+    params_default: SamplingParams | None = None
+    seed_default: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    lora_path: str | None = None
+    test_text: str | None = Field(default=None, max_length=2000)
+
+
+class ExportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str  # absolute destination from the native save dialog
+
+
+class ExportedFile(BaseModel):
+    path: str
+    bytes: int
+
+
+class VoiceSaved(BaseModel):
+    voice: Voice
+    # Encoding the voice's clips for the active model (a queued job), when needed.
+    encode_job_id: str | None = None
 
 
 # --- History ---------------------------------------------------------------------------

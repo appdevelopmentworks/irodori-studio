@@ -8,10 +8,12 @@ import { CrossIcon } from '@/components/icons';
 import type { ReferenceKind } from '@/features/params/schema';
 import { ApiError } from '@/lib/api';
 import { formatSeconds } from '@/lib/format';
-import { pickFile } from '@/lib/tauri';
-import type { Capabilities, Limits } from '@/lib/types';
+import type { ModelCapabilities } from '@/lib/types';
 import { useQuickStore } from '@/store/quick';
 import { useSidecarStore } from '@/store/sidecar';
+
+import { LibraryVoicePicker } from './LibraryVoicePicker';
+import { useEmbeddingPicker } from './useEmbeddingPicker';
 
 const button =
   'rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800';
@@ -19,14 +21,9 @@ const button =
 let uploadCounter = 0;
 
 /** Who speaks: nobody in particular, reference clips (uploaded, ordered), a speaker
- * embedding file, or — from Session 4 — a library voice. */
-export function VoiceSection({
-  capabilities,
-  limits,
-}: {
-  capabilities: Capabilities;
-  limits: Limits;
-}) {
+ * embedding file, or a library voice (with its defaults). */
+export function VoiceSection({ model }: { model: ModelCapabilities }) {
+  const { capabilities, limits } = model;
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? i18n.language;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -36,13 +33,14 @@ export function VoiceSection({
   const clips = useQuickStore((s) => s.clips);
   const uploads = useQuickStore((s) => s.uploads);
   const embeddingPath = useQuickStore((s) => s.embeddingPath);
+  const pickEmbedding = useEmbeddingPicker();
   const store = useQuickStore.getState;
 
   const kinds: { kind: ReferenceKind; enabled: boolean }[] = [
     { kind: 'none', enabled: true },
     { kind: 'clips', enabled: capabilities.speaker_reference },
     { kind: 'embedding', enabled: capabilities.speaker_embedding },
-    { kind: 'voice', enabled: false },
+    { kind: 'voice', enabled: true },
   ];
 
   const upload = async (files: FileList | null) => {
@@ -59,9 +57,7 @@ export function VoiceSection({
   };
 
   const chooseEmbedding = async () => {
-    const path = await pickFile(t('quick.voice.embeddingTitle'), [
-      { name: t('quick.voice.embeddingFilter'), extensions: ['safetensors'] },
-    ]);
+    const path = await pickEmbedding();
     if (path) store().setEmbeddingPath(path);
   };
 
@@ -78,7 +74,6 @@ export function VoiceSection({
             role="radio"
             aria-checked={reference === kind}
             disabled={!enabled}
-            title={kind === 'voice' ? t('quick.voice.libraryLater') : undefined}
             onClick={() => setReference(kind)}
             className={`rounded-full border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-40 ${
               reference === kind
@@ -94,6 +89,8 @@ export function VoiceSection({
       {reference === 'none' ? (
         <p className="text-xs text-zinc-500">{t('quick.voice.noneHint')}</p>
       ) : null}
+
+      {reference === 'voice' ? <LibraryVoicePicker model={model} /> : null}
 
       {reference === 'clips' ? (
         <div className="space-y-2">

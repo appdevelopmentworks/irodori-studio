@@ -68,6 +68,10 @@ class FakeBackend:
     def watermark_ready(self) -> bool:
         return self._watermark_ready
 
+    @property
+    def speaker_dim(self) -> int:
+        return 768
+
     def device_info(self) -> dict[str, object]:
         return {"device": "cpu"}
 

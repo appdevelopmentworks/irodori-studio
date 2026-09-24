@@ -9,6 +9,7 @@ export type RequestProblem =
   | 'needText'
   | 'needClips'
   | 'needEmbedding'
+  | 'needVoice'
   | 'uploading'
   | 'invalidParams';
 
@@ -19,6 +20,7 @@ export function requestProblem(state: QuickState): RequestProblem | null {
     if (state.clips.length === 0) return 'needClips';
   }
   if (state.reference === 'embedding' && !state.embeddingPath) return 'needEmbedding';
+  if (state.reference === 'voice' && !state.voiceId) return 'needVoice';
   if (Object.keys(state.invalid).length > 0) return 'invalidParams';
   return null;
 }
@@ -29,6 +31,8 @@ export function buildRequest(state: QuickState, model: ModelCapabilities): Synth
     reference = { kind: 'clips', clip_ids: state.clips.map((clip) => clip.clip_id) };
   } else if (state.reference === 'embedding' && state.embeddingPath) {
     reference = { kind: 'embedding', path: state.embeddingPath };
+  } else if (state.reference === 'voice' && state.voiceId) {
+    reference = { kind: 'voice', voice_id: state.voiceId };
   }
   const request: SynthesisRequest = {
     text: state.text,

@@ -1,0 +1,210 @@
+{
+  "title": "声音工作室",
+  "common": {
+    "cancel": "取消"
+  },
+  "sources": {
+    "designed": "设计的声音",
+    "imported": "音频文件",
+    "recorded": "录音",
+    "embedding": "说话人嵌入"
+  },
+  "empty": {
+    "title": "请选择一个声音，或新建声音",
+    "body": "在左侧列表中选择声音后，可以编辑参考音频、设置默认值并试听。新声音可以通过四种方式创建：用描述文字设计、音频文件、麦克风录音或说话人嵌入。"
+  },
+  "list": {
+    "new": "新建声音",
+    "title_other": "声音库（{{count}}）",
+    "empty": "还没有声音。请用上方按钮创建，或导入声音包。",
+    "embedding": "说话人嵌入（{{tokens}} 个 token）",
+    "captionOnly": "仅描述文字",
+    "clips_other": "{{count}} 个片段 · {{seconds}} 秒",
+    "noConsent": "没有同意记录"
+  },
+  "new": {
+    "buttons": {
+      "designed": "用描述文字设计",
+      "imported": "从音频文件创建",
+      "recorded": "用麦克风录音",
+      "embedding": "从说话人嵌入创建"
+    },
+    "buttonHints": {
+      "designed": "用文字描述声音，再从候选中选择",
+      "imported": "导入本人的声音文件",
+      "recorded": "朗读例句，录制约 30 秒",
+      "embedding": "导入 .speaker.safetensors 文件"
+    },
+    "titles": {
+      "designed": "用描述文字设计声音",
+      "imported": "从音频文件创建声音",
+      "recorded": "通过录音创建声音",
+      "embedding": "从说话人嵌入创建声音"
+    },
+    "intros": {
+      "designed": "描述想要的声音并生成候选，将满意的候选保存为声音。候选的音频会成为参考音频，之后也能用同一个声音说话。",
+      "imported": "添加同一个人的声音文件。准备噪音少、干净的音频，总计 30 秒以上（最多 120 秒）会更稳定。",
+      "recorded": "逐句朗读显示的例句并录音。请总共收集约 30 秒。",
+      "embedding": "将用 Speaker Inversion 制作的说话人嵌入（.speaker.safetensors）导入声音库。"
+    },
+    "save": "保存声音",
+    "discard": "放弃",
+    "problems": {
+      "needName": "请输入名称。",
+      "needClips": "请至少添加一个音频。",
+      "uploading": "正在等待上传完成。",
+      "needConsent": "请确认本人的同意。",
+      "needEmbedding": "请选择说话人嵌入文件。"
+    }
+  },
+  "fields": {
+    "name": "声音名称",
+    "namePlaceholder": "例如：旁白 A"
+  },
+  "clips": {
+    "title": "参考音频",
+    "hint": "从上到下依次拼接使用。可通过“编辑”剪掉前后的静音或噪音，或拆分片段。",
+    "origins": {
+      "upload": "文件",
+      "recording": "录音",
+      "generated": "生成"
+    },
+    "duration": "{{seconds}} 秒",
+    "edit": "编辑",
+    "close": "关闭",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "remove": "删除",
+    "removeConfirm": "要删除这个片段吗？此操作无法撤销。",
+    "removeYes": "删除",
+    "empty": "还没有音频。",
+    "dismiss": "关闭",
+    "uploading": "正在上传 {{name}}…",
+    "addFiles": "添加音频文件",
+    "record": "用麦克风录音",
+    "closeRecorder": "关闭录音",
+    "total": "总计 {{seconds}} 秒（最多使用 {{max}} 秒）",
+    "over": "超过 {{max}} 秒的部分不会被使用。",
+    "short": "总计 {{target}} 秒以上时声音更稳定。"
+  },
+  "editor": {
+    "hint": "在波形上拖动以选择范围，点击可移动播放位置。",
+    "loadFailed": "无法加载波形。",
+    "play": "播放",
+    "pause": "暂停",
+    "playSelection": "播放所选范围",
+    "trim": "仅保留所选范围",
+    "split": "在播放位置拆分",
+    "clearSelection": "取消选择",
+    "position": "{{current}} / {{total}} 秒",
+    "selection": "所选范围：{{start}}–{{end}} 秒（{{length}} 秒）",
+    "meta": "{{source}} · 创建于 {{date}}",
+    "otherModel": "这个声音是用其他模型（{{model}}）创建的，使用时会为当前模型重新编码。",
+    "delete": "删除…",
+    "deleteConfirm": "要删除“{{name}}”吗？参考音频和录音也会被删除，且无法撤销。",
+    "deleteYes": "删除",
+    "reference": "声音来源",
+    "designCaption": "设计时使用的描述文字：",
+    "captionOnly": "这是没有参考音频、仅有描述文字的声音，每次生成的声音都会略有不同。",
+    "addNeedsConsent": "添加音频文件或录音前，需要确认本人的同意"
+  },
+  "embedding": {
+    "file": "说话人嵌入文件",
+    "info": "说话人嵌入：{{tokens}} 个 token × {{dim}} 维",
+    "missing": "找不到说话人嵌入文件，请替换。",
+    "replace": "替换文件…"
+  },
+  "encode": {
+    "queued": "等待编码",
+    "running": "正在编码 {{done}} / {{total}}",
+    "done": "已编码",
+    "pending": "未编码",
+    "failed": "编码失败",
+    "now": "立即编码"
+  },
+  "consent": {
+    "title": "确认本人同意",
+    "statement": "我已获得此声音本人的同意，可将其声音用于语音合成（或者这是我自己的声音）。我不会将其用于冒充本人、伤害本人或他人，或违反法律及 Irodori-TTS 使用条款的目的。",
+    "confirm": "我已确认以上内容",
+    "note": "所确认的文字和时间会记录在此声音中，并包含在声音包里。",
+    "recorded": "已于 {{date}} 记录本人同意"
+  },
+  "defaults": {
+    "title": "声音设置与默认值",
+    "hint": "在快速生成中选择此声音时会载入这些设置。",
+    "caption": "默认描述文字",
+    "advanced": "默认参数（高级）",
+    "loraHint": "使用此声音生成时所用的 LoRA 适配器文件夹。",
+    "testText": "试听用的测试句",
+    "save": "保存设置",
+    "revert": "还原",
+    "unsaved": "有尚未保存的更改。",
+    "saved": "已保存。"
+  },
+  "audition": {
+    "title": "试听",
+    "hint": "使用上方的设置（包括未保存的更改）朗读测试句。",
+    "listen": "试听",
+    "encoded": "本次生成时已对参考音频进行编码（下次起将跳过）。"
+  },
+  "package": {
+    "export": "导出…",
+    "exportTitle": "保存声音包",
+    "filter": "声音包",
+    "exported": "已导出：{{path}}",
+    "import": "导入声音包…",
+    "importing": "正在导入…"
+  },
+  "design": {
+    "caption": "声音描述（描述文字）",
+    "captionPlaceholder": "请用日语书写，例如：落ち着いた低めの声の男性。やわらかく、ゆっくり話している。",
+    "captionHint": "请用日语描述音色、年龄、说话方式等。预设会追加到末尾。",
+    "text": "让候选朗读的句子",
+    "generate": "生成候选",
+    "candidates": "候选",
+    "candidatesHint": "请比较试听，选择一个要保存为声音的候选。",
+    "keepAudio": "将所选候选保存为参考音频（推荐）",
+    "keepAudioHint": "候选的音频会成为声音的来源，之后也能用同一个声音说话。",
+    "captionOnlyHint": "只保存描述文字，每次生成的声音都会略有不同。",
+    "problems": {
+      "needCaption": "请输入声音描述（描述文字）。",
+      "needText": "请输入让候选朗读的句子。",
+      "needChoice": "请选择要保存的候选。"
+    }
+  },
+  "record": {
+    "hint": "请在安静的地方，距离麦克风约 20–30 厘米，用自然的声音朗读。每读完一句，请按“停止并添加”。",
+    "sentence": "例句 {{index}} / {{count}}",
+    "previous": "上一句",
+    "next": "下一句",
+    "sentences": {
+      "s1": "今天天气晴朗，我想走到稍远一点的公园去看看。",
+      "s2": "听说车站前新开的面包店每天早上七点就开门了。",
+      "s3": "在昨天的会议上，我们花了不少时间讨论下个月的安排。",
+      "s4": "打开窗户，凉爽的风带着桂花的香气吹了进来。",
+      "s5": "如果方便的话，这个周末要不要一起去看电影？",
+      "s6": "这本书讲的是住在海边小镇的一只猫和一个少年的故事。",
+      "s7": "能帮我看看冰箱里还有没有牛奶和鸡蛋吗？",
+      "s8": "抬头望向夜空，数不清的星星在闪闪发光。",
+      "s9": "咦，真的吗？那真是个好消息！",
+      "s10": "请慢慢地深呼吸，放松你的肩膀。"
+    },
+    "start": "开始录音",
+    "stop": "停止并添加",
+    "discard": "放弃这段录音",
+    "elapsed": "{{seconds}} 秒",
+    "level": "输入电平",
+    "clipped": "声音出现削波失真。请离麦克风稍远一些，或调低输入音量。",
+    "quiet": "声音似乎太小。请靠近麦克风，或调高输入音量。",
+    "collected": "已收集的音频",
+    "collectedValue": "{{seconds}} / {{target}} 秒",
+    "takeName": "录音 {{index}}.wav",
+    "errors": {
+      "denied": "未允许使用麦克风。请在系统设置中允许此应用使用麦克风。",
+      "noDevice": "找不到麦克风。",
+      "busy": "无法使用麦克风，可能有其他应用正在使用。",
+      "unsupported": "当前环境无法录音。",
+      "failed": "无法开始录音。"
+    }
+  }
+}

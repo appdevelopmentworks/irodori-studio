@@ -94,6 +94,12 @@ class EngineHost:
         raise BackendError(code, "the model is not loaded")
 
     @property
+    def speaker_dim(self) -> int | None:
+        with self._cond:
+            backend = self._backend if self._state == "ready" else None
+        return None if backend is None else backend.speaker_dim
+
+    @property
     def watermark_ready(self) -> bool | None:
         with self._cond:
             backend = self._backend if self._state == "ready" else None

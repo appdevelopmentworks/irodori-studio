@@ -231,6 +231,13 @@ class TorchBackend:
         runtime = self._runtime
         return bool(runtime is not None and runtime.watermarker.ready)
 
+    @property
+    def speaker_dim(self) -> int | None:
+        runtime = self._runtime
+        if runtime is None or not runtime.model_cfg.use_speaker_condition_resolved:
+            return None
+        return int(runtime.model_cfg.speaker_dim)
+
     def device_info(self) -> dict[str, object]:
         options = self._options
         if options is None:

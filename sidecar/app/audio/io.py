@@ -7,6 +7,7 @@ decode itself. soundfile (libsndfile 1.2) reads WAV/FLAC/OGG/Opus/MP3; anything 
 
 from __future__ import annotations
 
+import io
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -58,6 +59,29 @@ def normalize_upload(src: Path, dest: Path, *, ffmpeg: Path | None) -> AudioInfo
         dest.unlink(missing_ok=True)
         raise AudioDecodeError("clip_empty", "no audio samples")
     return result
+
+
+def read_frames(path: Path) -> tuple[np.ndarray, int]:
+    """Decode to float32 `(frames, channels)`."""
+    data, sample_rate = sf.read(str(path), dtype="float32", always_2d=True)
+    return data, int(sample_rate)
+
+
+def write_float_wav(path: Path, frames: np.ndarray, sample_rate: int) -> AudioInfo:
+    """Store reference audio losslessly as a float32 WAV (the canonical clip format)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_name(path.name + ".part")
+    sf.write(str(partial), frames, sample_rate, subtype="FLOAT", format="WAV")
+    partial.replace(path)
+    return info(path)
+
+
+def preview_wav(path: Path) -> bytes:
+    """16-bit PCM copy for playback and waveforms in the WebView."""
+    frames, sample_rate = read_frames(path)
+    buffer = io.BytesIO()
+    sf.write(buffer, np.clip(frames, -1.0, 1.0), sample_rate, subtype="PCM_16", format="WAV")
+    return buffer.getvalue()
 
 
 def write_wav(path: Path, samples: np.ndarray, sample_rate: int) -> int:

@@ -36,7 +36,14 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "signingIdentity": "-"
+      "signingIdentity": "-",
+      "entitlements": "./Entitlements.plist",
+      "files": {
+        "Resources/en.lproj/InfoPlist.strings": "./macos/en.lproj/InfoPlist.strings",
+        "Resources/ja.lproj/InfoPlist.strings": "./macos/ja.lproj/InfoPlist.strings",
+        "Resources/zh-Hans.lproj/InfoPlist.strings": "./macos/zh-Hans.lproj/InfoPlist.strings",
+        "Resources/de.lproj/InfoPlist.strings": "./macos/de.lproj/InfoPlist.strings"
+      }
     }
   }
 }

@@ -1,0 +1,212 @@
+{
+  "title": "Stimmstudio",
+  "common": {
+    "cancel": "Abbrechen"
+  },
+  "sources": {
+    "designed": "Entworfen",
+    "imported": "Audiodateien",
+    "recorded": "Aufnahme",
+    "embedding": "Sprecher-Embedding"
+  },
+  "empty": {
+    "title": "Wählen Sie eine Stimme aus oder erstellen Sie eine neue",
+    "body": "Wählen Sie links eine Stimme, um ihr Referenzaudio zu bearbeiten, Standardwerte festzulegen und sie probezuhören. Neue Stimmen entstehen auf vier Wegen: per Beschreibung entworfen, aus Audiodateien, per Mikrofonaufnahme oder aus einem Sprecher-Embedding."
+  },
+  "list": {
+    "new": "Neue Stimme erstellen",
+    "title_one": "Bibliothek ({{count}})",
+    "title_other": "Bibliothek ({{count}})",
+    "empty": "Noch keine Stimmen. Erstellen Sie eine über die Schaltflächen oben oder importieren Sie ein Stimmpaket.",
+    "embedding": "Sprecher-Embedding ({{tokens}} Tokens)",
+    "captionOnly": "Nur Beschreibung",
+    "clips_one": "{{count}} Clip · {{seconds}} s",
+    "clips_other": "{{count}} Clips · {{seconds}} s",
+    "noConsent": "Keine Einwilligung erfasst"
+  },
+  "new": {
+    "buttons": {
+      "designed": "Per Beschreibung entwerfen",
+      "imported": "Aus Audiodateien",
+      "recorded": "Mit dem Mikrofon aufnehmen",
+      "embedding": "Aus einem Sprecher-Embedding"
+    },
+    "buttonHints": {
+      "designed": "Stimme beschreiben, dann einen Kandidaten wählen",
+      "imported": "Aufnahmen der Person importieren",
+      "recorded": "Beispielsätze etwa 30 s lang vorlesen",
+      "embedding": "Eine .speaker.safetensors-Datei importieren"
+    },
+    "titles": {
+      "designed": "Stimme per Beschreibung entwerfen",
+      "imported": "Stimme aus Audiodateien erstellen",
+      "recorded": "Stimme per Aufnahme erstellen",
+      "embedding": "Stimme aus einem Sprecher-Embedding erstellen"
+    },
+    "intros": {
+      "designed": "Beschreiben Sie die Stimme, erzeugen Sie Kandidaten und speichern Sie den passenden. Sein Audio wird zur Referenz der Stimme, sodass sie danach gleich klingt.",
+      "imported": "Fügen Sie Aufnahmen einer Person hinzu. Sauberes Audio mit wenig Rauschen und insgesamt 30 Sekunden oder mehr (höchstens 120) ergibt die stabilste Stimme.",
+      "recorded": "Lesen Sie die Beispielsätze vor, eine Aufnahme pro Satz. Sammeln Sie insgesamt etwa 30 Sekunden.",
+      "embedding": "Importiert ein mit Speaker Inversion erstelltes Sprecher-Embedding (.speaker.safetensors) in die Bibliothek."
+    },
+    "save": "Stimme speichern",
+    "discard": "Verwerfen",
+    "problems": {
+      "needName": "Geben Sie einen Namen ein.",
+      "needClips": "Fügen Sie mindestens einen Clip hinzu.",
+      "uploading": "Warte auf den Abschluss der Uploads.",
+      "needConsent": "Bestätigen Sie die Einwilligung der Person.",
+      "needEmbedding": "Wählen Sie eine Sprecher-Embedding-Datei aus."
+    }
+  },
+  "fields": {
+    "name": "Name der Stimme",
+    "namePlaceholder": "z. B. Sprecher A"
+  },
+  "clips": {
+    "title": "Referenzaudio",
+    "hint": "Die Clips werden von oben nach unten aneinandergefügt. Mit „Bearbeiten“ schneiden Sie Stille oder Rauschen an den Enden weg oder teilen einen Clip.",
+    "origins": {
+      "upload": "Datei",
+      "recording": "Aufnahme",
+      "generated": "Erzeugt"
+    },
+    "duration": "{{seconds}} s",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "remove": "Entfernen",
+    "removeConfirm": "Diesen Clip löschen? Das kann nicht rückgängig gemacht werden.",
+    "removeYes": "Löschen",
+    "empty": "Noch kein Audio.",
+    "dismiss": "Schließen",
+    "uploading": "{{name}} wird hochgeladen …",
+    "addFiles": "Audiodateien hinzufügen",
+    "record": "Mit Mikrofon aufnehmen",
+    "closeRecorder": "Aufnahme schließen",
+    "total": "Insgesamt {{seconds}} s (verwendet werden bis zu {{max}} s)",
+    "over": "Audio über {{max}} s hinaus wird nicht verwendet.",
+    "short": "Mit insgesamt {{target}} s oder mehr wird die Stimme stabiler."
+  },
+  "editor": {
+    "hint": "Ziehen Sie über die Wellenform, um einen Bereich auszuwählen; ein Klick setzt die Wiedergabeposition.",
+    "loadFailed": "Die Wellenform konnte nicht geladen werden.",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "playSelection": "Auswahl abspielen",
+    "trim": "Nur Auswahl behalten",
+    "split": "An Wiedergabeposition teilen",
+    "clearSelection": "Auswahl aufheben",
+    "position": "{{current}} / {{total}} s",
+    "selection": "Auswahl: {{start}}–{{end}} s ({{length}} s)",
+    "meta": "{{source}} · erstellt am {{date}}",
+    "otherModel": "Diese Stimme wurde mit einem anderen Modell ({{model}}) erstellt. Sie wird für dieses Modell neu kodiert.",
+    "delete": "Löschen …",
+    "deleteConfirm": "„{{name}}“ löschen? Referenzaudio und Aufnahmen werden ebenfalls gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "deleteYes": "Löschen",
+    "reference": "Grundlage der Stimme",
+    "designCaption": "Entworfen aus der Beschreibung:",
+    "captionOnly": "Eine Stimme nur aus einer Beschreibung, ohne Referenzaudio; sie klingt bei jeder Erzeugung etwas anders.",
+    "addNeedsConsent": "Zum Hinzufügen von Audiodateien oder Aufnahmen muss die Einwilligung der Person bestätigt werden"
+  },
+  "embedding": {
+    "file": "Sprecher-Embedding-Datei",
+    "info": "Sprecher-Embedding: {{tokens}} Tokens × {{dim}} Dimensionen",
+    "missing": "Die Sprecher-Embedding-Datei fehlt. Ersetzen Sie sie.",
+    "replace": "Datei ersetzen …"
+  },
+  "encode": {
+    "queued": "Wartet auf Kodierung",
+    "running": "Kodiere {{done}} / {{total}}",
+    "done": "Kodiert",
+    "pending": "Nicht kodiert",
+    "failed": "Kodierung fehlgeschlagen",
+    "now": "Jetzt kodieren"
+  },
+  "consent": {
+    "title": "Einwilligung der Person",
+    "statement": "Die Person, der diese Stimme gehört, hat eingewilligt, dass ihre Stimme für die Sprachsynthese verwendet wird (oder es ist meine eigene Stimme). Ich verwende sie nicht, um mich als diese Person auszugeben, ihr oder anderen zu schaden, oder für Zwecke, die gegen Gesetze oder die Nutzungsbedingungen von Irodori-TTS verstoßen.",
+    "confirm": "Ich bestätige die obige Erklärung",
+    "note": "Die bestätigte Erklärung und der Zeitpunkt werden mit dieser Stimme gespeichert und in ihr Stimmpaket übernommen.",
+    "recorded": "Einwilligung am {{date}} erfasst"
+  },
+  "defaults": {
+    "title": "Einstellungen und Standardwerte",
+    "hint": "Werden geladen, wenn Sie diese Stimme in der Schnellgenerierung wählen.",
+    "caption": "Standardbeschreibung",
+    "advanced": "Standardparameter (erweitert)",
+    "loraHint": "LoRA-Adapterordner für Erzeugungen mit dieser Stimme.",
+    "testText": "Testsatz",
+    "save": "Einstellungen speichern",
+    "revert": "Zurücksetzen",
+    "unsaved": "Es gibt ungespeicherte Änderungen.",
+    "saved": "Gespeichert."
+  },
+  "audition": {
+    "title": "Probehören",
+    "hint": "Liest den Testsatz mit den obigen Einstellungen vor, einschließlich ungespeicherter Änderungen.",
+    "listen": "Probehören",
+    "encoded": "Das Referenzaudio wurde bei dieser Erzeugung kodiert (künftig entfällt dieser Schritt)."
+  },
+  "package": {
+    "export": "Exportieren …",
+    "exportTitle": "Stimmpaket speichern",
+    "filter": "Stimmpaket",
+    "exported": "Exportiert: {{path}}",
+    "import": "Stimmpaket importieren …",
+    "importing": "Wird importiert …"
+  },
+  "design": {
+    "caption": "Beschreibung der Stimme",
+    "captionPlaceholder": "Auf Japanisch, z. B. 落ち着いた低めの声の男性。やわらかく、ゆっくり話している。",
+    "captionHint": "Beschreiben Sie Klangfarbe, Alter und Sprechweise auf Japanisch. Vorlagen werden am Ende angefügt.",
+    "text": "Satz für die Kandidaten",
+    "generate": "Kandidaten erzeugen",
+    "candidates": "Kandidaten",
+    "candidatesHint": "Vergleichen Sie sie und wählen Sie den aus, der als Stimme gespeichert werden soll.",
+    "keepAudio": "Gewählten Kandidaten als Referenzaudio speichern (empfohlen)",
+    "keepAudioHint": "Das Audio des Kandidaten wird zur Grundlage der Stimme, sodass sie danach gleich klingt.",
+    "captionOnlyHint": "Nur die Beschreibung wird gespeichert; die Stimme klingt bei jeder Erzeugung etwas anders.",
+    "problems": {
+      "needCaption": "Geben Sie eine Beschreibung der Stimme ein.",
+      "needText": "Geben Sie einen Satz für die Kandidaten ein.",
+      "needChoice": "Wählen Sie den zu speichernden Kandidaten aus."
+    }
+  },
+  "record": {
+    "hint": "Suchen Sie einen ruhigen Ort, halten Sie etwa 20–30 cm Abstand zum Mikrofon und lesen Sie mit natürlicher Stimme. Drücken Sie nach jedem Satz „Stoppen und hinzufügen“.",
+    "sentence": "Satz {{index}} von {{count}}",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "sentences": {
+      "s1": "Heute ist es so sonnig, dass ich zu Fuß zum Park am anderen Ende der Stadt gehe.",
+      "s2": "Die neue Bäckerei am Bahnhof öffnet jeden Morgen um sieben Uhr.",
+      "s3": "In der gestrigen Besprechung haben wir ausführlich über die Pläne für den nächsten Monat gesprochen.",
+      "s4": "Als ich das Fenster öffnete, wehte eine kühle Brise mit dem Duft von Blüten herein.",
+      "s5": "Wenn du Lust hast, könnten wir am Wochenende zusammen ins Kino gehen.",
+      "s6": "Dieses Buch erzählt die Geschichte einer Katze und eines Jungen in einer kleinen Stadt am Meer.",
+      "s7": "Kannst du nachsehen, ob noch Milch und Eier im Kühlschrank sind?",
+      "s8": "Als ich zum Nachthimmel hinaufsah, funkelten dort unzählige Sterne.",
+      "s9": "Wirklich? Das sind ja wunderbare Neuigkeiten!",
+      "s10": "Atme langsam und tief ein und lass die Schultern locker."
+    },
+    "start": "Aufnahme starten",
+    "stop": "Stoppen und hinzufügen",
+    "discard": "Diese Aufnahme verwerfen",
+    "elapsed": "{{seconds}} s",
+    "level": "Eingangspegel",
+    "clipped": "Der Ton übersteuert. Gehen Sie etwas weiter vom Mikrofon weg oder verringern Sie die Eingangslautstärke.",
+    "quiet": "Ihre Stimme ist recht leise. Gehen Sie näher ans Mikrofon oder erhöhen Sie die Eingangslautstärke.",
+    "collected": "Gesammeltes Audio",
+    "collectedValue": "{{seconds}} / {{target}} s",
+    "takeName": "Aufnahme {{index}}.wav",
+    "errors": {
+      "denied": "Der Mikrofonzugriff ist nicht erlaubt. Erlauben Sie dieser App den Mikrofonzugriff in den Systemeinstellungen.",
+      "noDevice": "Es wurde kein Mikrofon gefunden.",
+      "busy": "Das Mikrofon kann nicht verwendet werden. Möglicherweise wird es von einer anderen App genutzt.",
+      "unsupported": "Aufnahmen sind hier nicht möglich.",
+      "failed": "Die Aufnahme konnte nicht gestartet werden."
+    }
+  }
+}

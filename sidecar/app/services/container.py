@@ -17,6 +17,7 @@ from app.services.job_manager import Job, JobManager
 from app.services.preferences import PreferencesStore
 from app.services.queue import SynthesisQueue
 from app.services.synthesis import SynthesisService
+from app.services.voices import VoiceService
 from app.storage.db import Database
 from app.storage.files import DataLayout
 
@@ -34,10 +35,12 @@ class Services:
     jobs: JobManager
     queue: SynthesisQueue
     synthesis: SynthesisService
+    voices: VoiceService
     autoload: bool = True
 
     def start(self) -> None:
         """Begin loading the model (D4) and serving the queue."""
+        self.clips.purge_unowned()
         if self.autoload:
             self.host.start()
         self.queue.start()
@@ -66,12 +69,27 @@ def build_services(
     history = HistoryStore(db, layout)
     jobs = JobManager()
     synthesis: SynthesisService | None = None
+    voices: VoiceService | None = None
 
     def execute(job: Job) -> None:
-        assert synthesis is not None
-        synthesis.execute(job)
+        # One queue for all GPU work (D24): generations and voice encoding.
+        assert synthesis is not None and voices is not None
+        if job.kind == "encode":
+            voices.execute_encode(job)
+        else:
+            synthesis.execute(job)
 
     queue = SynthesisQueue(execute, host.wait_settled)
+    voices = VoiceService(
+        db=db,
+        layout=layout,
+        clips=clips,
+        history=history,
+        host=host,
+        jobs=jobs,
+        queue=queue,
+        app_version=config.app_version,
+    )
     synthesis = SynthesisService(
         host=host,
         clips=clips,
@@ -79,6 +97,8 @@ def build_services(
         preferences=preferences,
         jobs=jobs,
         queue=queue,
+        voices=voices,
+        tmp_dir=layout.tmp,
     )
     return Services(
         config=config,
@@ -92,5 +112,6 @@ def build_services(
         jobs=jobs,
         queue=queue,
         synthesis=synthesis,
+        voices=voices,
         autoload=autoload,
     )

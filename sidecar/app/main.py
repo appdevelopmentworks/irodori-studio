@@ -22,7 +22,17 @@ from app.config import SidecarConfig
 from app.engine.base import BackendFactory
 from app.errors import register_error_handlers
 from app.lifecycle import exit_with_parent, force_utf8
-from app.routers import audio, clips, history, jobs, models, preferences, system, tts
+from app.routers import (
+    audio,
+    clips,
+    history,
+    jobs,
+    models,
+    preferences,
+    system,
+    tts,
+    voices,
+)
 from app.services.container import build_services
 
 
@@ -53,7 +63,7 @@ def create_app(
         allow_headers=["*"],
     )
     register_error_handlers(app)
-    for module in (system, models, tts, jobs, audio, clips, history, preferences):
+    for module in (system, models, tts, jobs, audio, clips, voices, history, preferences):
         app.include_router(module.router)
     return app
 

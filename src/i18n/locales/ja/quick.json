@@ -39,7 +39,6 @@
       "embedding": "話者埋め込み",
       "library": "ライブラリの声"
     },
-    "libraryLater": "ボイススタジオの追加後に選べるようになります。",
     "noneHint": "参照音声を使わず、キャプション（または指定なし）で声が決まります。",
     "addClips": "音声ファイルを追加",
     "clipsHint": "同じ話者のきれいな短いクリップを複数並べると安定します。上から順につなげて使います（合計 {{max}} 秒まで）。",
@@ -53,9 +52,21 @@
     "chooseEmbedding": "ファイルを選択",
     "embeddingTitle": "話者埋め込みファイルを選択",
     "embeddingFilter": "話者埋め込み",
+    "safetensorsFilter": "すべての safetensors ファイル",
     "embeddingHint": "Speaker Inversion で作った .speaker.safetensors を指定します（同じベースモデル用のもの）。",
     "clear": "解除",
-    "embeddingNone": "未選択"
+    "embeddingNone": "未選択",
+    "libraryLabel": "ライブラリの声",
+    "libraryChoose": "声を選択…",
+    "libraryOption": "{{name}}（{{source}}）",
+    "libraryHint": "声を選ぶと、その声の既定値（キャプション・パラメーター・シード・LoRA）がフォームに読み込まれます。",
+    "libraryEmpty": "ライブラリに声がありません。ボイススタジオで作成できます。",
+    "openStudio": "ボイススタジオを開く",
+    "editInStudio": "ボイススタジオで編集",
+    "librarySummaryEmbedding": "話者埋め込みの声です。",
+    "librarySummaryClips_other": "参照音声 {{count}} クリップ（{{seconds}} 秒）の声です。",
+    "librarySummaryCaption": "キャプションだけの声です。",
+    "defaultsApplied": "選んだときに声の既定値を読み込みました。"
   },
   "simple": {
     "title": "生成の設定"
@@ -85,6 +96,7 @@
     "needText": "テキストを入力してください。",
     "needClips": "参照音声を追加してください。",
     "needEmbedding": "話者埋め込みファイルを選んでください。",
+    "needVoice": "ライブラリの声を選んでください。",
     "invalidParams": "詳細設定に正しくない値があります。",
     "uploading": "参照音声のアップロードを待っています。",
     "paramError": "{{param}}: {{reason}}"

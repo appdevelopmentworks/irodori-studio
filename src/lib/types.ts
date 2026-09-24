@@ -50,7 +50,13 @@ export type SidecarErrorCode =
   | 'out_of_memory'
   | 'save_path_invalid'
   | 'save_failed'
-  | 'ffmpeg_unavailable';
+  | 'ffmpeg_unavailable'
+  | 'clip_range_invalid'
+  | 'clip_in_use'
+  | 'voice_invalid'
+  | 'consent_required'
+  | 'embedding_invalid'
+  | 'package_invalid';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -263,16 +269,18 @@ export interface JobError {
   message: string;
 }
 
+export type JobKind = 'tts' | 'encode';
+
 export interface JobInfo {
   job_id: string;
-  kind: 'tts';
+  kind: JobKind;
   state: JobState;
   queue_position: number | null;
   created_at: string;
   started_at: string | null;
   finished_at: string | null;
   error: JobError | null;
-  result: TtsResult | null;
+  result: TtsResult | EncodeResult | null;
 }
 
 export interface CancelResponse {
@@ -282,7 +290,7 @@ export interface CancelResponse {
 
 export interface QueueItem {
   job_id: string;
-  kind: 'tts';
+  kind: JobKind;
   source: 'ui' | 'api';
   state: 'queued' | 'running';
   created_at: string;
@@ -293,20 +301,31 @@ export interface QueueSnapshot {
   queued: QueueItem[];
 }
 
-/** `GET /jobs/{id}/events` (SSE); the event name is `type`. */
-export type JobEvent =
+/** Result of an `encode` job: the voice's clips encoded for the active model. */
+export interface EncodeResult {
+  voice_id: string;
+  encoded: number;
+}
+
+export type ProgressUnit = 'step' | 'clip' | 'candidate' | 'chunk' | 'line';
+
+/** `GET /jobs/{id}/events` (SSE); the event name is `type`. `R` is the job's result. */
+export type JobEvent<R = TtsResult> =
   | { type: 'queued'; data: { position: number } }
   | { type: 'started'; data: Record<string, never> }
   | { type: 'log'; data: { line: string } }
-  | { type: 'progress'; data: { done: number; total: number; unit: 'step' | 'candidate' | 'chunk' | 'line' } }
+  | { type: 'progress'; data: { done: number; total: number; unit: ProgressUnit } }
   | { type: 'candidate'; data: AudioOutput }
-  | { type: 'completed'; data: TtsResult }
+  | { type: 'completed'; data: R }
   | { type: 'failed'; data: JobError }
   | { type: 'cancelled'; data: Record<string, never> };
 
 export type JobEventType = JobEvent['type'];
 
 // Clips, history, preferences.
+
+/** Uploaded and recorded audio may be a real person's voice (consent, D13). */
+export type ClipOrigin = 'upload' | 'recording' | 'generated';
 
 export interface ClipInfo {
   clip_id: string;
@@ -315,6 +334,95 @@ export interface ClipInfo {
   sample_rate: number;
   channels: number;
   created_at: string;
+  origin: ClipOrigin;
+  /** The library voice that owns the clip. */
+  voice_id: string | null;
+}
+
+// Voices (the voice library).
+
+export type VoiceSource = 'designed' | 'imported' | 'recorded' | 'embedding';
+
+/** The statement the user confirmed, in the words and language they saw (D13). */
+export interface ConsentInput {
+  statement: string;
+  locale: string;
+}
+
+export interface Consent extends ConsentInput {
+  confirmed_at: string;
+  version: number;
+}
+
+export interface EmbeddingInfo {
+  filename: string;
+  tokens: number;
+  dim: number;
+}
+
+export interface Voice {
+  id: string;
+  name: string;
+  source: VoiceSource;
+  created_at: string;
+  updated_at: string;
+  model_id: string;
+  caption_default: string | null;
+  params_default: SamplingParams;
+  seed_default: number | null;
+  lora_path: string | null;
+  test_text: string | null;
+  design_caption: string | null;
+  clips: ClipInfo[];
+  total_seconds: number;
+  embedding: EmbeddingInfo | null;
+  consent: Consent | null;
+  /** Some clip may be a real person's voice, so consent must be recorded. */
+  consent_required: boolean;
+  /** Reference latents are cached for the active model. */
+  encoded: boolean;
+}
+
+export interface VoiceCreate {
+  name: string;
+  source: VoiceSource;
+  clip_ids?: string[];
+  /** designed: keep this generated candidate as the voice's clip. */
+  from_audio_id?: string | null;
+  /** embedding: absolute path of a speaker embedding to copy into the library. */
+  embedding_path?: string | null;
+  consent?: ConsentInput | null;
+  caption_default?: string | null;
+  params_default?: SamplingParams;
+  seed_default?: number | null;
+  lora_path?: string | null;
+  test_text?: string | null;
+  design_caption?: string | null;
+}
+
+/** Only the fields sent change; `null` clears a nullable field. */
+export interface VoicePatch {
+  name?: string;
+  /** The voice's clips in order; clips left out are deleted. */
+  clip_ids?: string[];
+  embedding_path?: string | null;
+  consent?: ConsentInput;
+  caption_default?: string | null;
+  params_default?: SamplingParams;
+  seed_default?: number | null;
+  lora_path?: string | null;
+  test_text?: string | null;
+}
+
+export interface VoiceSaved {
+  voice: Voice;
+  /** The queued job encoding the voice's clips, when needed. */
+  encode_job_id: string | null;
+}
+
+export interface ExportedFile {
+  path: string;
+  bytes: number;
 }
 
 export interface HistorySummary {

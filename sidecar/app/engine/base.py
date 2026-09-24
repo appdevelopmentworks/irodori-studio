@@ -96,6 +96,11 @@ class TtsBackend(Protocol):
         """Whether the watermarker loaded (D12 must never lapse silently)."""
         ...
 
+    @property
+    def speaker_dim(self) -> int | None:
+        """Width of a speaker embedding token, to validate Speaker Inversion files."""
+        ...
+
     def device_info(self) -> dict[str, object]: ...
 
     def encode_reference(

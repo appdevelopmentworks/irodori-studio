@@ -52,6 +52,13 @@ class ErrorCode(str, Enum):
     CLIP_TOO_SHORT = "clip_too_short"
     CLIP_TOO_LONG = "clip_too_long"
     CLIP_TOO_LARGE = "clip_too_large"
+    CLIP_RANGE_INVALID = "clip_range_invalid"
+    CLIP_IN_USE = "clip_in_use"
+    # Voices (Session 4).
+    VOICE_INVALID = "voice_invalid"
+    CONSENT_REQUIRED = "consent_required"
+    EMBEDDING_INVALID = "embedding_invalid"
+    PACKAGE_INVALID = "package_invalid"
     # Jobs and stored results.
     JOB_NOT_FOUND = "job_not_found"
     AUDIO_NOT_FOUND = "audio_not_found"

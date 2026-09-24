@@ -6,7 +6,7 @@ Two listeners (D21):
 - **Internal API** — `http://127.0.0.1:<random>`; used only by the app UI. No auth (localhost, random port).
 - **External API** — optional; `<bind>:<port>` (default `127.0.0.1:50221`); OpenAI- and VOICEVOX-compatible routes for other apps. Bearer API key required when bound to a non-loopback address.
 
-Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3).
+Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4).
 
 ---
 
@@ -23,7 +23,7 @@ Status of this document: **v0 draft**. Shapes below are the intended contract; r
 ```ts
 type ReferenceInput =
   | { kind: "none" }                               // default: no speaker reference
-  | { kind: "voice"; voice_id: string }            // library voice (Session 4; 404 voice_not_found until then)
+  | { kind: "voice"; voice_id: string }            // library voice: its clips (cached latents) or embedding; 409 consent_required without consent
   | { kind: "clips"; clip_ids: string[] }          // 1–32 clips from POST /clips, concatenated in order
   | { kind: "embedding"; path: string };           // absolute path to a .speaker.safetensors
 
@@ -200,15 +200,16 @@ type EmojiItem = {
 type JobAccepted = { job_id: string; queue_position: number }; // jobs ahead of this one
 type AudioOutput = { index: number; audio_id: string; duration_s: number };
 type TtsResult = { history_id: string; used_seed: number; timings: Timings; outputs: AudioOutput[]; watermarked: boolean };
+type EncodeResult = { voice_id: string; encoded: number }; // clips encoded by an "encode" job
 type JobInfo = {
-  job_id: string; kind: "tts";
+  job_id: string; kind: "tts" | "encode";
   state: "queued" | "running" | "completed" | "failed" | "cancelled";
   queue_position: number | null;       // while queued
   created_at: string; started_at: string | null; finished_at: string | null;
   error: { code: string; message: string } | null;
-  result: TtsResult | null;
+  result: TtsResult | EncodeResult | null;
 };
-type QueueItem = { job_id: string; kind: "tts"; source: "ui" | "api"; state: "queued" | "running"; created_at: string };
+type QueueItem = { job_id: string; kind: "tts" | "encode"; source: "ui" | "api"; state: "queued" | "running"; created_at: string };
 type QueueSnapshot = { running: QueueItem | null; queued: QueueItem[] };
 ```
 
@@ -219,25 +220,33 @@ SSE (`text/event-stream`): each event has `event: <type>`, `id: <sequence number
 | `queued` | `{position}`: on submit and whenever the position changes |
 | `started` | `{}` |
 | `log` | `{line}`: upstream and sidecar log lines (developer text) |
-| `progress` | `{done, total, unit}`: `unit` is `"step"` (sampling steps) for single generations; `"chunk"` / `"line"` for narration and script jobs later |
+| `progress` | `{done, total, unit}`: `unit` is `"step"` (sampling steps) for single generations, `"clip"` for encode jobs (after each clip); `"chunk"` / `"line"` for narration and script jobs later |
 | `candidate` | `AudioOutput`, one per candidate, before `completed` |
-| `completed` | `TtsResult` (terminal) |
+| `completed` | `TtsResult`, or `EncodeResult` for an encode job (terminal) |
 | `failed` | `{code, message}` (terminal) |
 | `cancelled` | `{}` (terminal) |
 
-A single generation streams `queued → started → log / progress … → candidate × N → completed`. Failures detected only at run time include `watermark_unavailable` (the watermark is on but SilentCipher did not load, D12), `model_load_failed` / `model_files_missing`, `out_of_memory`, `invalid_params` (rejected upstream) and `synthesis_failed`.
+A single generation streams `queued → started → log / progress … → candidate × N → completed`; an encode job `queued → started → log / progress (unit "clip") … → completed`. Failures detected only at run time include `watermark_unavailable` (the watermark is on but SilentCipher did not load, D12), `model_load_failed` / `model_files_missing`, `out_of_memory`, `invalid_params` (rejected upstream) and `synthesis_failed`.
 
 ### Clips
-Ad-hoc reference audio for `ReferenceInput.kind = "clips"` (library voices are Session 4).
+Reference audio: ad-hoc clips for `ReferenceInput.kind = "clips"`, and the clips a library voice owns (upload first, then list them in `POST /voices` / `PATCH /voices/{id}`). A clip is stored once as float WAV with its encoded latents cached per model/codec/normalization. Edits never change a clip: trim and split create new clips that take its place (inside its voice too) and delete it. Clips no voice owns are deleted a day after upload, at sidecar start (D13).
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| POST | `/clips` | multipart `file` → `201 ClipInfo`. WAV/FLAC/OGG/Opus/MP3; other formats need the bundled ffmpeg (`415 clip_format_unsupported`). At most 100 MB (`413 clip_too_large`) and 10 min (`413 clip_too_long`); at least 0.1 s |
+| POST | `/clips` | multipart `file` + optional form field `origin: "upload" \| "recording"` (default `upload`; `recording` = recorded in the app) → `201 ClipInfo`. WAV/FLAC/OGG/Opus/MP3; other formats need ffmpeg (`415 clip_format_unsupported`). At most 100 MB (`413 clip_too_large`) and 10 min (`413 clip_too_long`); at least 0.1 s (`422 clip_too_short`) |
 | GET | `/clips/{id}` | `ClipInfo` |
-| DELETE | `/clips/{id}` | `204` |
+| GET | `/clips/{id}/audio` | `audio/wav` 16-bit, for playback and waveforms |
+| POST | `/clips/{id}/trim` | `{start_s, end_s}` → the new `ClipInfo`; `400 clip_range_invalid` outside the clip, `422 clip_too_short` under 0.1 s |
+| POST | `/clips/{id}/split` | `{at_s: number[]}` (1–31 cut points) → the pieces `ClipInfo[]` in order |
+| DELETE | `/clips/{id}` | `204`; `409 clip_in_use` (`detail.voice_id`) for a voice's clip — change the voice instead |
 
 ```ts
-type ClipInfo = { clip_id: string; filename: string; duration_s: number; sample_rate: number; channels: number; created_at: string };
+type ClipOrigin = "upload" | "recording" | "generated"; // upload/recording may be a real person (D13)
+type ClipInfo = {
+  clip_id: string; filename: string; duration_s: number; sample_rate: number; channels: number; created_at: string;
+  origin: ClipOrigin;
+  voice_id: string | null;             // the library voice that owns the clip
+};
 ```
 
 ### History (basic) & preferences
@@ -277,21 +286,53 @@ type Preferences = {
 | GET / PUT | `/dictionary` | `[{surface, reading, enabled, note}]` |
 
 ### Voices
+The voice library (requirements §6.5). A voice is a speaker identity — ordered clips, a speaker embedding, or only a caption — plus defaults the client applies to a generation (the sidecar uses only the identity for `{kind: "voice"}`). Voices from real people's audio need recorded consent (D13): `source` `imported` / `recorded`, or any clip with origin `upload` / `recording`. Saving queues an `encode` job on the synthesis queue when clips lack latents for the active model ("encode on save"), so generations skip the encoder.
+
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/voices` | list |
-| POST | `/voices` | create `{name, source: "designed"|"imported"|"recorded"|"embedding", caption_default?, params_default?, seed_default?, consent?}`; consent required for imported/recorded (D13) |
-| GET / PUT / DELETE | `/voices/{id}` | |
-| POST | `/voices/{id}/clips` | multipart upload (wav/flac/mp3/m4a/ogg/opus/webm) |
-| PUT | `/voices/{id}/clips/order` | ordered clip ids |
-| POST | `/voices/{id}/clips/{clip_id}/trim` | `{start_s, end_s}` |
-| POST | `/voices/{id}/clips/{clip_id}/split` | `{at_s[]}` |
-| DELETE | `/voices/{id}/clips/{clip_id}` | |
-| POST | `/voices/{id}/encode` | job; caches latent for the active model |
-| POST | `/voices/{id}/embedding` | upload `.speaker.safetensors` |
-| POST | `/voices/design` | `{caption, sample_text, params}` → job with N candidates; `POST /voices` from an adopted candidate |
-| GET | `/voices/{id}/export` | `.irovoice` (D22) |
-| POST | `/voices/import` | `.irovoice` upload |
+| GET | `/voices` | `Voice[]`, newest first |
+| POST | `/voices` | `VoiceCreate` → `201 VoiceSaved`. `422 consent_required` without consent where needed; `422 voice_invalid` (empty name, no clips for imported/recorded, a designed voice with neither audio nor caption, an embedding voice without exactly one file); `409 clip_in_use` for another voice's clip; `422 embedding_invalid` / `404 embedding_not_found`; `404 lora_not_found`; `422 invalid_params` |
+| GET | `/voices/{id}` | `Voice` |
+| PATCH | `/voices/{id}` | `VoicePatch` (only the fields sent change; `null` clears) → `VoiceSaved`. `clip_ids` is the new ordered list: clips left out are deleted; added real-voice clips need `consent` when the voice has none |
+| DELETE | `/voices/{id}` | `204`; deletes its clips and files too |
+| POST | `/voices/{id}/encode` | `JobAccepted`, or `null` when already encoded for the active model (e.g. after trim/split) |
+| POST | `/voices/{id}/export` | `{path}` (absolute, from the native save dialog; `.irovoice` appended) → `{path, bytes}`; `409 consent_required` for a voice lacking consent |
+| GET | `/voices/{id}/export` | the `.irovoice` bytes (`application/zip`, attachment) |
+| POST | `/voices/import` | multipart `file` (`.irovoice`, ≤ 400 MB) → `201 VoiceSaved`; keeps the package's consent record and model id; `422 package_invalid`, `422 consent_required` for a real voice without consent |
+
+```ts
+type VoiceSource = "designed" | "imported" | "recorded" | "embedding";
+type ConsentInput = { statement: string; locale: string }; // the statement exactly as shown (10–2000 chars)
+type Consent = ConsentInput & { confirmed_at: string; version: number };
+type Voice = {
+  id: string; name: string; source: VoiceSource; created_at: string; updated_at: string;
+  model_id: string;                    // the model it was created with
+  caption_default: string | null; params_default: SamplingParams; seed_default: number | null;
+  lora_path: string | null; test_text: string | null;
+  design_caption: string | null;       // designed voices: the caption they were designed from
+  clips: ClipInfo[]; total_seconds: number;
+  embedding: { filename: string; tokens: number; dim: number } | null;
+  consent: Consent | null;
+  consent_required: boolean;           // some clip (or the source) is a real person's voice
+  encoded: boolean;                    // every clip has latents for the active model
+};
+type VoiceCreate = {
+  name: string; source: VoiceSource;
+  clip_ids?: string[];                 // ≤ 32, from POST /clips, unowned or already this voice's
+  from_audio_id?: string | null;       // designed: keep this generated candidate as a clip (origin "generated")
+  embedding_path?: string | null;      // embedding: absolute path of a Speaker Inversion file, copied in
+  consent?: ConsentInput | null;
+  caption_default?: string | null; params_default?: SamplingParams; // seed goes in seed_default
+  seed_default?: number | null; lora_path?: string | null; test_text?: string | null;
+  design_caption?: string | null;
+};
+type VoicePatch = Partial<Omit<VoiceCreate, "source" | "from_audio_id" | "design_caption">>;
+type VoiceSaved = { voice: Voice; encode_job_id: string | null };
+```
+
+Speaker embeddings must be a safetensors file whose `speaker_embedding` tensor is float `(tokens, dim)` with the model's speaker dim (768 for v4.1) — the shape upstream's inference path loads. The library stores it as `voices/<id>/voice.speaker.safetensors` (upstream requires the suffix); ad-hoc `{kind: "embedding"}` paths are copied to a suffixed temp file when needed.
+
+`.irovoice` (D22) is a zip: `voice.json` (`format: "irovoice"`, `version: 1`, name, source, model id, defaults, consent, clip entries `{file, filename, origin}`), `clips/NN.flac` (24-bit), and `voice.speaker.safetensors` for embedding voices. Latents are not included; they are re-encoded on import.
 
 ### Narration
 | Method | Path | Notes |

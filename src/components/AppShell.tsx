@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { QuickScreen } from '@/features/quick/QuickScreen';
+import { VoiceStudioScreen } from '@/features/voice-studio/VoiceStudioScreen';
 import { getSidecarPort } from '@/lib/tauri';
 import { useAppStore } from '@/store/app';
 import { useNavStore } from '@/store/nav';
@@ -43,7 +44,13 @@ export function AppShell() {
       <div className="flex min-h-0 flex-1">
         <Sidebar />
         <main className="min-w-0 flex-1 overflow-y-auto">
-          {screen === 'quick' ? <QuickScreen /> : <ComingSoon screen={screen} />}
+          {screen === 'quick' ? (
+            <QuickScreen />
+          ) : screen === 'voices' ? (
+            <VoiceStudioScreen />
+          ) : (
+            <ComingSoon screen={screen} />
+          )}
         </main>
       </div>
       <StatusBar />

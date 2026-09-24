@@ -8,8 +8,10 @@ or `failed {code, message}` / `cancelled`.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import secrets
+import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +28,7 @@ from app.services.job_manager import Job, JobManager
 from app.services.policy import watermark_policy
 from app.services.preferences import PreferencesStore
 from app.services.queue import SynthesisQueue
+from app.services.voices import VoiceService, inspect_embedding
 
 log = logging.getLogger("irodori.synthesis")
 
@@ -54,6 +57,8 @@ class SynthesisService:
         preferences: PreferencesStore,
         jobs: JobManager,
         queue: SynthesisQueue,
+        voices: VoiceService,
+        tmp_dir: Path,
     ) -> None:
         self._host = host
         self._clips = clips
@@ -61,6 +66,8 @@ class SynthesisService:
         self._preferences = preferences
         self._jobs = jobs
         self._queue = queue
+        self._voices = voices
+        self._tmp_dir = tmp_dir
 
     # --- Submit (request thread) --------------------------------------------------------
 
@@ -88,8 +95,9 @@ class SynthesisService:
         clip_ids: tuple[str, ...] = ()
         embedding: Path | None = None
         if reference.kind == "voice":
-            # Library voices arrive in Session 4.
-            raise ApiError(ErrorCode.VOICE_NOT_FOUND, "voice not found", status_code=404)
+            # The voice's identity only: its defaults are applied by the client (the Quick
+            # screen form, later the compat APIs), so the request stays literal.
+            clip_ids, embedding = self._voices.reference(reference.voice_id)
         if reference.kind == "clips":
             if not caps.speaker_reference:
                 raise ApiError(ErrorCode.REFERENCE_UNSUPPORTED, "model has no reference input")
@@ -108,6 +116,8 @@ class SynthesisService:
             embedding = Path(reference.path)
             if not (embedding.is_absolute() and embedding.is_file()):
                 raise ApiError(ErrorCode.EMBEDDING_NOT_FOUND, "embedding file not found")
+            inspect_embedding(embedding, expected_dim=self._host.speaker_dim)
+            embedding = self._suffixed_embedding(embedding)
 
         lora: Path | None = None
         if request.lora_adapter and request.lora_adapter.strip():
@@ -199,7 +209,7 @@ class SynthesisService:
         ref_latents: list[Path] = []
         if prepared.clip_ids:
             started = time.perf_counter()
-            ref_latents = self._clips.latents(
+            ref_latents, encoded = self._clips.latents(
                 prepared.clip_ids,
                 backend=backend,
                 spec=spec,
@@ -208,7 +218,8 @@ class SynthesisService:
                 ensure_max=bool(prepared.params.get("ref_ensure_max", True)),
                 on_log=on_log,
             )
-            timings["encode_reference"] = (time.perf_counter() - started) * 1000.0
+            if encoded:  # absent when every clip came from the latent cache
+                timings["encode_reference"] = (time.perf_counter() - started) * 1000.0
         if job.cancel_requested.is_set():
             return None
 
@@ -263,6 +274,18 @@ class SynthesisService:
             outputs=outputs,
             watermarked=result.watermarked,
         )
+
+    def _suffixed_embedding(self, path: Path) -> Path:
+        """Upstream loads Speaker Inversion files only by their `.speaker.safetensors`
+        suffix; any other name is served from a content-addressed copy."""
+        if path.name.endswith(".speaker.safetensors"):
+            return path
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()[:24]
+        copy = self._tmp_dir / "embeddings" / f"{digest}.speaker.safetensors"
+        if not copy.is_file():
+            copy.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(path, copy)
+        return copy
 
 
 def _too_long(field: str, limit: int) -> ApiError:

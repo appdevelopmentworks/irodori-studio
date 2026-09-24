@@ -39,7 +39,6 @@
       "embedding": "说话人嵌入",
       "library": "资料库中的声音"
     },
-    "libraryLater": "声音工作室上线后即可选择。",
     "noneHint": "不使用参考音频：由风格描述（或不指定）决定声音。",
     "addClips": "添加音频文件",
     "clipsHint": "多段同一说话人的干净短音频效果最好。按从上到下的顺序拼接使用（合计最多 {{max}} 秒）。",
@@ -53,9 +52,21 @@
     "chooseEmbedding": "选择文件",
     "embeddingTitle": "选择说话人嵌入文件",
     "embeddingFilter": "说话人嵌入",
+    "safetensorsFilter": "所有 safetensors 文件",
     "embeddingHint": "指定用 Speaker Inversion 为同一基础模型生成的 .speaker.safetensors。",
     "clear": "清除",
-    "embeddingNone": "未选择"
+    "embeddingNone": "未选择",
+    "libraryLabel": "声音库中的声音",
+    "libraryChoose": "选择声音…",
+    "libraryOption": "{{name}}（{{source}}）",
+    "libraryHint": "选择声音后，会将其默认值（描述文字、参数、种子、LoRA）载入表单。",
+    "libraryEmpty": "声音库中还没有声音。可以在声音工作室中创建。",
+    "openStudio": "打开声音工作室",
+    "editInStudio": "在声音工作室中编辑",
+    "librarySummaryEmbedding": "这是说话人嵌入的声音。",
+    "librarySummaryClips_other": "这是带有 {{count}} 个参考音频片段（{{seconds}} 秒）的声音。",
+    "librarySummaryCaption": "这是仅有描述文字的声音。",
+    "defaultsApplied": "选择时已载入其默认值。"
   },
   "simple": {
     "title": "生成设置"
@@ -85,6 +96,7 @@
     "needText": "请输入文本。",
     "needClips": "请添加参考音频。",
     "needEmbedding": "请选择说话人嵌入文件。",
+    "needVoice": "请从声音库中选择一个声音。",
     "invalidParams": "高级设置中有无效的值。",
     "uploading": "正在等待参考音频上传完成。",
     "paramError": "{{param}}：{{reason}}"

@@ -5,27 +5,27 @@ import { useTranslation } from 'react-i18next';
 import { ErrorNotice } from '@/components/ErrorNotice';
 import { Spinner } from '@/components/icons';
 import { useParamText } from '@/features/params/text';
+import { isBusy, type JobState } from '@/lib/jobs';
 import type { SamplingParams } from '@/lib/types';
-import { type QuickJob, useQuickStore } from '@/store/quick';
-
-import { cancelGeneration } from './generation';
-import type { RequestProblem } from './request';
-
-const BUSY = new Set(['submitting', 'queued', 'running']);
-
-export const isBusy = (job: QuickJob | null) => job !== null && BUSY.has(job.phase);
 
 /** Generate / cancel, live progress, and why generation is not possible right now. */
 export function GenerateBar({
+  job,
   problem,
   onGenerate,
+  onCancel,
+  label,
 }: {
-  problem: RequestProblem | null;
+  job: JobState<unknown> | null;
+  /** Why the job cannot start (translated), shown while idle. */
+  problem: string | null;
   onGenerate: () => void;
+  onCancel: () => void;
+  /** Button text instead of "Generate". */
+  label?: string;
 }) {
   const { t } = useTranslation();
   const paramText = useParamText();
-  const job = useQuickStore((s) => s.job);
   const busy = isBusy(job);
 
   let status: string | null = null;
@@ -61,12 +61,12 @@ export function GenerateBar({
           onClick={onGenerate}
           className="rounded-md bg-sky-600 px-6 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
         >
-          {t('quick.generate.button')}
+          {label ?? t('quick.generate.button')}
         </button>
         {busy ? (
           <button
             type="button"
-            onClick={() => void cancelGeneration()}
+            onClick={onCancel}
             className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             {t('quick.generate.cancel')}
@@ -79,9 +79,7 @@ export function GenerateBar({
           </p>
         ) : null}
         {!busy && problem ? (
-          <p className="text-sm text-amber-700 dark:text-amber-300">
-            {t(`quick.generate.${problem}`)}
-          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-300">{problem}</p>
         ) : null}
       </div>
       {progress ? (

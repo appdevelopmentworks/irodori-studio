@@ -11,6 +11,7 @@ import deParams from './locales/de/params.json';
 import deQuick from './locales/de/quick.json';
 import deSetup from './locales/de/setup.json';
 import deShell from './locales/de/shell.json';
+import deVoiceStudio from './locales/de/voiceStudio.json';
 import enCommon from './locales/en/common.json';
 import enEmoji from './locales/en/emoji.json';
 import enErrors from './locales/en/errors.json';
@@ -19,6 +20,7 @@ import enParams from './locales/en/params.json';
 import enQuick from './locales/en/quick.json';
 import enSetup from './locales/en/setup.json';
 import enShell from './locales/en/shell.json';
+import enVoiceStudio from './locales/en/voiceStudio.json';
 import jaCommon from './locales/ja/common.json';
 import jaEmoji from './locales/ja/emoji.json';
 import jaErrors from './locales/ja/errors.json';
@@ -27,6 +29,7 @@ import jaParams from './locales/ja/params.json';
 import jaQuick from './locales/ja/quick.json';
 import jaSetup from './locales/ja/setup.json';
 import jaShell from './locales/ja/shell.json';
+import jaVoiceStudio from './locales/ja/voiceStudio.json';
 import zhHansCommon from './locales/zh-Hans/common.json';
 import zhHansEmoji from './locales/zh-Hans/emoji.json';
 import zhHansErrors from './locales/zh-Hans/errors.json';
@@ -35,6 +38,7 @@ import zhHansParams from './locales/zh-Hans/params.json';
 import zhHansQuick from './locales/zh-Hans/quick.json';
 import zhHansSetup from './locales/zh-Hans/setup.json';
 import zhHansShell from './locales/zh-Hans/shell.json';
+import zhHansVoiceStudio from './locales/zh-Hans/voiceStudio.json';
 
 export const resources = {
   ja: {
@@ -47,6 +51,7 @@ export const resources = {
       quick: jaQuick,
       setup: jaSetup,
       shell: jaShell,
+      voiceStudio: jaVoiceStudio,
     },
   },
   en: {
@@ -59,6 +64,7 @@ export const resources = {
       quick: enQuick,
       setup: enSetup,
       shell: enShell,
+      voiceStudio: enVoiceStudio,
     },
   },
   'zh-Hans': {
@@ -71,6 +77,7 @@ export const resources = {
       quick: zhHansQuick,
       setup: zhHansSetup,
       shell: zhHansShell,
+      voiceStudio: zhHansVoiceStudio,
     },
   },
   de: {
@@ -83,6 +90,7 @@ export const resources = {
       quick: deQuick,
       setup: deSetup,
       shell: deShell,
+      voiceStudio: deVoiceStudio,
     },
   },
 } as const satisfies Record<Locale, { translation: Record<string, unknown> }>;

@@ -73,7 +73,7 @@ def active_capabilities(svc: ServicesDep) -> ModelCapabilities:
             max_candidates=params.MAX_CANDIDATES,
             max_text_chars=synthesis.MAX_TEXT_CHARS,
             max_caption_chars=synthesis.MAX_CAPTION_CHARS,
-            max_clips=32,
+            max_clips=clips.MAX_VOICE_CLIPS,
             max_clip_seconds=clips.MAX_CLIP_SECONDS,
             max_upload_bytes=clips.MAX_UPLOAD_BYTES,
         ),

@@ -1,0 +1,212 @@
+{
+  "title": "Voice Studio",
+  "common": {
+    "cancel": "Cancel"
+  },
+  "sources": {
+    "designed": "Designed",
+    "imported": "Audio files",
+    "recorded": "Recorded",
+    "embedding": "Speaker embedding"
+  },
+  "empty": {
+    "title": "Choose a voice or create a new one",
+    "body": "Pick a voice on the left to edit its reference audio, set its defaults and listen to it. New voices can be designed from a caption, or made from audio files, microphone recordings or a speaker embedding."
+  },
+  "list": {
+    "new": "Create a voice",
+    "title_one": "Library ({{count}})",
+    "title_other": "Library ({{count}})",
+    "empty": "No voices yet. Create one with the buttons above or import a voice package.",
+    "embedding": "Speaker embedding ({{tokens}} tokens)",
+    "captionOnly": "Caption only",
+    "clips_one": "{{count}} clip · {{seconds}} s",
+    "clips_other": "{{count}} clips · {{seconds}} s",
+    "noConsent": "No consent on record"
+  },
+  "new": {
+    "buttons": {
+      "designed": "Design from a caption",
+      "imported": "From audio files",
+      "recorded": "Record with a microphone",
+      "embedding": "From a speaker embedding"
+    },
+    "buttonHints": {
+      "designed": "Describe the voice, then pick a candidate",
+      "imported": "Import recordings of the speaker",
+      "recorded": "Read sample sentences for about 30 s",
+      "embedding": "Import a .speaker.safetensors file"
+    },
+    "titles": {
+      "designed": "Design a voice from a caption",
+      "imported": "Create a voice from audio files",
+      "recorded": "Create a voice by recording",
+      "embedding": "Create a voice from a speaker embedding"
+    },
+    "intros": {
+      "designed": "Describe the voice, generate candidates and save the one you like. Its audio becomes the voice's reference, so the voice stays the same from then on.",
+      "imported": "Add recordings of one person. Clean audio with little noise, 30 seconds or more in total (up to 120), gives the most stable voice.",
+      "recorded": "Read the sample sentences aloud, one take per sentence. Aim for about 30 seconds in total.",
+      "embedding": "Import a speaker embedding (.speaker.safetensors) made with Speaker Inversion into the library."
+    },
+    "save": "Save voice",
+    "discard": "Discard",
+    "problems": {
+      "needName": "Enter a name.",
+      "needClips": "Add at least one clip.",
+      "uploading": "Waiting for uploads to finish.",
+      "needConsent": "Confirm the speaker's consent.",
+      "needEmbedding": "Choose a speaker embedding file."
+    }
+  },
+  "fields": {
+    "name": "Voice name",
+    "namePlaceholder": "e.g. Narrator A"
+  },
+  "clips": {
+    "title": "Reference audio",
+    "hint": "Clips are joined from top to bottom. Use Edit to cut silence or noise at either end, or to split a clip.",
+    "origins": {
+      "upload": "File",
+      "recording": "Recording",
+      "generated": "Generated"
+    },
+    "duration": "{{seconds}} s",
+    "edit": "Edit",
+    "close": "Close",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "remove": "Remove",
+    "removeConfirm": "Delete this clip? This cannot be undone.",
+    "removeYes": "Delete",
+    "empty": "No audio yet.",
+    "dismiss": "Dismiss",
+    "uploading": "Uploading {{name}}…",
+    "addFiles": "Add audio files",
+    "record": "Record with microphone",
+    "closeRecorder": "Close recorder",
+    "total": "{{seconds}} s in total (up to {{max}} s are used)",
+    "over": "Audio beyond {{max}} s is not used.",
+    "short": "{{target}} s or more in total gives a more stable voice."
+  },
+  "editor": {
+    "hint": "Drag across the waveform to select a range; click to move the playback position.",
+    "loadFailed": "The waveform could not be loaded.",
+    "play": "Play",
+    "pause": "Pause",
+    "playSelection": "Play selection",
+    "trim": "Keep selection only",
+    "split": "Split at playback position",
+    "clearSelection": "Clear selection",
+    "position": "{{current}} / {{total}} s",
+    "selection": "Selection: {{start}}–{{end}} s ({{length}} s)",
+    "meta": "{{source}} · created {{date}}",
+    "otherModel": "This voice was created with another model ({{model}}). It is re-encoded for this model when used.",
+    "delete": "Delete…",
+    "deleteConfirm": "Delete “{{name}}”? Its reference audio and recordings are deleted too. This cannot be undone.",
+    "deleteYes": "Delete",
+    "reference": "Voice source",
+    "designCaption": "Designed from the caption:",
+    "captionOnly": "A caption-only voice without reference audio; it varies a little with every generation.",
+    "addNeedsConsent": "Adding audio files or recordings requires confirming the speaker's consent"
+  },
+  "embedding": {
+    "file": "Speaker embedding file",
+    "info": "Speaker embedding: {{tokens}} tokens × {{dim}} dimensions",
+    "missing": "The speaker embedding file is missing. Replace it.",
+    "replace": "Replace file…"
+  },
+  "encode": {
+    "queued": "Waiting to encode",
+    "running": "Encoding {{done}} / {{total}}",
+    "done": "Encoded",
+    "pending": "Not encoded",
+    "failed": "Encoding failed",
+    "now": "Encode now"
+  },
+  "consent": {
+    "title": "Speaker consent",
+    "statement": "I have the consent of the person whose voice this is to use it for speech synthesis (or it is my own voice). I will not use it to impersonate them, to harm them or anyone else, or for any purpose that breaks the law or the Irodori-TTS terms of use.",
+    "confirm": "I confirm the statement above",
+    "note": "The confirmed statement and the time are recorded with this voice and included in its voice package.",
+    "recorded": "Consent recorded on {{date}}"
+  },
+  "defaults": {
+    "title": "Voice settings and defaults",
+    "hint": "Loaded when you choose this voice in Quick generation.",
+    "caption": "Default caption",
+    "advanced": "Default parameters (advanced)",
+    "loraHint": "LoRA adapter folder used when generating with this voice.",
+    "testText": "Test sentence",
+    "save": "Save settings",
+    "revert": "Revert",
+    "unsaved": "You have unsaved changes.",
+    "saved": "Saved."
+  },
+  "audition": {
+    "title": "Listen",
+    "hint": "Reads the test sentence with the settings above, including unsaved changes.",
+    "listen": "Listen",
+    "encoded": "The reference audio was encoded during this generation (skipped from now on)."
+  },
+  "package": {
+    "export": "Export…",
+    "exportTitle": "Save voice package",
+    "filter": "Voice package",
+    "exported": "Exported: {{path}}",
+    "import": "Import voice package…",
+    "importing": "Importing…"
+  },
+  "design": {
+    "caption": "Voice description (caption)",
+    "captionPlaceholder": "Japanese, e.g. 落ち着いた低めの声の男性。やわらかく、ゆっくり話している。",
+    "captionHint": "Describe timbre, age and manner of speaking in Japanese. Presets are appended at the end.",
+    "text": "Sentence for the candidates",
+    "generate": "Generate candidates",
+    "candidates": "Candidates",
+    "candidatesHint": "Compare them and choose the one to save as a voice.",
+    "keepAudio": "Save the chosen candidate as reference audio (recommended)",
+    "keepAudioHint": "The candidate's audio becomes the voice's source, so it sounds the same from then on.",
+    "captionOnlyHint": "Only the caption is saved; the voice varies a little with every generation.",
+    "problems": {
+      "needCaption": "Enter a voice description (caption).",
+      "needText": "Enter a sentence for the candidates.",
+      "needChoice": "Choose the candidate to save."
+    }
+  },
+  "record": {
+    "hint": "Find a quiet place, stay about 20–30 cm from the microphone and read in your natural voice. Press “Stop and add” after each sentence.",
+    "sentence": "Sentence {{index}} of {{count}}",
+    "previous": "Previous",
+    "next": "Next",
+    "sentences": {
+      "s1": "It's a clear day today, so I think I'll walk to the park on the other side of town.",
+      "s2": "The new bakery by the station opens at seven every morning.",
+      "s3": "At yesterday's meeting we took our time going over next month's schedule.",
+      "s4": "When I opened the window, a cool breeze drifted in with the scent of flowers.",
+      "s5": "If you like, shall we go and see a film together this weekend?",
+      "s6": "This book tells the story of a cat and a boy who live in a small town by the sea.",
+      "s7": "Could you check whether there's any milk or eggs left in the fridge?",
+      "s8": "When I looked up at the night sky, countless stars were shining.",
+      "s9": "Really? That's wonderful news!",
+      "s10": "Take a slow, deep breath and let your shoulders relax."
+    },
+    "start": "Start recording",
+    "stop": "Stop and add",
+    "discard": "Discard this take",
+    "elapsed": "{{seconds}} s",
+    "level": "Input level",
+    "clipped": "The sound is clipping. Move a little away from the microphone or lower the input volume.",
+    "quiet": "Your voice seems quiet. Move closer to the microphone or raise the input volume.",
+    "collected": "Audio collected",
+    "collectedValue": "{{seconds}} / {{target}} s",
+    "takeName": "Recording {{index}}.wav",
+    "errors": {
+      "denied": "Microphone access is not allowed. Allow this app to use the microphone in your system settings.",
+      "noDevice": "No microphone was found.",
+      "busy": "The microphone cannot be used. Another app may be using it.",
+      "unsupported": "Recording is not available here.",
+      "failed": "Recording could not be started."
+    }
+  }
+}

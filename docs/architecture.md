@@ -46,7 +46,7 @@ The frontend never talks to upstream directly. Rust owns lifecycle and settings;
 
 - `output: 'export'`; served by Tauri. No runtime Node server (D11).
 - Base URL of the internal API from the `get_sidecar_port` Tauri command. No port literals.
-- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job); later `voices`, `narration`, `script`.
+- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs); later `narration`, `script`. Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
 - **Capability-driven parameter UI.** The parameter panel is generated from `GET /models/active/capabilities` (a JSON schema-like list of parameters with type, range, default, group, `simple|advanced` tier, `visible_when`). No component hardcodes which parameters a model supports.
 - i18n via `react-i18next` (D17). Locale JSON under `src/i18n/locales/<locale>/`. Sidecar errors arrive as codes and are translated in the frontend.
 - Audio: playback via `<audio>` with blob URLs fetched from `/audio/{id}`; waveform editing (trim/split) with `wavesurfer.js` (regions plugin).
@@ -164,10 +164,10 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 | Data root | user-selected | default `<local-app-data>/data` (not roaming) |
 | Runtime | `<data-root>/runtime/` | `venv/` (recreated if broken), `python/` (uv-managed), `uv-cache/`, `pycache/`, `setup.json` marker |
 | Models | `<data-root>/models` | `HF_HOME`; pinned repos in `pinned/<owner>--<name>/<commit>/`, SilentCipher in `hub/` |
-| Database | `<data-root>/irodori-studio.db` | SQLite (WAL), sidecar-owned: preferences, history + audio, clips; migrations via `PRAGMA user_version` |
-| Voices | `<data-root>/voices/<voice-id>/` | clips (flac), cached latents per model id, optional embedding |
+| Database | `<data-root>/irodori-studio.db` | SQLite (WAL), sidecar-owned: preferences, history + audio, clips, voices; migrations via `PRAGMA user_version` |
+| Voices | `<data-root>/voices/<voice-id>/` | `voice.speaker.safetensors` for embedding voices; the rest of a voice is database rows and its clips |
 | History audio | `<data-root>/history/<history-id>/<audio-id>.wav` | 48 kHz mono PCM16; pruned by D23 |
-| Reference clips | `<data-root>/clips/<clip-id>/` | ad-hoc uploads: `audio.wav` (float32) + cached `latents/` per model setting |
+| Reference clips | `<data-root>/clips/<clip-id>/` | ad-hoc uploads and library voices' clips: `audio.wav` (float32) + cached `latents/` per model setting; unowned clips are purged after a day |
 | Projects | `<data-root>/projects/` | `.iroproj` |
 | Exports | user-selected default | |
 | Logs | `<data-root>/logs/` | `sidecar.log`, `setup.log`; rotated at 5 MB |
@@ -178,9 +178,16 @@ Wizard step 7, the test generation (synthesize and play one sentence), is the Qu
 
 1. Frontend `POST /tts/generate` → validated (text, reference, parameters against the capability schema) → `{job_id, queue_position}`.
 2. SSE `GET /jobs/{id}/events`: `queued` → `started` → `log` / `progress` (sampling steps) … → `candidate` (per candidate, with `audio_id`) → `completed {history_id, used_seed, timings, outputs}`.
-3. Reference resolution: clips (and library voices, Session 4) → cached latents for the active model (encoded on a miss); an embedding path is passed through.
+3. Reference resolution: clips or a library voice's clips → cached latents for the active model (encoded on a miss; library voices are encoded when saved); an embedding (a voice's or an ad-hoc path) is passed as a `.speaker.safetensors` file.
 4. Text pipeline: user dictionary (Session 5) → upstream (which normalizes internally).
 5. Result written to history (audio + request as submitted + resolved parameters + seed + timings), then pruned to the limits.
+
+### Voice library (Voice Studio)
+
+1. Clips are uploaded (`POST /clips`, origin `upload` / `recording`) or come from a generated candidate; trim and split replace a clip with new ones.
+2. `POST /voices` / `PATCH /voices/{id}` / `POST /voices/import` validate the voice (consent for real voices, D13) and assign the ordered clips; clips a voice no longer lists are deleted.
+3. If a clip lacks latents for the active model, an `encode` job joins the synthesis queue (D24) and streams `progress {unit: "clip"}`; `Voice.encoded` turns true.
+4. Generating with `{kind: "voice"}` reads the cached latents (or the voice's embedding); the caller applies the voice's defaults.
 
 ### Narration
 

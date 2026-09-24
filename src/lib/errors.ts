@@ -65,6 +65,12 @@ const KNOWN_CODES = new Set<string>([
   'save_path_invalid',
   'save_failed',
   'ffmpeg_unavailable',
+  'clip_range_invalid',
+  'clip_in_use',
+  'voice_invalid',
+  'consent_required',
+  'embedding_invalid',
+  'package_invalid',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

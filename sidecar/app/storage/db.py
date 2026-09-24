@@ -67,6 +67,30 @@ MIGRATIONS: tuple[str, ...] = (
     """
     ALTER TABLE history ADD COLUMN adopted_audio_id TEXT;
     """,
+    # 3 — Session 4: the voice library. Clips stay in `clips` (one audio file + cached
+    # latents each); a voice owns an ordered set of them.
+    """
+    CREATE TABLE voices (
+        id                  TEXT PRIMARY KEY,  -- ULID
+        name                TEXT NOT NULL,
+        source              TEXT NOT NULL,     -- designed | imported | recorded | embedding
+        created_at          TEXT NOT NULL,
+        updated_at          TEXT NOT NULL,
+        model_id            TEXT NOT NULL,     -- the model the voice was made with
+        caption_default     TEXT,
+        params_default_json TEXT NOT NULL,     -- SamplingParams overrides (JSON object)
+        seed_default        INTEGER,
+        lora_path           TEXT,
+        test_text           TEXT,
+        design_caption      TEXT,              -- the caption a designed voice came from
+        embedding_rel_path  TEXT,              -- `.speaker.safetensors` (embedding voices)
+        consent_json        TEXT               -- D13: {confirmed_at, statement, locale, version}
+    );
+    ALTER TABLE clips ADD COLUMN voice_id TEXT;
+    ALTER TABLE clips ADD COLUMN idx INTEGER;
+    ALTER TABLE clips ADD COLUMN origin TEXT NOT NULL DEFAULT 'upload';
+    CREATE INDEX clips_voice ON clips (voice_id, idx);
+    """,
 )
 
 

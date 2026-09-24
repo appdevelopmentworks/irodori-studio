@@ -39,7 +39,6 @@
       "embedding": "Speaker embedding",
       "library": "Library voice"
     },
-    "libraryLater": "Available once the Voice Studio arrives.",
     "noneHint": "No reference audio: the caption (or nothing) decides the voice.",
     "addClips": "Add audio files",
     "clipsHint": "Several clean short clips of one speaker work best. They are joined from top to bottom (up to {{max}} s in total).",
@@ -53,9 +52,22 @@
     "chooseEmbedding": "Choose file",
     "embeddingTitle": "Choose a speaker embedding file",
     "embeddingFilter": "Speaker embedding",
+    "safetensorsFilter": "All safetensors files",
     "embeddingHint": "A .speaker.safetensors made with Speaker Inversion for the same base model.",
     "clear": "Clear",
-    "embeddingNone": "None selected"
+    "embeddingNone": "None selected",
+    "libraryLabel": "Library voice",
+    "libraryChoose": "Choose a voice…",
+    "libraryOption": "{{name}} ({{source}})",
+    "libraryHint": "Choosing a voice loads its defaults (caption, parameters, seed, LoRA) into the form.",
+    "libraryEmpty": "The library has no voices yet. You can create them in Voice Studio.",
+    "openStudio": "Open Voice Studio",
+    "editInStudio": "Edit in Voice Studio",
+    "librarySummaryEmbedding": "A speaker-embedding voice.",
+    "librarySummaryClips_one": "A voice with {{count}} reference clip ({{seconds}} s).",
+    "librarySummaryClips_other": "A voice with {{count}} reference clips ({{seconds}} s).",
+    "librarySummaryCaption": "A caption-only voice.",
+    "defaultsApplied": "Its defaults were loaded when you chose it."
   },
   "simple": {
     "title": "Generation"
@@ -86,6 +98,7 @@
     "needText": "Enter some text.",
     "needClips": "Add reference audio.",
     "needEmbedding": "Choose a speaker embedding file.",
+    "needVoice": "Choose a voice from the library.",
     "invalidParams": "Some advanced settings are invalid.",
     "uploading": "Waiting for reference uploads to finish.",
     "paramError": "{{param}}: {{reason}}"

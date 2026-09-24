@@ -3,27 +3,11 @@
 import { create } from 'zustand';
 
 import type { ParamName, ParamValue, ParamValues, ReferenceKind } from '@/features/params/schema';
-import type { AudioFormat, ClipInfo, JobEvent, TtsResult } from '@/lib/types';
+import { type JobFailure, type JobState, reduceJob, submittingJob, withFailure } from '@/lib/jobs';
+import type { AudioFormat, ClipInfo, JobEvent, ParamSchema, TtsResult, Voice } from '@/lib/types';
 
-export type JobPhase = 'submitting' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
-
-export interface JobFailure {
-  code: string;
-  message?: string;
-  detail?: Record<string, unknown>;
-}
-
-export interface QuickJob {
-  id: string | null;
-  phase: JobPhase;
-  position: number;
-  progress: { done: number; total: number } | null;
-  logs: string[];
-  result: TtsResult | null;
-  error: JobFailure | null;
+export interface QuickJob extends JobState<TtsResult> {
   adoptedAudioId: string | null;
-  startedAt: number;
-  finishedAt: number | null;
   /** A fresh result waits to be played once. */
   autoplay: boolean;
 }
@@ -35,8 +19,6 @@ export interface ClipUpload {
   error: string | null;
 }
 
-const MAX_LOG_LINES = 1000;
-
 interface QuickStore {
   text: string;
   textSeeded: boolean;
@@ -45,6 +27,8 @@ interface QuickStore {
   clips: ClipInfo[];
   uploads: ClipUpload[];
   embeddingPath: string | null;
+  /** The library voice for `reference === 'voice'`. */
+  voiceId: string | null;
   loraPath: string | null;
   values: ParamValues;
   invalid: Partial<Record<ParamName, true>>;
@@ -64,6 +48,9 @@ interface QuickStore {
   moveClip: (clipId: string, delta: -1 | 1) => void;
   removeClip: (clipId: string) => void;
   setEmbeddingPath: (path: string | null) => void;
+  /** Choose a library voice and load its defaults (caption, parameters, seed, LoRA). */
+  applyVoice: (voice: Voice, schema: ParamSchema[]) => void;
+  clearVoice: () => void;
   setLoraPath: (path: string | null) => void;
   setParam: (name: ParamName, value: ParamValue, defaultValue: ParamValue) => void;
   resetParams: () => void;
@@ -89,6 +76,7 @@ export const useQuickStore = create<QuickStore>((set) => ({
   clips: [],
   uploads: [],
   embeddingPath: null,
+  voiceId: null,
   loraPath: null,
   values: {},
   invalid: {},
@@ -120,6 +108,22 @@ export const useQuickStore = create<QuickStore>((set) => ({
     }),
   removeClip: (clipId) => set((s) => ({ clips: s.clips.filter((c) => c.clip_id !== clipId) })),
   setEmbeddingPath: (embeddingPath) => set({ embeddingPath }),
+  applyVoice: (voice, schema) =>
+    set(() => {
+      const values: ParamValues = {};
+      for (const param of schema) {
+        const value = param.name === 'seed' ? voice.seed_default : voice.params_default[param.name];
+        if (value !== undefined && value !== param.default) values[param.name] = value;
+      }
+      return {
+        voiceId: voice.id,
+        caption: voice.caption_default ?? '',
+        loraPath: voice.lora_path,
+        values,
+        invalid: {},
+      };
+    }),
+  clearVoice: () => set({ voiceId: null }),
   setLoraPath: (loraPath) => set({ loraPath }),
   setParam: (name, value, defaultValue) =>
     set((s) => {
@@ -139,69 +143,16 @@ export const useQuickStore = create<QuickStore>((set) => ({
     }),
 
   beginJob: () =>
-    set({
-      job: {
-        id: null,
-        phase: 'submitting',
-        position: 0,
-        progress: null,
-        logs: [],
-        result: null,
-        error: null,
-        adoptedAudioId: null,
-        startedAt: Date.now(),
-        finishedAt: null,
-        autoplay: false,
-      },
-    }),
+    set({ job: { ...submittingJob<TtsResult>(), adoptedAudioId: null, autoplay: false } }),
   jobAccepted: (id, position) =>
     set((s) => ({ job: updateJob(s.job, { id, phase: 'queued', position }) })),
   applyEvent: (event) =>
     set((s) => {
-      const job = s.job;
-      if (!job) return {};
-      switch (event.type) {
-        case 'queued':
-          return { job: { ...job, phase: 'queued', position: event.data.position } };
-        case 'started':
-          return { job: { ...job, phase: 'running' } };
-        case 'progress': {
-          const { done, total } = event.data;
-          return { job: { ...job, progress: { done, total } } };
-        }
-        case 'log': {
-          const logs = [...job.logs.slice(-(MAX_LOG_LINES - 1)), event.data.line];
-          return { job: { ...job, logs } };
-        }
-        case 'candidate':
-          return {};
-        case 'completed':
-          return {
-            job: {
-              ...job,
-              phase: 'completed',
-              result: event.data,
-              finishedAt: Date.now(),
-              autoplay: true,
-            },
-          };
-        case 'failed':
-          return {
-            job: {
-              ...job,
-              phase: 'failed',
-              error: { code: event.data.code, message: event.data.message },
-              finishedAt: Date.now(),
-            },
-          };
-        case 'cancelled':
-          return { job: { ...job, phase: 'cancelled', finishedAt: Date.now() } };
-      }
+      if (!s.job) return {};
+      const job = reduceJob(s.job, event);
+      return { job: event.type === 'completed' ? { ...job, autoplay: true } : job };
     }),
-  failJob: (failure) =>
-    set((s) => ({
-      job: updateJob(s.job, { phase: 'failed', error: failure, finishedAt: Date.now() }),
-    })),
+  failJob: (failure) => set((s) => ({ job: s.job ? withFailure(s.job, failure) : s.job })),
   setAdopted: (adoptedAudioId) => set((s) => ({ job: updateJob(s.job, { adoptedAudioId }) })),
   markSaved: (audioId, path) => set((s) => ({ saved: { ...s.saved, [audioId]: path } })),
   consumeAutoplay: () => set((s) => ({ job: updateJob(s.job, { autoplay: false }) })),

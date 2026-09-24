@@ -39,7 +39,6 @@
       "embedding": "Sprecher-Embedding",
       "library": "Stimme aus der Bibliothek"
     },
-    "libraryLater": "Verfügbar, sobald das Stimmstudio da ist.",
     "noneHint": "Ohne Referenzaudio: Die Stilbeschreibung (oder nichts) bestimmt die Stimme.",
     "addClips": "Audiodateien hinzufügen",
     "clipsHint": "Mehrere saubere, kurze Clips eines Sprechers funktionieren am besten. Sie werden von oben nach unten verbunden (insgesamt bis {{max}} s).",
@@ -53,9 +52,22 @@
     "chooseEmbedding": "Datei wählen",
     "embeddingTitle": "Sprecher-Embedding-Datei wählen",
     "embeddingFilter": "Sprecher-Embedding",
+    "safetensorsFilter": "Alle safetensors-Dateien",
     "embeddingHint": "Eine mit Speaker Inversion für dasselbe Basismodell erstellte .speaker.safetensors-Datei.",
     "clear": "Entfernen",
-    "embeddingNone": "Nichts gewählt"
+    "embeddingNone": "Nichts gewählt",
+    "libraryLabel": "Stimme aus der Bibliothek",
+    "libraryChoose": "Stimme wählen …",
+    "libraryOption": "{{name}} ({{source}})",
+    "libraryHint": "Beim Auswählen einer Stimme werden ihre Standardwerte (Beschreibung, Parameter, Seed, LoRA) in das Formular geladen.",
+    "libraryEmpty": "Die Bibliothek enthält noch keine Stimmen. Sie können sie im Stimmstudio erstellen.",
+    "openStudio": "Stimmstudio öffnen",
+    "editInStudio": "Im Stimmstudio bearbeiten",
+    "librarySummaryEmbedding": "Eine Stimme aus einem Sprecher-Embedding.",
+    "librarySummaryClips_one": "Eine Stimme mit {{count}} Referenzclip ({{seconds}} s).",
+    "librarySummaryClips_other": "Eine Stimme mit {{count}} Referenzclips ({{seconds}} s).",
+    "librarySummaryCaption": "Eine Stimme nur aus einer Beschreibung.",
+    "defaultsApplied": "Ihre Standardwerte wurden beim Auswählen geladen."
   },
   "simple": {
     "title": "Generierung"
@@ -86,6 +98,7 @@
     "needText": "Bitte einen Text eingeben.",
     "needClips": "Bitte Referenzaudio hinzufügen.",
     "needEmbedding": "Bitte eine Sprecher-Embedding-Datei wählen.",
+    "needVoice": "Wählen Sie eine Stimme aus der Bibliothek.",
     "invalidParams": "Einige erweiterte Einstellungen sind ungültig.",
     "uploading": "Warten, bis die Referenzaudios hochgeladen sind.",
     "paramError": "{{param}}: {{reason}}"
