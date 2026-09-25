@@ -67,6 +67,7 @@ case "$(uname -s)" in
     # The oldest macOS the binary runs on (the app targets 14+, with a margin).
     export MACOSX_DEPLOYMENT_TARGET=13.0
     PLATFORM_FLAGS=(--enable-pthreads)
+    LAME_CFLAGS=""
     ;;
   UCRT64_NT* | MINGW64_NT*)
     PLATFORM="Windows x64"
@@ -74,6 +75,8 @@ case "$(uname -s)" in
     JOBS="$(nproc)"
     # -static: no MinGW runtime DLLs next to ffmpeg.exe.
     PLATFORM_FLAGS=(--enable-w32threads --extra-ldflags=-static)
+    # GCC 14+ turns old-C diagnostics into errors; -fpermissive makes them warnings again.
+    LAME_CFLAGS="-fpermissive"
     ;;
   *)
     echo "build-ffmpeg: run on macOS or in MSYS2's UCRT64 shell" >&2
@@ -89,17 +92,26 @@ mkdir -p "$SRC" "$PREFIX"
 build_static() { # directory configure-arguments...
   local dir="$1"
   shift
-  (cd "$dir" && ./configure --prefix="$PREFIX" --disable-shared --enable-static \
-    --disable-dependency-tracking "$@" && make -j"$JOBS" && make install)
+  (
+    cd "$dir"
+    ./configure --prefix="$PREFIX" --disable-shared --enable-static \
+      --disable-dependency-tracking "$@" || { tail -n 40 config.log >&2; exit 1; }
+    make -j"$JOBS"
+    make install
+  )
 }
 
 tar -xzf "$WORK/lame-$LAME_VERSION.tar.gz" -C "$SRC"
-build_static "$SRC/lame-$LAME_VERSION" --disable-frontend
+# The encoder only: FFmpeg decodes MP3 itself, and LAME's decoder needs libmpg123. LAME's
+# older code does not build as C23, the default of recent compilers (as in Homebrew's formula).
+build_static "$SRC/lame-$LAME_VERSION" --disable-frontend --disable-decoder \
+  ac_cv_prog_cc_c23=no CFLAGS="-O2 -std=gnu17 -Wno-implicit-function-declaration $LAME_CFLAGS"
 tar -xzf "$WORK/opus-$OPUS_VERSION.tar.gz" -C "$SRC"
 build_static "$SRC/opus-$OPUS_VERSION" --disable-doc --disable-extra-programs
 
 # --disable-autodetect: no library is picked up from the build machine, threads included
-# (enabled per platform above), so nothing but the system's may end up linked.
+# (enabled per platform above), so nothing but the system's may end up linked. No avdevice:
+# the app captures nothing, and on Windows it would link the capture APIs.
 tar -xJf "$WORK/ffmpeg-$FFMPEG_VERSION.tar.xz" -C "$SRC"
 (
   cd "$SRC/ffmpeg-$FFMPEG_VERSION"
@@ -108,7 +120,8 @@ tar -xJf "$WORK/ffmpeg-$FFMPEG_VERSION.tar.xz" -C "$SRC"
     --extra-cflags="-I$PREFIX/include" --extra-ldflags="-L$PREFIX/lib" \
     --disable-autodetect "${PLATFORM_FLAGS[@]}" \
     --enable-libmp3lame --enable-libopus \
-    --disable-ffplay --disable-ffprobe --disable-doc --disable-network --disable-debug
+    --disable-avdevice --disable-ffplay --disable-ffprobe --disable-doc --disable-network \
+    --disable-debug || { tail -n 60 ffbuild/config.log >&2; exit 1; }
   make -j"$JOBS"
 )
 
@@ -145,10 +158,17 @@ if [[ -z "$EXE" ]]; then
     exit 1
   fi
 else
+  # Every imported DLL must be part of Windows: an API set, or a file in System32.
   linked="$(objdump -p "$ffmpeg" | sed -n 's/^[[:space:]]*DLL Name: //p')"
-  if grep -viqE '^(kernel32|user32|advapi32|bcrypt|shell32|ole32|oleaut32|ws2_32|psapi|shlwapi|secur32|msvcrt|ucrtbase|api-ms-win-[a-z0-9-]+)\.dll$' <<<"$linked"; then
-    echo "$linked" >&2
-    echo "ffmpeg.exe links a DLL that is not part of Windows" >&2
+  system32="$(cygpath -u "${SYSTEMROOT:-C:/Windows}")/System32"
+  foreign=""
+  shopt -s nocasematch
+  while read -r dll; do
+    [[ -z "$dll" || "$dll" == api-ms-win-* || -f "$system32/$dll" ]] || foreign+=" $dll"
+  done <<<"$linked"
+  shopt -u nocasematch
+  if [[ -n "$foreign" ]]; then
+    echo "ffmpeg.exe links DLLs that are not part of Windows:$foreign" >&2
     exit 1
   fi
 fi
