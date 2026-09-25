@@ -47,6 +47,9 @@ pub struct SpawnOptions<'a> {
     pub marker: &'a Marker,
     pub app_version: &'a str,
     pub allowed_origins: &'a [String],
+    /// The setup plan, or the override chosen in Settings (D9).
+    pub device: Device,
+    pub precision: Precision,
 }
 
 /// Bind port 0 and read the assigned port back. The listener closes before the
@@ -75,8 +78,7 @@ pub fn spawn(opts: &SpawnOptions, port: u16) -> Result<SidecarProcess, AppError>
     if let Ok(joined) = std::env::join_paths(python_path) {
         cmd.env("PYTHONPATH", joined);
     }
-    let device = opts.marker.device.unwrap_or(Device::Cpu);
-    let precision = opts.marker.precision.unwrap_or(Precision::Fp32);
+    let (device, precision) = (opts.device, opts.precision);
     cmd.env("PYTHONUTF8", "1")
         .env("PYTHONIOENCODING", "utf-8")
         .env("PYTHONUNBUFFERED", "1")

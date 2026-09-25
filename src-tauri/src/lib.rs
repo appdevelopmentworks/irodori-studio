@@ -6,8 +6,10 @@ mod commands;
 mod config;
 mod error;
 mod layout;
+mod logs;
 mod paths;
 mod platform;
+mod relocate;
 mod sidecar;
 mod update_check;
 
@@ -31,6 +33,23 @@ pub fn run() {
             commands::get_setup_progress,
             commands::get_sidecar_port,
             commands::retry_startup,
+            commands::get_settings_info,
+            commands::set_runtime,
+            commands::restart_sidecar,
+            commands::repair_installation,
+            commands::open_folder,
+            commands::read_log,
+            commands::get_update_state,
+            commands::check_for_updates,
+            commands::set_update_check,
+            commands::skip_update,
+            commands::open_release_page,
+            commands::inspect_move_target,
+            commands::start_data_move,
+            commands::cancel_data_move,
+            commands::get_move_progress,
+            commands::delete_old_data_root,
+            commands::dismiss_move_result,
         ])
         .setup(|app| {
             commands::initialize(app.handle());

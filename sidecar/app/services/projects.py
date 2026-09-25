@@ -21,7 +21,7 @@ import soundfile as sf
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.engine.host import EngineHost
-from app.errors import ApiError, ErrorCode
+from app.errors import ApiError, ErrorCode, save_error_code
 from app.schemas import (
     Cue,
     ExportedFile,
@@ -172,7 +172,7 @@ class ProjectService:
                     archive.writestr(name, data, compress_type=zipfile.ZIP_STORED)
             partial.replace(dest)
         except OSError as exc:
-            raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
+            raise ApiError(save_error_code(exc), str(exc)) from exc
         finally:
             partial.unlink(missing_ok=True)
         return ExportedFile(path=str(dest), bytes=dest.stat().st_size)
@@ -259,7 +259,7 @@ class ProjectService:
         except zipfile.BadZipFile as exc:
             raise _invalid("zip") from exc
         except OSError as exc:
-            raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
+            raise ApiError(save_error_code(exc), str(exc)) from exc
 
     def _document(self, archive: zipfile.ZipFile) -> _Document:
         try:

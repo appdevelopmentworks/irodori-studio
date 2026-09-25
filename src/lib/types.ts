@@ -72,7 +72,9 @@ export type SidecarErrorCode =
   | 'preset_not_found'
   | 'project_invalid'
   | 'api_key_required'
-  | 'api_port_in_use';
+  | 'api_port_in_use'
+  | 'disk_full'
+  | 'device_lost';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -120,7 +122,25 @@ export type SystemIssue =
   | 'cuda_unavailable'
   | 'mps_unavailable'
   | 'watermark_unavailable'
-  | 'model_load_failed';
+  | 'model_load_failed'
+  | 'device_lost';
+
+/** The Settings monitor, MiB. Accelerator figures are what torch holds in the sidecar;
+ * `DeviceInfo.memory_used_mb` is the whole device, other programs included. */
+export interface MemoryInfo {
+  process_mb: number | null;
+  system_total_mb: number | null;
+  system_used_mb: number | null;
+  accelerator_allocated_mb: number | null;
+  accelerator_reserved_mb: number | null;
+}
+
+/** A Python package of the runtime and the license its metadata names. */
+export interface PackageLicense {
+  name: string;
+  version: string;
+  license: string | null;
+}
 
 export interface SystemInfo {
   app_version: string;
@@ -134,6 +154,7 @@ export interface SystemInfo {
   watermark_available: boolean | null;
   /** ffmpeg is available: other audio formats can be read and saved (D20). */
   ffmpeg_available: boolean;
+  memory: MemoryInfo;
   issues: SystemIssue[];
 }
 
@@ -1005,14 +1026,20 @@ export type ErrorCode =
   | 'sidecar_health_timeout'
   | 'sidecar_not_ready'
   | 'model_load_failed'
-  | 'model_load_timeout';
+  | 'model_load_timeout'
+  | 'data_root_not_empty'
+  | 'data_move_failed'
+  | 'update_check_failed'
+  | 'runtime_unsupported'
+  | 'open_failed'
+  | 'busy';
 
 export interface AppError {
   code: ErrorCode;
   detail: string | null;
 }
 
-export type AppStatus = 'setup' | 'starting' | 'loading_model' | 'ready' | 'error';
+export type AppStatus = 'setup' | 'starting' | 'loading_model' | 'ready' | 'moving' | 'error';
 
 export interface StatusPayload {
   status: AppStatus;
@@ -1107,4 +1134,100 @@ export interface DataRootInfo {
   free_bytes: number | null;
   required_bytes: number;
   issues: ErrorCode[];
+}
+
+// Settings (Session 9): runtime override, updates, logs, the data root move.
+
+/** Device and precision chosen over the setup plan (D9); restarts the sidecar. */
+export interface RuntimeOverride {
+  device: Device;
+  precision: Precision;
+}
+
+export interface RuntimeChoices {
+  /** As set up; null before setup finished. */
+  installed_device: Device | null;
+  installed_precision: Precision | null;
+  torch_version: string | null;
+  /** The override saved in settings. */
+  selected: RuntimeOverride | null;
+  devices: Device[];
+  /** The GPU in use runs bf16 (Ampere or newer). */
+  bf16: boolean;
+}
+
+export interface SettingsInfo {
+  app_version: string;
+  data_root: string | null;
+  logs_dir: string | null;
+  /** Unix seconds. */
+  terms_accepted_at: number | null;
+  update_check: boolean;
+  skipped_version: string | null;
+  runtime: RuntimeChoices;
+}
+
+export interface ReleaseInfo {
+  version: string;
+  url: string;
+  published_at: string | null;
+  newer: boolean;
+}
+
+export interface UpdateState {
+  checking: boolean;
+  latest: ReleaseInfo | null;
+  error: ErrorCode | null;
+  /** Unix seconds. */
+  checked_at: number | null;
+  skipped_version: string | null;
+}
+
+export type LogName = 'sidecar' | 'setup';
+
+export interface LogTail {
+  name: LogName;
+  path: string;
+  size: number;
+  text: string;
+  truncated: boolean;
+}
+
+export type FolderKind = 'data_root' | 'logs' | 'models' | 'projects' | 'exports';
+
+export type MovePhase =
+  | 'idle'
+  | 'stopping'
+  | 'scanning'
+  | 'copying'
+  | 'verifying'
+  | 'switching'
+  | 'starting'
+  | 'done'
+  | 'failed'
+  | 'cancelled';
+
+export interface MoveProgress {
+  phase: MovePhase;
+  running: boolean;
+  from: string | null;
+  to: string | null;
+  done_bytes: number;
+  total_bytes: number;
+  done_files: number;
+  total_files: number;
+  error: AppError | null;
+  /** After a move: the previous folder, until it is deleted or dismissed. */
+  old_root: string | null;
+}
+
+export interface MoveTarget {
+  path: string;
+  exists: boolean;
+  free_bytes: number | null;
+  /** What the copy needs (caches excluded). */
+  required_bytes: number;
+  issues: ErrorCode[];
+  /** A new folder inside the chosen one, which was not empty. */
+  proposed: boolean;
 }

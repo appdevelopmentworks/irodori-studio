@@ -1,0 +1,194 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "storage": "Storage",
+    "engine": "Model & device",
+    "output": "Generation & output",
+    "logs": "Logs",
+    "about": "About"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "general": {
+    "language": "Language"
+  },
+  "updates": {
+    "title": "Updates",
+    "hint": "Checks GitHub Releases for a newer version and lets you know. Nothing is ever installed automatically.",
+    "current": "Current version: {{version}}",
+    "auto": "Check for a new version at startup",
+    "checkNow": "Check now",
+    "checking": "Checking…",
+    "available": "Version {{version}} is available.",
+    "upToDate": "You have the latest version.",
+    "open": "Open the release page",
+    "checkedAt": "Last checked: {{time}}"
+  },
+  "apiServer": {
+    "title": "API server",
+    "hint": "Offers OpenAI- and VOICEVOX-compatible APIs to other apps.",
+    "running": "Running ({{url}})",
+    "stopped": "Stopped",
+    "open": "Open the API server screen"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "ctrl": "Ctrl",
+    "cmd": "⌘",
+    "enter": "Enter",
+    "screens": "Switch screens (in sidebar order)",
+    "settings": "Open Settings",
+    "generate": "Generate (Quick generation, a script line)"
+  },
+  "storage": {
+    "title": "Storage folder",
+    "hint": "Everything the app keeps — models, the runtime, voices, history, projects — lives in this folder.",
+    "open": {
+      "data_root": "Open the storage folder",
+      "models": "Models",
+      "projects": "Projects",
+      "exports": "Exports",
+      "logs": "Logs"
+    }
+  },
+  "move": {
+    "title": "Move the storage folder",
+    "hint": "Copies the data to another folder or drive, checks the copy, then switches to it. The old folder stays until you delete it.",
+    "choose": "Choose a new location…",
+    "pickTitle": "Choose the new storage folder (an empty folder)",
+    "from": "From",
+    "to": "To",
+    "required": "Space needed",
+    "free": "Free space",
+    "proposed": "The chosen folder is not empty, so a new folder will be created inside it.",
+    "notes": {
+      "stop": "The app cannot be used during the move. Running and queued work is cancelled.",
+      "caches": "The download cache (uv) and bytecode are not copied; they are rebuilt when needed.",
+      "keep": "The app switches only after checking the copy. The old folder stays, so you can delete it later."
+    },
+    "queueBusy": "Generations are running or queued. Starting the move cancels them.",
+    "start": "Start the move",
+    "screenTitle": "Moving the storage folder",
+    "phases": {
+      "idle": "Preparing…",
+      "stopping": "Stopping the engine…",
+      "scanning": "Listing the files to copy…",
+      "copying": "Copying…",
+      "verifying": "Checking the copy…",
+      "switching": "Switching to the new folder…",
+      "starting": "Starting from the new folder…",
+      "done": "Moved.",
+      "failed": "The move failed.",
+      "cancelled": "The move was cancelled."
+    },
+    "bytes": "{{done}} of {{total}} ({{percent}}) · {{files}} of {{totalFiles}} files",
+    "keepOpen": "Keep the app open until the move finishes.",
+    "cancel": "Cancel",
+    "result": {
+      "done": "The storage folder has been moved.",
+      "failed": "The storage folder could not be moved. The app runs from the old folder.",
+      "cancelled": "The move was cancelled. The app still uses the old folder.",
+      "oldRoot": "The old folder is still there: {{path}}",
+      "delete": "Delete the old folder…",
+      "keep": "Keep it",
+      "deleteConfirm": "{{path}} will be deleted permanently. This cannot be undone.",
+      "deleteNow": "Delete"
+    }
+  },
+  "model": {
+    "title": "Model",
+    "hint": "Loaded at startup and kept in memory.",
+    "size": "about {{size}}",
+    "installed": "Installed",
+    "missing": "Files missing",
+    "runtime": "Running on {{device}} · {{precision}}"
+  },
+  "runtime": {
+    "title": "Device and precision (advanced)",
+    "hint": "Overrides the device and precision chosen during setup. Applying restarts the engine, which loads the model again.",
+    "installed": "As set up: {{device}} · {{precision}}",
+    "device": "Device",
+    "precision": "Precision",
+    "precisions": {
+      "fp32": "fp32 (standard)",
+      "bf16": "bf16 (less memory)"
+    },
+    "apply": "Apply and restart",
+    "reset": "Back to the setup choice",
+    "restartNote": "Nothing can be generated during the restart. Running and queued work is cancelled.",
+    "cpuOnly": "This installation was set up for the CPU, so the GPU cannot be used."
+  },
+  "monitor": {
+    "title": "GPU and memory",
+    "hint": "Refreshed every 2 seconds.",
+    "capability": "Compute capability {{value}}",
+    "vram": "GPU memory (all apps)",
+    "ram": "System memory (all apps)",
+    "torch": "This app's GPU memory",
+    "torchValue": "{{allocated}} in use · {{reserved}} reserved",
+    "process": "This app's system memory",
+    "versions": "Libraries",
+    "clear": "Free unused GPU memory",
+    "cleared": "Freed.",
+    "usage": "{{used}} of {{total}}"
+  },
+  "repair": {
+    "title": "Repair the installation",
+    "hint": "Checks the dependencies and model files and reinstalls anything missing or damaged. Use it when the app does not start or the model fails to load.",
+    "button": "Repair the installation…",
+    "confirm": "The engine stops and setup runs the repair. Checking the model files takes a few minutes, and damaged files are downloaded again (this needs an internet connection).",
+    "start": "Start the repair"
+  },
+  "watermark": {
+    "title": "Watermark",
+    "hint": "Embeds an inaudible watermark (SilentCipher) in generated audio, so that it can later be identified as AI-generated.",
+    "enabled": "Watermark generated audio",
+    "offNote": "Audio is generated without a watermark. When you publish it, state clearly that it is AI-generated."
+  },
+  "output": {
+    "title": "Export defaults",
+    "hint": "The format and post-processing used for saving and exporting — the same settings as on each screen."
+  },
+  "logs": {
+    "title": "Logs",
+    "hint": "Useful when something goes wrong; please include them when you report a problem.",
+    "file": "File",
+    "names": {
+      "sidecar": "Engine (sidecar.log)",
+      "setup": "Setup (setup.log)"
+    },
+    "refresh": "Refresh",
+    "openFolder": "Open the log folder",
+    "meta": "{{path}} ({{size}})",
+    "truncated": "Showing the end only.",
+    "empty": "No log yet.",
+    "show": "Show the log"
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "license": "This app is released under the MIT License. It is not the official Irodori-TTS app.",
+    "components": "Models and main components",
+    "componentsHint": "The licenses of the models and software this app uses.",
+    "name": "Name",
+    "role": "Role",
+    "licenseColumn": "License",
+    "versionColumn": "Version",
+    "roles": {
+      "model": "Speech model",
+      "codec": "Audio codec",
+      "code": "Inference code",
+      "watermark": "Watermark",
+      "app": "App framework"
+    },
+    "python": "Python packages of the runtime",
+    "pythonHint": "The packages installed in the engine's runtime and the licenses their metadata names.",
+    "unknown": "Not stated",
+    "loading": "Loading…",
+    "terms": "Terms of use",
+    "acceptedAt": "Accepted on {{date}}",
+    "showTerms": "Show the terms"
+  }
+}

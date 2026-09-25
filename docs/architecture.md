@@ -46,7 +46,7 @@ The frontend never talks to upstream directly. Rust owns lifecycle and settings;
 
 - `output: 'export'`; served by Tauri. No runtime Node server (D11).
 - Base URL of the internal API from the `get_sidecar_port` Tauri command. No port literals.
-- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs), `narration` (manuscript, settings draft, render job, reading previews), `script` (import text, open script, settings draft, render job, file-name preview), `library` (history filters, page, selection, regenerate jobs), `presets`, `projects` (what an opened project left out). Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
+- Zustand stores (memory only): `app` (boot, status, port), `nav` (active screen), `sidecar` (API client, capabilities, emoji palette, preferences, polled system/engine status), `quick` (Quick screen form and job), `voices` (library, Voice Studio drafts and jobs), `narration` (manuscript, settings draft, render job, reading previews), `script` (import text, open script, settings draft, render job, file-name preview), `library` (history filters, page, selection, regenerate jobs), `presets`, `projects` (what an opened project left out), `apiServer` (the external listener's configuration, status and styles), `settings` (what Rust reports for Settings, the runtime's licenses, the open tab); `app` also holds the update check and the data root move. Job state shared by screens (`lib/jobs.ts`) is advanced by SSE events outside React, so jobs keep updating on other screens.
 - **Capability-driven parameter UI.** The parameter panel is generated from `GET /models/active/capabilities` (a JSON schema-like list of parameters with type, range, default, group, `simple|advanced` tier, `visible_when`). No component hardcodes which parameters a model supports.
 - i18n via `react-i18next` (D17). Locale JSON under `src/i18n/locales/<locale>/`. Sidecar errors arrive as codes and are translated in the frontend.
 - Audio: playback via `<audio>` with blob URLs fetched from `/audio/{id}`; waveform editing (trim/split) with `wavesurfer.js` (regions plugin).
@@ -54,7 +54,7 @@ The frontend never talks to upstream directly. Rust owns lifecycle and settings;
 
 ### Tauri core (Rust)
 
-Modules (one responsibility each): `layout` (dev vs installed paths), `paths`, `config` (settings.json), `platform` (`windows.rs`: nvidia-smi probe; `macos.rs`: chip, macOS version, memory), `bootstrap` (first-run steps, idempotent, progress events), `sidecar` (port, spawn, health, teardown guard), `update_check` (GitHub Releases API), `commands`.
+Modules (one responsibility each): `layout` (dev vs installed paths), `paths`, `config` (settings.json), `platform` (`windows.rs`: nvidia-smi probe, junctions; `macos.rs`: chip, macOS version, memory; both: opening folders and links, HTTP through the system curl), `bootstrap` (first-run steps, idempotent, progress events, repair), `sidecar` (port, spawn, health, teardown guard), `update_check` (GitHub Releases API), `relocate` (moving the data root), `logs` (log tails), `commands`.
 
 ### Python sidecar
 
@@ -129,7 +129,7 @@ Adding Large = one entry + submodule bump. A MeanFlow model would declare `"samp
 
 ## Process model & port selection
 
-- Rust selects a free port on `127.0.0.1`, spawns `<venv-python> -m app.main --port <port>` (cwd = sidecar dir), polls `GET /health` (retrying on a new port if the sidecar exits early), and exposes status `setup → starting → loading_model → ready` (or `error`) to the frontend (`app://status`); `loading_model` lasts until `/health` reports the engine `ready` (D4).
+- Rust selects a free port on `127.0.0.1`, spawns `<venv-python> -m app.main --port <port>` (cwd = sidecar dir), polls `GET /health` (retrying on a new port if the sidecar exits early), and exposes status `setup → starting → loading_model → ready` (or `error`; `moving` while the data root moves) to the frontend (`app://status`); `loading_model` lasts until `/health` reports the engine `ready` (D4).
 - Teardown guard kills the process tree on window close, app quit, panic, and forced quit: every child (uv, provisioning scripts, sidecar) runs in its own kill-on-close Job Object (Windows) or process group (macOS); the sidecar also exits when the app's pid (`IRODORI_PARENT_PID`) disappears, which covers a forced quit on macOS. Children get a null stdin.
 - Environment passed to the sidecar: `PYTHONPATH=<sidecar dir>[;<upstream dir>]`, `HF_HOME=<data-root>/models`, `HF_HUB_OFFLINE=1`, `HF_HUB_DISABLE_TELEMETRY=1`, `HF_HUB_DISABLE_SYMLINKS_WARNING=1`, `IRODORI_DATA_ROOT`, `IRODORI_LOG_DIR`, `IRODORI_DEVICE`, `IRODORI_PRECISION`, `IRODORI_APP_VERSION`, `IRODORI_PARENT_PID`, `IRODORI_ALLOWED_ORIGINS`, `IRODORI_FFMPEG` (the bundled LGPL build; in dev, an ffmpeg on PATH), `PYTHONUTF8=1`, `PYTHONIOENCODING=utf-8`, `PYTHONPYCACHEPREFIX=<data-root>/runtime/pycache`; plus `CUDA_DEVICE_ORDER`/`CUDA_VISIBLE_DEVICES` with several GPUs and `PYTORCH_ENABLE_MPS_FALLBACK=1` on macOS. Inherited `UV_*`, `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, `CONDA_PREFIX` and relocated HF cache variables are removed first.
 
@@ -217,7 +217,14 @@ The Library screen pages `/history` with filters (`voice_id` is recorded per ent
 
 ## Update check (D15)
 
-Rust `update_check` → `GET https://api.github.com/repos/<owner>/<repo>/releases/latest` with a short timeout; compare semver with the app version; emit an event the frontend shows as a dismissible banner. Disabled in Settings or offline → no-op.
+Rust `update_check` → `GET https://api.github.com/repos/<owner>/<repo>/releases/latest` through the system's curl (Windows 10+ and macOS ship it; no TLS stack bundled), 8 s timeout, three seconds after startup when enabled and the terms are accepted; compare semver with the app version; emit `app://update`, which the frontend shows as a dismissible banner (open the release page, skip this version). A 404 (nothing published yet) means nothing is newer; offline or other failures are silent at startup and reported by a manual check in Settings. Only this app's Releases page is ever opened.
+
+## Settings (Session 9)
+
+- **Runtime override (D9):** `settings.json` `runtime: {device, precision}` over the setup plan, applied through `IRODORI_DEVICE` / `IRODORI_PRECISION` when the sidecar starts; the choices follow the installed torch (a CUDA build also runs on the CPU, the macOS wheels on MPS or the CPU, a CPU build only on the CPU; bf16 only on CUDA with an Ampere or newer GPU). Applying restarts the sidecar.
+- **Data root move (D16):** `relocate` stops the sidecar, scans the root (not following links) without the rebuildable caches (`runtime/uv-cache`, `runtime/pycache`), checks the target (empty or new, not inside or around the current root, writable, space for the copy plus 512 MB), copies (links are recreated, rebased into the new root: junctions on Windows, symlinks on macOS), verifies every entry and the database byte for byte, relinks the runtime venv with the bundled uv (`uv venv --allow-existing --managed-python --no-python-downloads`, which rewrites `pyvenv.cfg` and the absolute interpreter path in the `python.exe` trampoline / `bin/` links), checks that the moved venv runs entirely from the new root, switches `settings.json`, and starts the sidecar. Any failure removes the copy and starts from the old root; a start failure after the switch switches back. Progress streams as `app://move` while the app shows the move screen. The old root stays until the user deletes it from Settings (only a folder that looks like a data root and does not overlap the current one).
+- **Repair:** clears the marker's dependency, model and self-check entries and returns to the setup wizard, which resumes at once: `uv sync` (a no-op when nothing is missing), the model downloader (which now checks every complete file against the Hub's hash and fetches damaged ones again), the self-check, then the sidecar.
+- **Logs:** Rust reads the last 256 KB of `sidecar.log` / `setup.log` (also on the error screen, when the sidecar is down); folders open in Explorer / Finder.
 
 ## Platform-specific handling
 
@@ -227,5 +234,7 @@ Rust `update_check` → `GET https://api.github.com/repos/<owner>/<repo>/release
 ## Error & status surfaces
 
 - `GET /health` (liveness + engine state), `GET /system` (device, memory, torch/CUDA/MPS versions, active model, upstream sha, queue length).
+- A GPU failure mid-generation (`device_lost`) leaves the engine in `error`; a banner offers to restart the sidecar. A write that fails for lack of space is `disk_full`.
+- The error screen (startup failed) offers retry, repair, and the log.
 - Errors are `{code, message, detail}`; `code` is stable and translated by the frontend.
 - All sidecar stdout/stderr tee'd to `logs/` and viewable in Settings.

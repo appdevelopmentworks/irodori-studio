@@ -1,0 +1,194 @@
+{
+  "title": "设置",
+  "tabs": {
+    "general": "常规",
+    "storage": "存储位置",
+    "engine": "模型与设备",
+    "output": "生成与输出",
+    "logs": "日志",
+    "about": "关于"
+  },
+  "common": {
+    "cancel": "取消",
+    "close": "关闭"
+  },
+  "general": {
+    "language": "语言"
+  },
+  "updates": {
+    "title": "检查更新",
+    "hint": "在 GitHub Releases 上检查新版本，发现后通知你。不会自动安装更新。",
+    "current": "当前版本：{{version}}",
+    "auto": "启动时检查新版本",
+    "checkNow": "立即检查",
+    "checking": "正在检查…",
+    "available": "有新版本 {{version}}。",
+    "upToDate": "已是最新版本。",
+    "open": "打开发布页面",
+    "checkedAt": "上次检查：{{time}}"
+  },
+  "apiServer": {
+    "title": "API 服务器",
+    "hint": "向其他应用提供兼容 OpenAI 和 VOICEVOX 的 API。",
+    "running": "运行中（{{url}}）",
+    "stopped": "已停止",
+    "open": "打开 API 服务器页面"
+  },
+  "shortcuts": {
+    "title": "键盘快捷键",
+    "ctrl": "Ctrl",
+    "cmd": "⌘",
+    "enter": "Enter",
+    "screens": "切换页面（按侧栏顺序）",
+    "settings": "打开设置",
+    "generate": "生成（快速生成、台本的行）"
+  },
+  "storage": {
+    "title": "存储文件夹",
+    "hint": "模型、运行环境、声音、历史、项目等应用数据都保存在此文件夹中。",
+    "open": {
+      "data_root": "打开存储文件夹",
+      "models": "模型",
+      "projects": "项目",
+      "exports": "导出",
+      "logs": "日志"
+    }
+  },
+  "move": {
+    "title": "移动存储文件夹",
+    "hint": "将数据复制到其他文件夹或驱动器，验证后再切换。原文件夹会一直保留，直到你将其删除。",
+    "choose": "选择新位置…",
+    "pickTitle": "选择新的存储文件夹（空文件夹）",
+    "from": "原位置",
+    "to": "新位置",
+    "required": "所需空间",
+    "free": "可用空间",
+    "proposed": "所选文件夹不为空，将在其中新建一个文件夹。",
+    "notes": {
+      "stop": "移动期间无法使用应用。正在进行和排队中的处理将被取消。",
+      "caches": "不复制下载缓存（uv）和字节码，需要时会重新生成。",
+      "keep": "验证副本后才会切换。原文件夹会保留，之后可以删除。"
+    },
+    "queueBusy": "有正在生成或排队中的处理。开始移动后将被取消。",
+    "start": "开始移动",
+    "screenTitle": "正在移动存储文件夹",
+    "phases": {
+      "idle": "正在准备…",
+      "stopping": "正在停止引擎…",
+      "scanning": "正在列出要复制的文件…",
+      "copying": "正在复制…",
+      "verifying": "正在验证副本…",
+      "switching": "正在切换存储文件夹…",
+      "starting": "正在从新位置启动…",
+      "done": "已移动。",
+      "failed": "移动失败。",
+      "cancelled": "已取消移动。"
+    },
+    "bytes": "{{done}} / {{total}}（{{percent}}）· {{files}} / {{totalFiles}} 个文件",
+    "keepOpen": "完成之前请不要关闭应用。",
+    "cancel": "取消",
+    "result": {
+      "done": "已移动存储文件夹。",
+      "failed": "无法移动存储文件夹。应用仍在使用原文件夹运行。",
+      "cancelled": "已取消移动。仍在使用原存储文件夹。",
+      "oldRoot": "原文件夹仍然保留：{{path}}",
+      "delete": "删除原文件夹…",
+      "keep": "保留",
+      "deleteConfirm": "将永久删除 {{path}}，且无法恢复。",
+      "deleteNow": "删除"
+    }
+  },
+  "model": {
+    "title": "模型",
+    "hint": "在启动时加载并常驻内存。",
+    "size": "约 {{size}}",
+    "installed": "已安装",
+    "missing": "缺少文件",
+    "runtime": "运行：{{device}} · {{precision}}"
+  },
+  "runtime": {
+    "title": "设备与精度（高级）",
+    "hint": "更改安装时选择的设备与精度。应用后引擎将重新启动并重新加载模型。",
+    "installed": "安装时的设置：{{device}} · {{precision}}",
+    "device": "设备",
+    "precision": "精度",
+    "precisions": {
+      "fp32": "fp32（标准）",
+      "bf16": "bf16（节省显存）"
+    },
+    "apply": "应用并重新启动",
+    "reset": "恢复为安装时的设置",
+    "restartNote": "重新启动期间无法生成。正在进行和排队中的处理将被取消。",
+    "cpuOnly": "此安装是为 CPU 配置的，无法使用 GPU。"
+  },
+  "monitor": {
+    "title": "GPU 与内存",
+    "hint": "每 2 秒刷新一次。",
+    "capability": "计算能力 {{value}}",
+    "vram": "GPU 显存（含其他应用）",
+    "ram": "系统内存（含其他应用）",
+    "torch": "本应用的 GPU 显存",
+    "torchValue": "已用 {{allocated}} · 已保留 {{reserved}}",
+    "process": "本应用的系统内存",
+    "versions": "库",
+    "clear": "释放未使用的 GPU 显存",
+    "cleared": "已释放。",
+    "usage": "{{used}} / {{total}}"
+  },
+  "repair": {
+    "title": "修复安装",
+    "hint": "检查依赖包和模型文件，重新安装缺失或损坏的部分。在应用无法启动或模型加载失败时使用。",
+    "button": "修复安装…",
+    "confirm": "引擎将停止，并在安装界面中进行修复。检查模型文件需要几分钟，如有损坏的文件将重新下载（需要联网）。",
+    "start": "开始修复"
+  },
+  "watermark": {
+    "title": "数字水印",
+    "hint": "在生成的音频中嵌入听不到的数字水印（SilentCipher），以便日后确认该音频由 AI 生成。",
+    "enabled": "为生成的音频添加数字水印",
+    "offNote": "将在不添加水印的情况下生成。公开生成的音频时，请明确注明其由 AI 生成。"
+  },
+  "output": {
+    "title": "导出默认设置",
+    "hint": "保存和导出时使用的格式与后期处理，与各页面的导出设置共用。"
+  },
+  "logs": {
+    "title": "日志",
+    "hint": "出现问题时查看。反馈问题时请附上这些内容。",
+    "file": "文件",
+    "names": {
+      "sidecar": "引擎（sidecar.log）",
+      "setup": "安装（setup.log）"
+    },
+    "refresh": "刷新",
+    "openFolder": "打开日志文件夹",
+    "meta": "{{path}}（{{size}}）",
+    "truncated": "仅显示末尾部分。",
+    "empty": "暂无日志。",
+    "show": "显示日志"
+  },
+  "about": {
+    "version": "版本 {{version}}",
+    "license": "本应用以 MIT 许可证发布，并非 Irodori-TTS 的官方应用。",
+    "components": "模型与主要组件",
+    "componentsHint": "本应用所使用的模型和软件的许可证。",
+    "name": "名称",
+    "role": "用途",
+    "licenseColumn": "许可证",
+    "versionColumn": "版本",
+    "roles": {
+      "model": "语音合成模型",
+      "codec": "音频编解码器",
+      "code": "推理代码",
+      "watermark": "数字水印",
+      "app": "应用框架"
+    },
+    "python": "运行环境的 Python 包",
+    "pythonHint": "引擎运行环境中安装的包，以及其元数据所标示的许可证。",
+    "unknown": "未注明",
+    "loading": "正在加载…",
+    "terms": "使用条款",
+    "acceptedAt": "同意时间：{{date}}",
+    "showTerms": "显示使用条款"
+  }
+}

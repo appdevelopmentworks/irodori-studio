@@ -332,6 +332,8 @@ class TorchBackend:
             if "out of memory" in message or "can't allocate memory" in message:
                 _free_accelerator_cache(torch)
                 raise BackendError("out_of_memory", str(exc)) from exc
+            if device_failed(exc):
+                raise BackendError("device_lost", str(exc)) from exc
             raise
         finally:
             runtime.watermarker = original_watermarker
@@ -364,6 +366,27 @@ class TorchBackend:
         if runtime is None:
             raise BackendError("model_not_loaded", "no model is loaded")
         return runtime
+
+
+# After these the CUDA context is broken (errors are sticky) until the process restarts.
+_DEVICE_FAILURES = (
+    "cuda error",
+    "cudnn_status",
+    "cublas_status",
+    "cusolver",
+    "cufft",
+    "device-side assert",
+    "illegal memory access",
+    "unspecified launch failure",
+)
+
+
+def device_failed(exc: BaseException) -> bool:
+    """A GPU failure (torch raises `AcceleratorError` for CUDA errors since 2.8)."""
+    message = str(exc).lower()
+    return type(exc).__name__ == "AcceleratorError" or any(
+        marker in message for marker in _DEVICE_FAILURES
+    )
 
 
 def _free_accelerator_cache(torch: Any) -> None:

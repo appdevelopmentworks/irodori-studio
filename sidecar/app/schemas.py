@@ -68,6 +68,17 @@ class DeviceInfo(BaseModel):
     memory_used_mb: int | None = None
 
 
+class MemoryInfo(BaseModel):
+    """The Settings monitor (MiB). Accelerator figures are what torch holds in this
+    process; `DeviceInfo.memory_used_mb` is the whole device, other programs included."""
+
+    process_mb: int | None = None
+    system_total_mb: int | None = None
+    system_used_mb: int | None = None
+    accelerator_allocated_mb: int | None = None
+    accelerator_reserved_mb: int | None = None
+
+
 class SystemInfo(BaseModel):
     app_version: str
     python_version: str
@@ -80,7 +91,17 @@ class SystemInfo(BaseModel):
     watermark_available: bool | None = None
     # ffmpeg is available: other audio formats can be read and saved (D20).
     ffmpeg_available: bool = False
+    memory: MemoryInfo = Field(default_factory=MemoryInfo)
     issues: list[str] = []
+
+
+class PackageLicense(BaseModel):
+    """An installed Python package of the runtime and the license its metadata names."""
+
+    name: str
+    version: str
+    # An SPDX expression or a short license name; None when the metadata has none.
+    license: str | None = None
 
 
 # --- Models ----------------------------------------------------------------------------

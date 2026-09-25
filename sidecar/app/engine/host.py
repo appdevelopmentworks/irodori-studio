@@ -149,6 +149,17 @@ class EngineHost:
                 backend.watermark_ready,
             )
 
+    def mark_broken(self, code: str) -> None:
+        """The device failed mid-generation: refuse further work with `code` until the
+        sidecar restarts (the app offers the restart)."""
+        with self._cond:
+            if self._state != "ready":
+                return
+            self._state = "error"
+            self._error_code = code
+            self._cond.notify_all()
+        log.error("engine unusable after a device failure: %s", code)
+
     def shutdown(self) -> None:
         with self._cond:
             backend, self._backend = self._backend, None

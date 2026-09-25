@@ -7,6 +7,7 @@ SSE `failed` event.
 
 from __future__ import annotations
 
+import errno
 import logging
 from enum import Enum
 
@@ -87,6 +88,10 @@ class ErrorCode(str, Enum):
     OUT_OF_MEMORY = "out_of_memory"
     SAVE_PATH_INVALID = "save_path_invalid"
     SAVE_FAILED = "save_failed"
+    # A write failed because the disk is full (Session 9).
+    DISK_FULL = "disk_full"
+    # The GPU failed mid-generation; the engine needs a restart (Session 9).
+    DEVICE_LOST = "device_lost"
     FFMPEG_UNAVAILABLE = "ffmpeg_unavailable"
 
     @classmethod
@@ -111,6 +116,27 @@ class ApiError(Exception):
         self.message = message
         self.status_code = status_code
         self.detail = detail or {}
+
+
+# ERROR_HANDLE_DISK_FULL and ERROR_DISK_FULL (Windows reports them with errno ENOSPC too).
+_DISK_FULL_WINERRORS = frozenset({39, 112})
+
+
+def is_disk_full(exc: BaseException) -> bool:
+    return isinstance(exc, OSError) and (
+        exc.errno == errno.ENOSPC or getattr(exc, "winerror", None) in _DISK_FULL_WINERRORS
+    )
+
+
+def save_error_code(exc: OSError) -> ErrorCode:
+    """A full disk reads as such; any other write failure as `save_failed`."""
+    return ErrorCode.DISK_FULL if is_disk_full(exc) else ErrorCode.SAVE_FAILED
+
+
+def job_failure_code(exc: BaseException) -> ErrorCode:
+    """An unexpected exception in a generation job: a full disk (writing the audio), else
+    `synthesis_failed`."""
+    return ErrorCode.DISK_FULL if is_disk_full(exc) else ErrorCode.SYNTHESIS_FAILED
 
 
 def not_found(code: ErrorCode, what: str) -> ApiError:

@@ -23,7 +23,7 @@ import numpy as np
 from app.engine import params as param_table
 from app.engine.base import BackendError, BackendHooks, BackendRequest, SynthesisCancelled
 from app.engine.host import EngineHost
-from app.errors import ApiError, ErrorCode
+from app.errors import ApiError, ErrorCode, job_failure_code
 from app.schemas import SynthesisRequest, TtsResult
 from app.services.clips import ClipStore
 from app.services.history import HistoryStore, NewEntry
@@ -208,7 +208,7 @@ class SynthesisService:
             return
         except Exception as exc:
             log.exception("job %s failed", job.id)
-            job.mark_failed(ErrorCode.SYNTHESIS_FAILED.value, f"{type(exc).__name__}: {exc}")
+            job.mark_failed(job_failure_code(exc).value, f"{type(exc).__name__}: {exc}")
             return
         if result is None:
             job.mark_cancelled()
@@ -269,7 +269,18 @@ class SynthesisService:
     def synthesize(self, prepared: PreparedSynthesis, hooks: RunHooks) -> Synthesized | None:
         """Run a prepared request on the resident model (worker thread): reference latents
         from the cache (encoded on a miss), the watermark decision, the backend call.
-        None when cancelled. Recording the result is the caller's business."""
+        None when cancelled. Recording the result is the caller's business.
+
+        Shared by the Quick screen, narrations, scripts and the external API: a GPU that
+        failed here leaves the engine unusable until the sidecar restarts."""
+        try:
+            return self._synthesize(prepared, hooks)
+        except BackendError as exc:
+            if exc.code == ErrorCode.DEVICE_LOST.value:
+                self._host.mark_broken(exc.code)
+            raise
+
+    def _synthesize(self, prepared: PreparedSynthesis, hooks: RunHooks) -> Synthesized | None:
         backend = self._host.backend()
         spec = self._host.spec
         options = self._host.options

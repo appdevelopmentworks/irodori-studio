@@ -7,6 +7,7 @@ linting and unit tests has no torch at all (D2) — /system then reports
 
 from __future__ import annotations
 
+import gc
 import platform
 import sys
 import threading
@@ -14,7 +15,7 @@ from types import ModuleType
 
 from app.config import SidecarConfig, upstream_commit
 from app.errors import ErrorCode
-from app.schemas import DeviceInfo, SystemInfo, TorchInfo
+from app.schemas import DeviceInfo, MemoryInfo, SystemInfo, TorchInfo
 
 _MB = 1024 * 1024
 _torch_lock = threading.Lock()
@@ -52,6 +53,7 @@ def build_system_info(config: SidecarConfig) -> SystemInfo:
         device.name = platform.processor() or platform.machine() or None
         _fill_system_memory(device)
 
+    memory = _memory(torch, config.device)
     return SystemInfo(
         app_version=config.app_version,
         python_version=platform.python_version(),
@@ -60,8 +62,48 @@ def build_system_info(config: SidecarConfig) -> SystemInfo:
         torch=torch_info,
         upstream_commit=upstream_commit(),
         ffmpeg_available=config.ffmpeg is not None and config.ffmpeg.is_file(),
+        memory=memory,
         issues=issues,
     )
+
+
+def clear_accelerator_cache() -> None:
+    """Hand torch's cached, unused accelerator memory back to the device."""
+    gc.collect()
+    torch = _import_torch()
+    if torch is None:
+        return
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    mps = getattr(torch, "mps", None)
+    if mps is not None and _mps_available(torch) and hasattr(mps, "empty_cache"):
+        mps.empty_cache()
+
+
+def _memory(torch: ModuleType | None, device: str) -> MemoryInfo:
+    memory = MemoryInfo()
+    try:
+        import psutil
+    except ImportError:
+        psutil = None
+    if psutil is not None:
+        virtual = psutil.virtual_memory()
+        memory.system_total_mb = int(virtual.total // _MB)
+        memory.system_used_mb = int((virtual.total - virtual.available) // _MB)
+        memory.process_mb = int(psutil.Process().memory_info().rss // _MB)
+    if torch is None:
+        return memory
+    try:
+        if device == "cuda" and torch.cuda.is_available():
+            index = torch.cuda.current_device()
+            memory.accelerator_allocated_mb = int(torch.cuda.memory_allocated(index) // _MB)
+            memory.accelerator_reserved_mb = int(torch.cuda.memory_reserved(index) // _MB)
+        elif device == "mps" and _mps_available(torch):
+            memory.accelerator_allocated_mb = int(torch.mps.current_allocated_memory() // _MB)
+            memory.accelerator_reserved_mb = int(torch.mps.driver_allocated_memory() // _MB)
+    except (RuntimeError, AttributeError):
+        pass
+    return memory
 
 
 def _import_torch() -> ModuleType | None:

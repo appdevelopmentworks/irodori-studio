@@ -9,10 +9,6 @@
     "apiServer": "API server",
     "settings": "Settings"
   },
-  "comingSoon": {
-    "title": "This screen is on its way",
-    "body": "It will be added in an upcoming version."
-  },
   "status": {
     "engine": {
       "idle": "Model not loaded",
@@ -28,5 +24,14 @@
     "watermarkOff": "Watermark: off",
     "cpuMode": "CPU mode (generation is slow)",
     "disconnected": "Cannot reach the speech engine"
+  },
+  "update": {
+    "available": "Version {{version}} is available.",
+    "open": "Open the release page",
+    "skip": "Skip this version",
+    "close": "Close"
+  },
+  "engine": {
+    "restart": "Restart the engine"
   }
 }

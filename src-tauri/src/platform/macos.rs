@@ -6,7 +6,7 @@ use std::ffi::CString;
 use std::io;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::process::CommandExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -35,6 +35,22 @@ fn command_output(program: &str, args: &[&str]) -> Option<String> {
     out.status
         .success()
         .then(|| String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+pub fn open_path_command(path: &Path) -> Command {
+    let mut cmd = Command::new("/usr/bin/open");
+    cmd.arg(path);
+    cmd
+}
+
+pub fn open_url_command(url: &str) -> Command {
+    let mut cmd = Command::new("/usr/bin/open");
+    cmd.arg(url);
+    cmd
+}
+
+pub fn curl() -> PathBuf {
+    PathBuf::from("/usr/bin/curl")
 }
 
 pub fn free_space(path: &Path) -> io::Result<u64> {

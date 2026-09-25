@@ -5,6 +5,7 @@
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tauri::{AppHandle, Manager};
 
@@ -90,6 +91,27 @@ impl DataPaths {
     /// First-run setup completion marker (bootstrap.rs).
     pub fn marker(&self) -> PathBuf {
         self.runtime.join("setup.json")
+    }
+}
+
+/// Whether directories can be created at `path` (or its nearest existing ancestor).
+pub fn can_create_in(path: &Path) -> bool {
+    // Unique per call: concurrent inspections of one folder must not collide.
+    static PROBES: AtomicUsize = AtomicUsize::new(0);
+    let Some(base) = path.ancestors().find(|p| p.is_dir()) else {
+        return false;
+    };
+    let probe = base.join(format!(
+        ".irodori-write-test-{}-{}",
+        std::process::id(),
+        PROBES.fetch_add(1, Ordering::Relaxed)
+    ));
+    match fs::create_dir(&probe) {
+        Ok(()) => {
+            let _ = fs::remove_dir(&probe);
+            true
+        }
+        Err(_) => false,
     }
 }
 

@@ -9,10 +9,6 @@
     "apiServer": "API 服务器",
     "settings": "设置"
   },
-  "comingSoon": {
-    "title": "此页面正在准备中",
-    "body": "将在后续版本中加入。"
-  },
   "status": {
     "engine": {
       "idle": "模型未加载",
@@ -27,5 +23,14 @@
     "watermarkOff": "水印：关",
     "cpuMode": "CPU 模式（生成较慢）",
     "disconnected": "无法连接语音合成引擎"
+  },
+  "update": {
+    "available": "已发布新版本 {{version}}。",
+    "open": "打开发布页面",
+    "skip": "不再提示此版本",
+    "close": "关闭"
+  },
+  "engine": {
+    "restart": "重新启动引擎"
   }
 }

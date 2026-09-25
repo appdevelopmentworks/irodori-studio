@@ -55,11 +55,14 @@ irodori-studio/
 │  │  ├─ projects/                ProjectBar (save / open `.iroproj`)
 │  │  ├─ api-server/              ApiServerScreen: ConfigSection (enable, bind, port, API key), StatusSection (URLs),
 │  │  │                           UsageSection (OpenAI SDK example, VOICEVOX URL, style ids), RequestLog, snippets.ts
-│  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
-│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error screens, AppShell (Sidebar + screen + StatusBar),
-│  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid, ProgressBar,
-│  │                              usePlayer (one shared audio player), CopyButton;
-│  │                              later WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
+│  │  └─ settings/                SettingsScreen (tabs): GeneralTab (language, updates, API server, shortcuts), StorageTab
+│  │                              (folders, move + result), EngineTab (model, device / precision, monitor, repair),
+│  │                              OutputTab (watermark, export defaults, limits), LogsTab, AboutTab (licenses, terms),
+│  │                              Section, components.ts (licenses of models and main components)
+│  ├─ components/                 AppRoot (boot + routing by status), Startup/Error/Move screens, AppShell (Sidebar + screen +
+│  │                              StatusBar, shortcuts), UpdateBanner, EngineBanner, ErrorNotice, LanguageSwitcher,
+│  │                              EmojiPalette, CandidateGrid, ProgressBar, usePlayer (one shared audio player), CopyButton,
+│  │                              LogViewer, TermsText
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
 │  │  ├─ config.ts                supported locales; source locale `ja`
@@ -79,7 +82,7 @@ irodori-studio/
 │  │  ├─ clipboard.ts             copy to the clipboard
 │  │  └─ format.ts                Intl formatting (bytes, memory, seconds, dates, percent)
 │  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration, script, library, presets, projects,
-│                                 apiServer
+│                                 apiServer, settings
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", entitlements, localized plist strings
 │  ├─ Info.plist                  merged into the macOS Info.plist (NSMicrophoneUsageDescription)
@@ -92,11 +95,14 @@ irodori-studio/
 │     ├─ paths.rs
 │     ├─ config.rs                settings.json
 │     ├─ error.rs                 error codes returned to the frontend (D17)
-│     ├─ platform/{mod.rs, policy.rs, windows.rs, macos.rs}   probe, device policy, process trees, free space
-│     ├─ bootstrap.rs             idempotent first-run steps + progress events
+│     ├─ platform/{mod.rs, policy.rs, windows.rs, macos.rs}   probe, device policy, process trees, free space,
+│     │                           opening folders / links, HTTP via the system curl, junctions
+│     ├─ bootstrap.rs             idempotent first-run steps + progress events, repair
 │     ├─ sidecar.rs               port, spawn, health, teardown guard
-│     ├─ update_check.rs          GitHub Releases latest
-│     └─ commands.rs
+│     ├─ update_check.rs          GitHub Releases latest (D15)
+│     ├─ relocate.rs              moving the data root (D16)
+│     ├─ logs.rs                  log tails for Settings and the error screen
+│     └─ commands.rs              commands, app state, startup / setup / move flows, runtime override
 └─ sidecar/
    ├─ pyproject.toml              NO torch (D2); upstream non-torch deps pinned
    ├─ .python-version, uv.lock    3.10 (upstream); the lock contains no torch family
@@ -124,7 +130,8 @@ irodori-studio/
    │  │                           clips, voices (library, encode jobs, packages), takes (chunk / line audio rows),
    │  │                           narration (split, render jobs, assemble, export), script (lines, speaker map, render
    │  │                           jobs, assemble, export, tables), history, library (regenerate, export), presets,
-   │  │                           projects (.iroproj), preferences, system_info, api_server (the external listener)
+   │  │                           projects (.iroproj), preferences, system_info (+ memory, cache), licenses, api_server
+   │  │                           (the external listener)
    │  ├─ text/                    dictionary.py (user dictionary), reading.py (pyopenjtalk-plus readings, length
    │  │                           estimates), chunker.py (D18, Markdown to text), srt.py (SRT/WebVTT in and out),
    │  │                           script_parser.py ("話者：セリフ" text, CSV / TSV in and out), naming.py (file-name templates)

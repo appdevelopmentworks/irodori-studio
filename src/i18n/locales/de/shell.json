@@ -9,10 +9,6 @@
     "apiServer": "API-Server",
     "settings": "Einstellungen"
   },
-  "comingSoon": {
-    "title": "Dieser Bereich ist in Arbeit",
-    "body": "Er folgt in einer der nächsten Versionen."
-  },
   "status": {
     "engine": {
       "idle": "Modell nicht geladen",
@@ -28,5 +24,14 @@
     "watermarkOff": "Wasserzeichen: aus",
     "cpuMode": "CPU-Modus (Generierung ist langsam)",
     "disconnected": "Die Sprachsynthese-Engine ist nicht erreichbar"
+  },
+  "update": {
+    "available": "Version {{version}} ist verfügbar.",
+    "open": "Release-Seite öffnen",
+    "skip": "Diese Version überspringen",
+    "close": "Schließen"
+  },
+  "engine": {
+    "restart": "Engine neu starten"
   }
 }

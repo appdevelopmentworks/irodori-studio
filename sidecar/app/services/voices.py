@@ -30,7 +30,7 @@ from pydantic import ValidationError
 from app.engine import params as param_table
 from app.engine.base import BackendError
 from app.engine.host import EngineHost
-from app.errors import ApiError, ErrorCode
+from app.errors import ApiError, ErrorCode, save_error_code
 from app.schemas import (
     Consent,
     ConsentInput,
@@ -373,7 +373,7 @@ class VoiceService:
             partial.replace(dest)
         except OSError as exc:
             partial.unlink(missing_ok=True)
-            raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
+            raise ApiError(save_error_code(exc), str(exc)) from exc
         return ExportedFile(path=str(dest), bytes=len(data))
 
     def import_package(self, stream: BinaryIO) -> VoiceSaved:

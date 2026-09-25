@@ -1,5 +1,5 @@
 {
-  "title": "库・历史记录",
+  "title": "资料库与历史",
   "tabs": {
     "history": "历史记录",
     "presets": "预设"
@@ -48,7 +48,7 @@
     "saved": "已保存：{{path}}",
     "details": "详细信息",
     "hideDetails": "收起详细信息",
-    "run": "{{device}}・{{precision}}・生成用时 {{seconds}} 秒",
+    "run": "{{device}} · {{precision}} · 生成用时 {{seconds}} 秒",
     "delete": "删除",
     "deleteConfirm": "确认删除",
     "deleteSelected_other": "删除 {{count}} 条",
@@ -75,7 +75,7 @@
   },
   "limits": {
     "title": "历史记录上限",
-    "usage": "当前 {{entries}} 条・{{size}}",
+    "usage": "当前 {{entries}} 条 · {{size}}",
     "hint": "超过任一上限时，会自动从最旧的历史记录开始删除；降低上限后立即生效（旁白和台本的音频不受影响）。",
     "entries": "最大条数",
     "size": "最大容量（GB）",

@@ -16,6 +16,7 @@ import deParams from './locales/de/params.json';
 import deProjects from './locales/de/projects.json';
 import deQuick from './locales/de/quick.json';
 import deScript from './locales/de/script.json';
+import deSettings from './locales/de/settings.json';
 import deSetup from './locales/de/setup.json';
 import deShell from './locales/de/shell.json';
 import deVoiceStudio from './locales/de/voiceStudio.json';
@@ -32,6 +33,7 @@ import enParams from './locales/en/params.json';
 import enProjects from './locales/en/projects.json';
 import enQuick from './locales/en/quick.json';
 import enScript from './locales/en/script.json';
+import enSettings from './locales/en/settings.json';
 import enSetup from './locales/en/setup.json';
 import enShell from './locales/en/shell.json';
 import enVoiceStudio from './locales/en/voiceStudio.json';
@@ -48,6 +50,7 @@ import jaParams from './locales/ja/params.json';
 import jaProjects from './locales/ja/projects.json';
 import jaQuick from './locales/ja/quick.json';
 import jaScript from './locales/ja/script.json';
+import jaSettings from './locales/ja/settings.json';
 import jaSetup from './locales/ja/setup.json';
 import jaShell from './locales/ja/shell.json';
 import jaVoiceStudio from './locales/ja/voiceStudio.json';
@@ -64,6 +67,7 @@ import zhHansParams from './locales/zh-Hans/params.json';
 import zhHansProjects from './locales/zh-Hans/projects.json';
 import zhHansQuick from './locales/zh-Hans/quick.json';
 import zhHansScript from './locales/zh-Hans/script.json';
+import zhHansSettings from './locales/zh-Hans/settings.json';
 import zhHansSetup from './locales/zh-Hans/setup.json';
 import zhHansShell from './locales/zh-Hans/shell.json';
 import zhHansVoiceStudio from './locales/zh-Hans/voiceStudio.json';
@@ -84,6 +88,7 @@ export const resources = {
       projects: jaProjects,
       quick: jaQuick,
       script: jaScript,
+      settings: jaSettings,
       setup: jaSetup,
       shell: jaShell,
       voiceStudio: jaVoiceStudio,
@@ -104,6 +109,7 @@ export const resources = {
       projects: enProjects,
       quick: enQuick,
       script: enScript,
+      settings: enSettings,
       setup: enSetup,
       shell: enShell,
       voiceStudio: enVoiceStudio,
@@ -124,6 +130,7 @@ export const resources = {
       projects: zhHansProjects,
       quick: zhHansQuick,
       script: zhHansScript,
+      settings: zhHansSettings,
       setup: zhHansSetup,
       shell: zhHansShell,
       voiceStudio: zhHansVoiceStudio,
@@ -144,6 +151,7 @@ export const resources = {
       projects: deProjects,
       quick: deQuick,
       script: deScript,
+      settings: deSettings,
       setup: deSetup,
       shell: deShell,
       voiceStudio: deVoiceStudio,

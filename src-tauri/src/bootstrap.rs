@@ -236,6 +236,23 @@ impl Marker {
     }
 }
 
+/// The setup marker as last written, complete or not.
+pub fn read_marker(data: &DataPaths) -> Option<Marker> {
+    Marker::read(data)
+}
+
+/// Make the next setup run re-check what a repair can fix: the locked dependencies, the
+/// model files (hash-verified, missing or damaged ones downloaded again) and the
+/// self-check. Python, the venv and torch stay unless they are broken.
+pub fn request_repair(data: &DataPaths) -> Result<(), AppError> {
+    let mut marker = Marker::read(data).unwrap_or_default();
+    marker.schema = MARKER_SCHEMA;
+    marker.deps_hash = None;
+    marker.models_hash = None;
+    marker.verified_at = None;
+    marker.save(data)
+}
+
 /// The marker when setup is complete for this build and device choice; `None` means
 /// the wizard must run (again).
 pub fn completed_marker(layout: &Layout, data: &DataPaths, choice: DeviceChoice) -> Option<Marker> {

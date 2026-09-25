@@ -23,3 +23,9 @@ html:lang(zh-Hans) {
 body {
   @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100;
 }
+
+/* Keyboard focus is always visible, in one style (accessibility basics, Session 9). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-sky-500);
+  outline-offset: 2px;
+}

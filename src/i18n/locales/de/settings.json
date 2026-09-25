@@ -1,0 +1,194 @@
+{
+  "title": "Einstellungen",
+  "tabs": {
+    "general": "Allgemein",
+    "storage": "Speicherort",
+    "engine": "Modell & Gerät",
+    "output": "Erzeugung & Ausgabe",
+    "logs": "Protokolle",
+    "about": "Info"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "close": "Schließen"
+  },
+  "general": {
+    "language": "Sprache"
+  },
+  "updates": {
+    "title": "Updates",
+    "hint": "Prüft GitHub Releases auf eine neuere Version und weist Sie darauf hin. Es wird nie etwas automatisch installiert.",
+    "current": "Aktuelle Version: {{version}}",
+    "auto": "Beim Start nach einer neuen Version suchen",
+    "checkNow": "Jetzt prüfen",
+    "checking": "Wird geprüft…",
+    "available": "Version {{version}} ist verfügbar.",
+    "upToDate": "Sie verwenden die neueste Version.",
+    "open": "Release-Seite öffnen",
+    "checkedAt": "Zuletzt geprüft: {{time}}"
+  },
+  "apiServer": {
+    "title": "API-Server",
+    "hint": "Stellt anderen Apps OpenAI- und VOICEVOX-kompatible APIs bereit.",
+    "running": "Läuft ({{url}})",
+    "stopped": "Gestoppt",
+    "open": "Bereich API-Server öffnen"
+  },
+  "shortcuts": {
+    "title": "Tastenkürzel",
+    "ctrl": "Strg",
+    "cmd": "⌘",
+    "enter": "Eingabe",
+    "screens": "Bereich wechseln (in der Reihenfolge der Seitenleiste)",
+    "settings": "Einstellungen öffnen",
+    "generate": "Erzeugen (Schnellgenerierung, eine Skriptzeile)"
+  },
+  "storage": {
+    "title": "Speicherordner",
+    "hint": "Alles, was die App speichert – Modelle, Laufzeitumgebung, Stimmen, Verlauf, Projekte –, liegt in diesem Ordner.",
+    "open": {
+      "data_root": "Speicherordner öffnen",
+      "models": "Modelle",
+      "projects": "Projekte",
+      "exports": "Exporte",
+      "logs": "Protokolle"
+    }
+  },
+  "move": {
+    "title": "Speicherordner verschieben",
+    "hint": "Kopiert die Daten in einen anderen Ordner oder auf ein anderes Laufwerk, prüft die Kopie und wechselt dann dorthin. Der alte Ordner bleibt, bis Sie ihn löschen.",
+    "choose": "Neuen Ort wählen…",
+    "pickTitle": "Neuen Speicherordner wählen (einen leeren Ordner)",
+    "from": "Von",
+    "to": "Nach",
+    "required": "Benötigter Platz",
+    "free": "Freier Platz",
+    "proposed": "Der gewählte Ordner ist nicht leer, daher wird darin ein neuer Ordner angelegt.",
+    "notes": {
+      "stop": "Während des Verschiebens ist die App nicht nutzbar. Laufende und wartende Aufträge werden abgebrochen.",
+      "caches": "Der Download-Cache (uv) und Bytecode werden nicht kopiert; sie werden bei Bedarf neu erstellt.",
+      "keep": "Die App wechselt erst, nachdem die Kopie geprüft wurde. Der alte Ordner bleibt erhalten und kann später gelöscht werden."
+    },
+    "queueBusy": "Es laufen oder warten Erzeugungen. Das Verschieben bricht sie ab.",
+    "start": "Verschieben starten",
+    "screenTitle": "Speicherordner wird verschoben",
+    "phases": {
+      "idle": "Wird vorbereitet…",
+      "stopping": "Engine wird angehalten…",
+      "scanning": "Zu kopierende Dateien werden ermittelt…",
+      "copying": "Wird kopiert…",
+      "verifying": "Kopie wird geprüft…",
+      "switching": "Wechsel zum neuen Ordner…",
+      "starting": "Start aus dem neuen Ordner…",
+      "done": "Verschoben.",
+      "failed": "Das Verschieben ist fehlgeschlagen.",
+      "cancelled": "Das Verschieben wurde abgebrochen."
+    },
+    "bytes": "{{done}} von {{total}} ({{percent}}) · {{files}} von {{totalFiles}} Dateien",
+    "keepOpen": "Lassen Sie die App geöffnet, bis das Verschieben abgeschlossen ist.",
+    "cancel": "Abbrechen",
+    "result": {
+      "done": "Der Speicherordner wurde verschoben.",
+      "failed": "Der Speicherordner konnte nicht verschoben werden. Die App läuft mit dem alten Ordner.",
+      "cancelled": "Das Verschieben wurde abgebrochen. Die App verwendet weiterhin den alten Ordner.",
+      "oldRoot": "Der alte Ordner ist noch vorhanden: {{path}}",
+      "delete": "Alten Ordner löschen…",
+      "keep": "Behalten",
+      "deleteConfirm": "{{path}} wird endgültig gelöscht. Das lässt sich nicht rückgängig machen.",
+      "deleteNow": "Löschen"
+    }
+  },
+  "model": {
+    "title": "Modell",
+    "hint": "Wird beim Start geladen und bleibt im Speicher.",
+    "size": "etwa {{size}}",
+    "installed": "Installiert",
+    "missing": "Dateien fehlen",
+    "runtime": "Läuft auf {{device}} · {{precision}}"
+  },
+  "runtime": {
+    "title": "Gerät und Genauigkeit (für Fortgeschrittene)",
+    "hint": "Überschreibt das bei der Einrichtung gewählte Gerät und die Genauigkeit. Beim Anwenden startet die Engine neu und lädt das Modell erneut.",
+    "installed": "Laut Einrichtung: {{device}} · {{precision}}",
+    "device": "Gerät",
+    "precision": "Genauigkeit",
+    "precisions": {
+      "fp32": "fp32 (Standard)",
+      "bf16": "bf16 (weniger Speicher)"
+    },
+    "apply": "Anwenden und neu starten",
+    "reset": "Auf die Einrichtung zurücksetzen",
+    "restartNote": "Während des Neustarts kann nichts erzeugt werden. Laufende und wartende Aufträge werden abgebrochen.",
+    "cpuOnly": "Diese Installation wurde für die CPU eingerichtet, daher kann die GPU nicht genutzt werden."
+  },
+  "monitor": {
+    "title": "GPU und Speicher",
+    "hint": "Wird alle 2 Sekunden aktualisiert.",
+    "capability": "Compute Capability {{value}}",
+    "vram": "GPU-Speicher (alle Apps)",
+    "ram": "Arbeitsspeicher (alle Apps)",
+    "torch": "GPU-Speicher dieser App",
+    "torchValue": "{{allocated}} belegt · {{reserved}} reserviert",
+    "process": "Arbeitsspeicher dieser App",
+    "versions": "Bibliotheken",
+    "clear": "Ungenutzten GPU-Speicher freigeben",
+    "cleared": "Freigegeben.",
+    "usage": "{{used}} von {{total}}"
+  },
+  "repair": {
+    "title": "Installation reparieren",
+    "hint": "Prüft Abhängigkeiten und Modelldateien und installiert Fehlendes oder Beschädigtes neu. Verwenden Sie dies, wenn die App nicht startet oder das Modell nicht geladen werden kann.",
+    "button": "Installation reparieren…",
+    "confirm": "Die Engine wird angehalten und die Einrichtung führt die Reparatur aus. Die Prüfung der Modelldateien dauert einige Minuten; beschädigte Dateien werden erneut heruntergeladen (dafür ist eine Internetverbindung nötig).",
+    "start": "Reparatur starten"
+  },
+  "watermark": {
+    "title": "Wasserzeichen",
+    "hint": "Bettet ein unhörbares Wasserzeichen (SilentCipher) in erzeugtes Audio ein, damit es später als KI-erzeugt erkannt werden kann.",
+    "enabled": "Erzeugtes Audio mit Wasserzeichen versehen",
+    "offNote": "Audio wird ohne Wasserzeichen erzeugt. Wenn Sie es veröffentlichen, kennzeichnen Sie es deutlich als KI-erzeugt."
+  },
+  "output": {
+    "title": "Export-Standardwerte",
+    "hint": "Format und Nachbearbeitung für Speichern und Export – dieselben Einstellungen wie in den einzelnen Bereichen."
+  },
+  "logs": {
+    "title": "Protokolle",
+    "hint": "Hilfreich, wenn etwas schiefgeht; fügen Sie sie bitte einer Problemmeldung bei.",
+    "file": "Datei",
+    "names": {
+      "sidecar": "Engine (sidecar.log)",
+      "setup": "Einrichtung (setup.log)"
+    },
+    "refresh": "Aktualisieren",
+    "openFolder": "Protokollordner öffnen",
+    "meta": "{{path}} ({{size}})",
+    "truncated": "Es wird nur das Ende angezeigt.",
+    "empty": "Noch kein Protokoll.",
+    "show": "Protokoll anzeigen"
+  },
+  "about": {
+    "version": "Version {{version}}",
+    "license": "Diese App wird unter der MIT-Lizenz veröffentlicht. Sie ist nicht die offizielle Irodori-TTS-App.",
+    "components": "Modelle und wichtige Komponenten",
+    "componentsHint": "Die Lizenzen der Modelle und der Software, die diese App verwendet.",
+    "name": "Name",
+    "role": "Zweck",
+    "licenseColumn": "Lizenz",
+    "versionColumn": "Version",
+    "roles": {
+      "model": "Sprachmodell",
+      "codec": "Audio-Codec",
+      "code": "Inferenzcode",
+      "watermark": "Wasserzeichen",
+      "app": "App-Grundlage"
+    },
+    "python": "Python-Pakete der Laufzeitumgebung",
+    "pythonHint": "Die in der Laufzeitumgebung der Engine installierten Pakete und die Lizenzen laut ihren Metadaten.",
+    "unknown": "Nicht angegeben",
+    "loading": "Wird geladen…",
+    "terms": "Nutzungsbedingungen",
+    "acceptedAt": "Zugestimmt am {{date}}",
+    "showTerms": "Nutzungsbedingungen anzeigen"
+  }
+}

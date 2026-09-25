@@ -46,6 +46,8 @@ class FakeBackend:
         self.encoded: list[Path] = []
         # Set `blocking` to make synthesize wait for `release` (cancel tests).
         self.blocking = False
+        # Raised by the next synthesize calls (device failures, full disks, ...).
+        self.fail_synthesis: Exception | None = None
         self.release = threading.Event()
         self.started = threading.Event()
         self.load_gate = threading.Event()
@@ -91,6 +93,8 @@ class FakeBackend:
     def synthesize(self, request: BackendRequest, hooks: BackendHooks) -> BackendResult:
         self.requests.append(request)
         self.started.set()
+        if self.fail_synthesis is not None:
+            raise self.fail_synthesis
         while self.blocking and not self.release.is_set():
             if hooks.is_cancelled():
                 raise SynthesisCancelled()

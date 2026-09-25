@@ -81,6 +81,14 @@
     "preset_not_found": "The preset was not found.",
     "project_invalid": "The project file could not be read. Check that it is an .iroproj file saved by irodori-studio.",
     "api_key_required": "Set an API key to open the API server to the local network.",
-    "api_port_in_use": "This port is not available (another app is using it, or the system reserves it). Choose a different port."
+    "api_port_in_use": "This port is not available (another app is using it, or the system reserves it). Choose a different port.",
+    "data_root_not_empty": "The chosen folder is not empty. Choose an empty folder or create a new one.",
+    "data_move_failed": "The storage folder could not be moved. The old folder is still in use.",
+    "update_check_failed": "Could not check for a new version.",
+    "runtime_unsupported": "This device and precision cannot be used with this installation.",
+    "open_failed": "Could not open the folder or page.",
+    "busy": "Something else is in progress. Try again when it has finished.",
+    "disk_full": "The disk is full, so the file could not be saved. Free up space and try again.",
+    "device_lost": "The GPU reported an error and the engine stopped. Restart the engine."
   }
 }

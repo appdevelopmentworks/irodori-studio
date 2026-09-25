@@ -6,7 +6,7 @@ Two listeners (D21):
 - **Internal API** — `http://127.0.0.1:<random>`; used only by the app UI. No auth (localhost, random port).
 - **External API** — optional; `<bind>:<port>` (default `127.0.0.1:50221`); OpenAI- and VOICEVOX-compatible routes for other apps. An API key (`Authorization: Bearer` or `X-API-Key`) is required for a LAN bind and optional on this computer.
 
-Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4); the user dictionary, reading preview and narrations (S5); scripts (S6); output post-processing, the library, presets and projects (S7); the API server with its OpenAI- and VOICEVOX-compatible routes (S8).
+Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4); the user dictionary, reading preview and narrations (S5); scripts (S6); output post-processing, the library, presets and projects (S7); the API server with its OpenAI- and VOICEVOX-compatible routes (S8); memory, cache clearing, package licenses, `disk_full` and `device_lost` (S9).
 
 ---
 
@@ -14,6 +14,7 @@ Status of this document: **v0 draft**. Shapes below are the intended contract; r
 
 - JSON, UTF-8, `snake_case`.
 - Errors: HTTP 4xx/5xx with body `{"code": "string", "message": "string", "detail": {}}`. `code` values are stable and listed in `sidecar/app/errors.py`; the frontend translates them (`message` is a developer hint, never UI copy). Status classes: 400 unsupported or missing inputs, 404 unknown ids, 413 too long / too large, 415 unreadable audio, 422 validation (`invalid_request` for malformed bodies with `detail.errors`, `invalid_params` with `detail {param, reason}`, `text_empty`, `text_too_long` with `detail {field, max_chars}`), 500 `internal_error`.
+- `disk_full` when a write fails for lack of space (with the failing call's usual status, or in a job's `failed` event); `device_lost` when the GPU fails mid-generation — the engine then reports `state: "error"` with that code (and `/system` the issue) until the sidecar restarts, which the app offers.
 - Long-running operations return `202 {"job_id": "...", "queue_position": 0}`; follow with SSE.
 - IDs are ULIDs (sortable). Timestamps are ISO 8601 UTC (`2026-09-24T02:26:57.752Z`).
 - Seeds are integers in `0 … 2^53−1` so they survive JavaScript numbers.
@@ -89,8 +90,9 @@ type Timings = Record<string, number>;
 | Method | Path | Notes |
 | --- | --- | --- |
 | GET | `/health` | `{status: "ok", engine: EngineStatus}`; answers while the model loads |
-| GET | `/system` | `SystemInfo` below (S1) |
-| POST | `/system/cache/clear` | free accelerator cache |
+| GET | `/system` | `SystemInfo` below (S1; `memory` S9) |
+| POST | `/system/cache/clear` | `204`: hand torch's cached, unused accelerator memory back (the model stays loaded) |
+| GET | `/system/licenses` | `PackageLicense[]`: every Python package of the runtime, sorted by name, with the license its metadata names (`License-Expression`, a short `License`, the trove classifiers, or the first line of a license text; else `null`) |
 
 CORS: only the app's own WebView origins may read the internal API (`tauri://localhost`, `http(s)://tauri.localhost`, plus the dev server origin in debug builds), passed by Rust as `IRODORI_ALLOWED_ORIGINS`.
 
@@ -127,8 +129,19 @@ type SystemInfo = {
   queue_length: number;                // running + queued jobs
   watermark_available: boolean | null; // SilentCipher loaded; null until the model is ready
   ffmpeg_available: boolean;           // other audio formats can be read (clips) and saved
-  issues: ("torch_unavailable" | "cuda_unavailable" | "mps_unavailable" | "watermark_unavailable" | "model_load_failed")[];
+  memory: MemoryInfo;
+  issues: ("torch_unavailable" | "cuda_unavailable" | "mps_unavailable" | "watermark_unavailable" | "model_load_failed" | "device_lost")[];
 };
+
+// The Settings monitor, MiB (null when unknown). `device.memory_used_mb` is the whole device.
+type MemoryInfo = {
+  process_mb: number | null;           // the sidecar's resident memory
+  system_total_mb: number | null; system_used_mb: number | null;
+  accelerator_allocated_mb: number | null;  // what torch's tensors hold (CUDA / MPS)
+  accelerator_reserved_mb: number | null;   // what torch's allocator keeps
+};
+
+type PackageLicense = { name: string; version: string; license: string | null };
 ```
 
 The first `/system` call imports torch (seconds); later calls are fast.

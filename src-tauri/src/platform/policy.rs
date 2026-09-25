@@ -206,6 +206,19 @@ pub fn windows_plan(gpus: &[NvidiaGpu]) -> DevicePlan {
     }
 }
 
+/// Whether the GPU setup chose (by index, else the one `windows_plan` picks) runs bf16;
+/// Settings offers bf16 only then (D9).
+pub fn bf16_supported(gpus: &[NvidiaGpu], index: Option<u32>) -> bool {
+    let chosen = match index {
+        Some(index) => gpus.iter().find(|g| g.index == index),
+        None => gpus
+            .iter()
+            .filter(|g| g.capability() >= MIN_CUDA_CAPABILITY)
+            .max_by_key(|g| g.vram_mib),
+    };
+    chosen.is_some_and(|g| g.capability() >= BF16_MIN_CAPABILITY)
+}
+
 /// macOS policy (D8, D9): Apple Silicon → MPS fp32; M1 warns; Intel is blocked.
 pub fn mac_plan(apple: &AppleSilicon) -> (DevicePlan, Option<Blocker>) {
     if !apple.arm64 {
@@ -278,6 +291,16 @@ mod tests {
             vram_mib,
             driver_version: driver.to_string(),
         }
+    }
+
+    #[test]
+    fn bf16_follows_the_chosen_gpu() {
+        let gpus = [gpu(0, "7.5", 8192, "580.1"), gpu(1, "8.6", 12288, "580.1")];
+        assert!(bf16_supported(&gpus, None));
+        assert!(!bf16_supported(&gpus, Some(0)));
+        assert!(bf16_supported(&gpus, Some(1)));
+        assert!(!bf16_supported(&[], None));
+        assert!(!bf16_supported(&[gpu(0, "7.0", 16384, "580.1")], None));
     }
 
     #[test]

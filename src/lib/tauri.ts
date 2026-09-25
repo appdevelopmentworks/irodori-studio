@@ -10,9 +10,17 @@ import type {
   BootState,
   DataRootInfo,
   DeviceChoice,
+  FolderKind,
+  LogName,
+  LogTail,
+  MoveProgress,
+  MoveTarget,
   ProbeReport,
+  RuntimeOverride,
+  SettingsInfo,
   SetupProgress,
   StatusPayload,
+  UpdateState,
 } from './types';
 
 export { isTauri };
@@ -41,6 +49,56 @@ export const getSetupProgress = (): Promise<SetupProgress> =>
 export const getSidecarPort = (): Promise<number> => invoke<number>('get_sidecar_port');
 
 export const retryStartup = (): Promise<void> => invoke('retry_startup');
+
+// Settings (Session 9).
+
+export const getSettingsInfo = (): Promise<SettingsInfo> =>
+  invoke<SettingsInfo>('get_settings_info');
+
+/** Save a device / precision override (null: as set up); the sidecar restarts. */
+export const setRuntime = (runtime: RuntimeOverride | null): Promise<void> =>
+  invoke('set_runtime', { runtime });
+
+export const restartSidecar = (): Promise<void> => invoke('restart_sidecar');
+
+/** Stop the app and re-run setup for dependencies, model files and the self-check. */
+export const repairInstallation = (): Promise<void> => invoke('repair_installation');
+
+export const openFolder = (folder: FolderKind): Promise<void> => invoke('open_folder', { folder });
+
+export const readLog = (name: LogName): Promise<LogTail> => invoke<LogTail>('read_log', { name });
+
+export const getUpdateState = (): Promise<UpdateState> => invoke<UpdateState>('get_update_state');
+
+export const checkForUpdates = (): Promise<UpdateState> =>
+  invoke<UpdateState>('check_for_updates');
+
+export const setUpdateCheck = (enabled: boolean): Promise<void> =>
+  invoke('set_update_check', { enabled });
+
+export const skipUpdate = (version: string): Promise<void> => invoke('skip_update', { version });
+
+export const openReleasePage = (): Promise<void> => invoke('open_release_page');
+
+export const inspectMoveTarget = (path: string): Promise<MoveTarget> =>
+  invoke<MoveTarget>('inspect_move_target', { path });
+
+export const startDataMove = (path: string): Promise<void> => invoke('start_data_move', { path });
+
+export const cancelDataMove = (): Promise<void> => invoke('cancel_data_move');
+
+export const getMoveProgress = (): Promise<MoveProgress> =>
+  invoke<MoveProgress>('get_move_progress');
+
+export const deleteOldDataRoot = (): Promise<void> => invoke('delete_old_data_root');
+
+export const dismissMoveResult = (): Promise<void> => invoke('dismiss_move_result');
+
+export const onUpdate = (handler: (state: UpdateState) => void): Promise<UnlistenFn> =>
+  listen<UpdateState>('app://update', (event) => handler(event.payload));
+
+export const onMoveProgress = (handler: (progress: MoveProgress) => void): Promise<UnlistenFn> =>
+  listen<MoveProgress>('app://move', (event) => handler(event.payload));
 
 export const onStatus = (handler: (payload: StatusPayload) => void): Promise<UnlistenFn> =>
   listen<StatusPayload>('app://status', (event) => handler(event.payload));

@@ -7,22 +7,41 @@ import { LibraryScreen } from '@/features/library/LibraryScreen';
 import { NarrationScreen } from '@/features/narration/NarrationScreen';
 import { QuickScreen } from '@/features/quick/QuickScreen';
 import { ScriptScreen } from '@/features/script/ScriptScreen';
+import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { VoiceStudioScreen } from '@/features/voice-studio/VoiceStudioScreen';
 import { getSidecarPort } from '@/lib/tauri';
 import { useAppStore } from '@/store/app';
-import { useNavStore } from '@/store/nav';
+import { SCREENS, useNavStore } from '@/store/nav';
 import { useSidecarStore } from '@/store/sidecar';
 
-import { ComingSoon } from './ComingSoon';
+import { EngineBanner } from './EngineBanner';
 import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
+import { UpdateBanner } from './UpdateBanner';
 
 const POLL_MS = 2000;
+
+/** Ctrl/Cmd + 1–7 opens a screen, Ctrl/Cmd + , opens Settings (listed in Settings). */
+function useScreenShortcuts() {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+      const index = event.key >= '1' && event.key <= '9' ? Number(event.key) - 1 : -1;
+      const target = event.key === ',' ? 'settings' : SCREENS[index];
+      if (!target) return;
+      event.preventDefault();
+      useNavStore.getState().setScreen(target);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+}
 
 /** The app once the model is ready: sidebar navigation, the active screen, status bar. */
 export function AppShell() {
   const screen = useNavStore((s) => s.screen);
   const setPort = useAppStore((s) => s.setPort);
+  useScreenShortcuts();
 
   useEffect(() => {
     let active = true;
@@ -45,6 +64,8 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <UpdateBanner />
+      <EngineBanner />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
         <main className="min-w-0 flex-1 overflow-y-auto">
@@ -61,7 +82,7 @@ export function AppShell() {
           ) : screen === 'apiServer' ? (
             <ApiServerScreen />
           ) : (
-            <ComingSoon screen={screen} />
+            <SettingsScreen />
           )}
         </main>
       </div>

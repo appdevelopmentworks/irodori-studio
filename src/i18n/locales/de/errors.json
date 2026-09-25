@@ -81,6 +81,14 @@
     "preset_not_found": "Die Voreinstellung wurde nicht gefunden.",
     "project_invalid": "Die Projektdatei konnte nicht gelesen werden. Prüfen Sie, ob es eine von irodori-studio gespeicherte .iroproj-Datei ist.",
     "api_key_required": "Legen Sie einen API-Schlüssel fest, um den API-Server im lokalen Netzwerk freizugeben.",
-    "api_port_in_use": "Dieser Port ist nicht verfügbar (eine andere App nutzt ihn oder das System reserviert ihn). Wählen Sie einen anderen Port."
+    "api_port_in_use": "Dieser Port ist nicht verfügbar (eine andere App nutzt ihn oder das System reserviert ihn). Wählen Sie einen anderen Port.",
+    "data_root_not_empty": "Der gewählte Ordner ist nicht leer. Wählen Sie einen leeren Ordner oder legen Sie einen neuen an.",
+    "data_move_failed": "Der Speicherordner konnte nicht verschoben werden. Der alte Ordner wird weiter verwendet.",
+    "update_check_failed": "Es konnte nicht nach einer neuen Version gesucht werden.",
+    "runtime_unsupported": "Diese Kombination aus Gerät und Genauigkeit ist mit dieser Installation nicht nutzbar.",
+    "open_failed": "Der Ordner oder die Seite konnte nicht geöffnet werden.",
+    "busy": "Es läuft gerade ein anderer Vorgang. Versuchen Sie es erneut, wenn er abgeschlossen ist.",
+    "disk_full": "Der Datenträger ist voll, daher konnte nicht gespeichert werden. Schaffen Sie Platz und versuchen Sie es erneut.",
+    "device_lost": "Die GPU hat einen Fehler gemeldet und die Engine wurde angehalten. Starten Sie die Engine neu."
   }
 }

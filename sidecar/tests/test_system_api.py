@@ -51,3 +51,27 @@ def test_cors_allows_only_configured_origins() -> None:
     assert allowed.headers.get("access-control-allow-origin") == "http://tauri.localhost"
     foreign = client.get("/health", headers={"Origin": "https://example.com"})
     assert "access-control-allow-origin" not in foreign.headers
+
+
+def test_system_reports_memory_and_clears_the_cache() -> None:
+    client = _client()
+    memory = client.get("/system").json()["memory"]
+    assert set(memory) == {
+        "process_mb",
+        "system_total_mb",
+        "system_used_mb",
+        "accelerator_allocated_mb",
+        "accelerator_reserved_mb",
+    }
+    # psutil comes with the runtime's dependencies.
+    assert memory["process_mb"] > 0 and memory["system_total_mb"] >= memory["system_used_mb"]
+    assert client.post("/system/cache/clear").status_code == 204
+
+
+def test_licenses_list_the_runtime_packages() -> None:
+    packages = _client().get("/system/licenses").json()
+    by_name = {package["name"].lower(): package for package in packages}
+    assert by_name["fastapi"]["license"] == "MIT"
+    assert all(package["version"] for package in packages)
+    names = [package["name"].lower() for package in packages]
+    assert names == sorted(names) and len(names) == len(set(names))

@@ -17,6 +17,7 @@ from typing import Literal
 
 from app.audio import post as post_processing
 from app.audio.post import Post
+from app.errors import save_error_code
 
 AudioFormat = Literal["wav", "mp3", "m4a", "flac", "opus"]
 
@@ -81,7 +82,7 @@ def export_audio(
             _encode(source, partial, fmt, ffmpeg, post or Post())
         os.replace(partial, dest)
     except OSError as exc:
-        raise ExportError("save_failed", str(exc)) from exc
+        raise ExportError(save_error_code(exc).value, str(exc)) from exc
     except post_processing.PostError as exc:
         raise ExportError(exc.code, str(exc)) from exc
     finally:

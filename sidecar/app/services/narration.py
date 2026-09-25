@@ -23,7 +23,7 @@ from app.audio.io import read_frames
 from app.audio.post import Post, post_of, retimed
 from app.engine.base import BackendError, SynthesisCancelled
 from app.engine.host import EngineHost
-from app.errors import ApiError, ErrorCode
+from app.errors import ApiError, ErrorCode, job_failure_code, save_error_code
 from app.schemas import (
     AssembledNarration,
     ChunkPatch,
@@ -386,7 +386,7 @@ class NarrationService:
             return
         except Exception as exc:
             log.exception("narration job %s failed", job.id)
-            job.mark_failed(ErrorCode.SYNTHESIS_FAILED.value, f"{type(exc).__name__}: {exc}")
+            job.mark_failed(job_failure_code(exc).value, f"{type(exc).__name__}: {exc}")
             return
         job.mark_completed({"narration_id": payload.narration_id, "rendered": rendered})
 
@@ -462,7 +462,7 @@ class NarrationService:
             try:
                 path.write_bytes(text.encode("utf-8"))
             except OSError as exc:
-                raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
+                raise ApiError(save_error_code(exc), str(exc)) from exc
             files.append(ExportedFile(path=str(path), bytes=path.stat().st_size))
         if body.per_chunk:
             pairs = [

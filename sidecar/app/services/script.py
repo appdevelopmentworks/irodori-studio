@@ -23,7 +23,7 @@ from app.audio.io import read_frames
 from app.audio.post import Post, post_of, retimed
 from app.engine.base import BackendError, SynthesisCancelled
 from app.engine.host import EngineHost
-from app.errors import ApiError, ErrorCode
+from app.errors import ApiError, ErrorCode, job_failure_code, save_error_code
 from app.schemas import (
     AssembledScript,
     ExportedFile,
@@ -456,7 +456,7 @@ class ScriptService:
             return
         except Exception as exc:
             log.exception("script job %s failed", job.id)
-            job.mark_failed(ErrorCode.SYNTHESIS_FAILED.value, f"{type(exc).__name__}: {exc}")
+            job.mark_failed(job_failure_code(exc).value, f"{type(exc).__name__}: {exc}")
             return
         job.mark_completed({"script_id": payload.script_id, "rendered": rendered})
 
@@ -548,7 +548,7 @@ class ScriptService:
                 try:
                     subtitle.write_bytes(text.encode("utf-8"))
                 except OSError as exc:
-                    raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
+                    raise ApiError(save_error_code(exc), str(exc)) from exc
                 files.append(ExportedFile(path=str(subtitle), bytes=subtitle.stat().st_size))
         return ScriptExported(files=files)
 
@@ -566,7 +566,7 @@ class ScriptService:
             # With a BOM, Excel opens UTF-8 correctly; this app reads either.
             dest.write_bytes((_BOM + table).encode("utf-8"))
         except OSError as exc:
-            raise ApiError(ErrorCode.SAVE_FAILED, str(exc)) from exc
+            raise ApiError(save_error_code(exc), str(exc)) from exc
         return ExportedFile(path=str(dest), bytes=dest.stat().st_size)
 
     def preview_names(self, script_id: str, template: str) -> FileNames:

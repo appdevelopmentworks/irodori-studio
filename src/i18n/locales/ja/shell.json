@@ -9,10 +9,6 @@
     "apiServer": "API サーバー",
     "settings": "設定"
   },
-  "comingSoon": {
-    "title": "この画面は準備中です",
-    "body": "今後のバージョンで追加されます。"
-  },
   "status": {
     "engine": {
       "idle": "モデル未読み込み",
@@ -27,5 +23,14 @@
     "watermarkOff": "透かし: オフ",
     "cpuMode": "CPU モード（生成に時間がかかります）",
     "disconnected": "音声合成エンジンに接続できません"
+  },
+  "update": {
+    "available": "新しいバージョン {{version}} が公開されています。",
+    "open": "リリースページを開く",
+    "skip": "このバージョンは通知しない",
+    "close": "閉じる"
+  },
+  "engine": {
+    "restart": "エンジンを再起動"
   }
 }

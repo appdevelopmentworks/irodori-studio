@@ -16,10 +16,10 @@
     "podcast": "-16 LUFS（网络）",
     "broadcast": "-23 LUFS（广播）"
   },
-  "tempo": "语速（后期处理・倍）",
+  "tempo": "语速（后期处理，倍）",
   "gain": "音量（dB）",
   "summary": {
-    "separator": "・",
+    "separator": " · ",
     "rate": "{{value}} kHz",
     "loudness": "{{value}} LUFS",
     "tempo": "语速 {{value}} 倍",

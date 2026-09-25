@@ -9,6 +9,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
+use crate::platform::{Device, Precision};
+
 /// Bump when the first-run terms change; users must accept the new version (D13).
 pub const TERMS_VERSION: u32 = 1;
 
@@ -31,13 +33,40 @@ pub struct TermsAcceptance {
     pub accepted_at: u64,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// Device and precision chosen in Settings over the setup plan (D9), applied when the
+/// sidecar starts. What is possible depends on the torch that setup installed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RuntimeOverride {
+    pub device: Device,
+    pub precision: Precision,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
     pub locale: Option<String>,
     pub terms: Option<TermsAcceptance>,
     pub data_root: Option<PathBuf>,
     pub device: DeviceChoice,
+    /// Look for a newer GitHub Release at startup (D15).
+    pub update_check: bool,
+    /// A newer version the user asked not to be told about again.
+    pub skipped_version: Option<String>,
+    pub runtime: Option<RuntimeOverride>,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            locale: None,
+            terms: None,
+            data_root: None,
+            device: DeviceChoice::default(),
+            update_check: true,
+            skipped_version: None,
+            runtime: None,
+        }
+    }
 }
 
 impl Settings {
@@ -117,6 +146,12 @@ mod tests {
             }),
             data_root: Some(dir.join("data")),
             device: DeviceChoice::Cpu,
+            update_check: false,
+            skipped_version: Some("0.2.0".into()),
+            runtime: Some(RuntimeOverride {
+                device: Device::Cpu,
+                precision: Precision::Fp32,
+            }),
         };
         save(&path, &settings).unwrap();
         assert_eq!(load(&path), settings);
@@ -155,6 +190,18 @@ mod tests {
         let settings = load(&path);
         assert_eq!(settings.locale, None);
         assert!(!settings.terms_accepted());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn settings_from_older_versions_keep_the_update_check_on() {
+        let dir = temp_dir("older");
+        let path = dir.join("settings.json");
+        fs::write(&path, r#"{"locale":"ja","device":"auto"}"#).unwrap();
+        let settings = load(&path);
+        assert!(settings.update_check);
+        assert_eq!(settings.runtime, None);
+        assert_eq!(settings.skipped_version, None);
         let _ = fs::remove_dir_all(&dir);
     }
 }

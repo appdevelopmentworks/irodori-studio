@@ -18,6 +18,7 @@ from app.provision.download import (
     FileSpec,
     RepoSpec,
     fetch_resumable,
+    is_intact,
     load_repo_specs,
     make_bar_class,
     part_path,
@@ -210,6 +211,25 @@ def test_fetch_verifies_git_blob_hashes(tmp_path: Path) -> None:
 
 
 # ----- progress -----------------------------------------------------------------------
+
+
+def test_complete_files_are_checked_against_the_hub_hash(tmp_path: Path) -> None:
+    data = b"model weights"
+    dest = tmp_path / "model.safetensors"
+    dest.write_bytes(data)
+    spec = FileSpec(
+        repo_id="o/m",
+        path="model.safetensors",
+        size=len(data),
+        commit="c",
+        download_revision="c",
+        pinned=True,
+        expected=("sha256", hashlib.sha256(data).hexdigest()),
+    )
+    assert is_intact(dest, spec)
+    dest.write_bytes(b"model weightz")
+    assert not is_intact(dest, spec)
+    assert is_intact(dest, FileSpec(**{**spec.__dict__, "expected": None}))
 
 
 def test_byte_progress_takes_the_best_bar_and_caps_at_file_size() -> None:

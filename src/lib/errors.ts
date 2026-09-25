@@ -31,6 +31,12 @@ const KNOWN_CODES = new Set<string>([
   'sidecar_not_ready',
   'model_load_failed',
   'model_load_timeout',
+  'data_root_not_empty',
+  'data_move_failed',
+  'update_check_failed',
+  'runtime_unsupported',
+  'open_failed',
+  'busy',
   // Sidecar
   'internal_error',
   'torch_unavailable',
@@ -87,6 +93,8 @@ const KNOWN_CODES = new Set<string>([
   'project_invalid',
   'api_key_required',
   'api_port_in_use',
+  'disk_full',
+  'device_lost',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

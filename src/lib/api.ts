@@ -38,6 +38,7 @@ import type {
   NarrationPatch,
   NarrationSplit,
   NarrationSummary,
+  PackageLicense,
   PostOptions,
   Preferences,
   Preset,
@@ -260,6 +261,10 @@ export function createApi(port: number) {
       send<ApiServerStatus>(`${base}/api-server/config`, json('PUT', config)),
     getApiServerStatus: () => send<ApiServerStatus>(`${base}/api-server/status`),
     getApiServerStyles: () => send<ApiStyle[]>(`${base}/api-server/styles`),
+
+    /** Hand torch's cached, unused accelerator memory back (the model stays loaded). */
+    clearAcceleratorCache: () => send<void>(`${base}/system/cache/clear`, { method: 'POST' }),
+    getLicenses: () => send<PackageLicense[]>(`${base}/system/licenses`),
 
     getPreferences: () => send<Preferences>(`${base}/preferences`),
     updatePreferences: (patch: Partial<Preferences>) =>

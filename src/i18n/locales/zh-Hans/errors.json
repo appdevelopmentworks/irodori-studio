@@ -81,6 +81,14 @@
     "preset_not_found": "找不到该预设。",
     "project_invalid": "无法读取项目文件。请确认它是由 irodori-studio 保存的 .iroproj 文件。",
     "api_key_required": "要向局域网开放 API 服务器，请先设置 API 密钥。",
-    "api_port_in_use": "无法使用此端口（可能被其他应用占用或被系统保留）。请指定其他端口。"
+    "api_port_in_use": "无法使用此端口（可能被其他应用占用或被系统保留）。请指定其他端口。",
+    "data_root_not_empty": "所选文件夹不为空。请选择空文件夹，或新建一个文件夹。",
+    "data_move_failed": "无法移动存储文件夹。原文件夹仍可继续使用。",
+    "update_check_failed": "无法检查新版本。",
+    "runtime_unsupported": "当前安装无法使用此设备与精度的组合。",
+    "open_failed": "无法打开文件夹或页面。",
+    "busy": "有其他处理正在进行。请在其完成后重试。",
+    "disk_full": "磁盘空间不足，无法保存。请释放空间后重试。",
+    "device_lost": "GPU 发生错误，引擎已停止。请重新启动引擎。"
   }
 }

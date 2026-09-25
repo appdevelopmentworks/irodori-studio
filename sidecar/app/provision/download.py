@@ -141,6 +141,15 @@ def file_digest(path: Path, kind: str, size: int) -> str:
     return digest.hexdigest()
 
 
+def is_intact(dest: Path, file: FileSpec) -> bool:
+    """A complete file still matches the Hub's hash. Checked whenever this step runs, so
+    a repair (or a setup resumed after a crash) replaces a damaged file."""
+    if file.expected is None:
+        return True
+    kind, value = file.expected
+    return file_digest(dest, kind, file.size) == value
+
+
 def fetch_resumable(
     client: httpx.Client,
     url: str,
@@ -334,8 +343,11 @@ def main(argv: list[str] | None = None) -> int:
         if file.pinned:
             dest = pinned_file(models_root, file.repo_id, file.commit, file.path)
             if dest.is_file() and dest.stat().st_size == file.size:
-                progress.skip(file.size)
-                continue
+                if is_intact(dest, file):
+                    progress.skip(file.size)
+                    continue
+                emit("damaged", repo=file.repo_id, file=file.path)
+                dest.unlink()
             part = part_path(dest)
             remaining += file.size - (part.stat().st_size if part.exists() else 0)
         else:

@@ -8,15 +8,21 @@ import i18n from '@/i18n';
 import { matchLocale } from '@/i18n/config';
 import {
   getBootState,
+  getMoveProgress,
+  getUpdateState,
   isTauri,
+  onMoveProgress,
   onSetupLog,
   onSetupProgress,
   onStatus,
+  onUpdate,
 } from '@/lib/tauri';
+import type { MoveProgress } from '@/lib/types';
 import { useAppStore } from '@/store/app';
 
 import { AppShell } from './AppShell';
 import { ErrorScreen } from './ErrorScreen';
+import { MoveScreen } from './MoveScreen';
 import { Screen, Splash } from './Screen';
 import { StartupScreen } from './StartupScreen';
 
@@ -40,15 +46,31 @@ export function AppRoot() {
       else unlisteners.push(unlisten);
     };
 
+    const onMove = (move: MoveProgress) => {
+      store.setMove(move);
+      // A finished move changed the data root: refresh the paths shown by the app.
+      if (move.phase === 'done' || move.phase === 'failed') {
+        void getBootState().then((boot) =>
+          store.patchBoot({ data_root: boot.data_root, logs_dir: boot.logs_dir }),
+        );
+      }
+    };
+
     (async () => {
       // Subscribe before reading the state so no event is missed in between.
       keep(await onStatus(store.applyStatus));
       keep(await onSetupProgress(store.setSetup));
       keep(await onSetupLog(store.appendLog));
+      keep(await onUpdate(store.setUpdate));
+      keep(await onMoveProgress(onMove));
       const state = await getBootState();
       if (disposed) return;
       await i18n.changeLanguage(state.locale ?? matchLocale(navigator.languages));
       store.setBoot(state);
+      const [update, move] = await Promise.all([getUpdateState(), getMoveProgress()]);
+      if (disposed) return;
+      store.setUpdate(update);
+      store.setMove(move);
     })().catch(() => undefined);
 
     return () => {
@@ -77,6 +99,8 @@ export function AppRoot() {
       return <StartupScreen />;
     case 'ready':
       return <AppShell />;
+    case 'moving':
+      return <MoveScreen />;
     case 'error':
       return <ErrorScreen />;
   }

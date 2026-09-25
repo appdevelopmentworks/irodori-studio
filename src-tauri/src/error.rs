@@ -32,6 +32,12 @@ pub enum ErrorCode {
     SidecarNotReady,
     ModelLoadFailed,
     ModelLoadTimeout,
+    DataRootNotEmpty,
+    DataMoveFailed,
+    UpdateCheckFailed,
+    RuntimeUnsupported,
+    OpenFailed,
+    Busy,
 }
 
 impl ErrorCode {
@@ -62,6 +68,12 @@ impl ErrorCode {
             ErrorCode::SidecarNotReady => "sidecar_not_ready",
             ErrorCode::ModelLoadFailed => "model_load_failed",
             ErrorCode::ModelLoadTimeout => "model_load_timeout",
+            ErrorCode::DataRootNotEmpty => "data_root_not_empty",
+            ErrorCode::DataMoveFailed => "data_move_failed",
+            ErrorCode::UpdateCheckFailed => "update_check_failed",
+            ErrorCode::RuntimeUnsupported => "runtime_unsupported",
+            ErrorCode::OpenFailed => "open_failed",
+            ErrorCode::Busy => "busy",
         }
     }
 }
@@ -109,7 +121,12 @@ mod tests {
 
     #[test]
     fn as_str_matches_serde() {
-        for code in [ErrorCode::UvMissing, ErrorCode::SidecarHealthTimeout] {
+        for code in [
+            ErrorCode::UvMissing,
+            ErrorCode::SidecarHealthTimeout,
+            ErrorCode::DataRootNotEmpty,
+            ErrorCode::Busy,
+        ] {
             let json = serde_json::to_value(code).unwrap();
             assert_eq!(json, code.as_str());
         }

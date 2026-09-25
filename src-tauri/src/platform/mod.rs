@@ -4,9 +4,11 @@
 
 use std::io;
 use std::path::Path;
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 #[cfg(target_os = "macos")]
 mod macos;
@@ -78,6 +80,145 @@ pub fn free_space(path: &Path) -> io::Result<u64> {
     {
         let _ = existing;
         Err(io::Error::new(io::ErrorKind::Unsupported, "free space"))
+    }
+}
+
+// ----- Folders, links and HTTP -----------------------------------------------------
+
+/// Show a folder in the file manager (Explorer, Finder).
+pub fn open_path(path: &Path) -> io::Result<()> {
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        spawn_detached(sys::open_path_command(path))
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        let _ = path;
+        Err(io::Error::new(io::ErrorKind::Unsupported, "open"))
+    }
+}
+
+/// Open an https link in the default browser.
+pub fn open_url(url: &str) -> io::Result<()> {
+    if !url.starts_with("https://") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "not an https link",
+        ));
+    }
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        spawn_detached(sys::open_url_command(url))
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "open"))
+    }
+}
+
+/// Recreate a link to a directory: a junction on Windows (no privilege needed), a
+/// symbolic link elsewhere. `target` must be absolute on Windows.
+pub fn link_dir(link: &Path, target: &Path) -> io::Result<()> {
+    #[cfg(windows)]
+    {
+        sys::create_junction(link, target)
+    }
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(target, link)
+    }
+    #[cfg(not(any(windows, unix)))]
+    {
+        let _ = (link, target);
+        Err(io::Error::new(io::ErrorKind::Unsupported, "links"))
+    }
+}
+
+/// Recreate a link to a file. On Windows this needs Developer Mode or elevation; the
+/// caller copies the file instead when it fails.
+pub fn link_file(link: &Path, target: &Path) -> io::Result<()> {
+    #[cfg(windows)]
+    {
+        std::os::windows::fs::symlink_file(target, link)
+    }
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(target, link)
+    }
+    #[cfg(not(any(windows, unix)))]
+    {
+        let _ = (link, target);
+        Err(io::Error::new(io::ErrorKind::Unsupported, "links"))
+    }
+}
+
+/// A link target as a plain path (Windows may report `\\?\`-prefixed targets).
+pub fn plain_path(path: &Path) -> std::path::PathBuf {
+    #[cfg(windows)]
+    {
+        sys::strip_verbatim(path)
+    }
+    #[cfg(not(windows))]
+    {
+        path.to_path_buf()
+    }
+}
+
+/// Start a short-lived helper and reap it off-thread, so it never lingers as a zombie.
+#[cfg(any(windows, target_os = "macos"))]
+fn spawn_detached(mut cmd: Command) -> io::Result<()> {
+    cmd.stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    let mut child = cmd.spawn()?;
+    thread::spawn(move || {
+        let _ = child.wait();
+    });
+    Ok(())
+}
+
+/// GET an https URL with the system's curl (shipped with Windows 10+ and macOS), so the
+/// app bundles no TLS stack. Returns the HTTP status and the body.
+pub fn http_get(
+    url: &str,
+    headers: &[(&str, &str)],
+    timeout: Duration,
+) -> io::Result<(u16, String)> {
+    #[cfg(any(windows, target_os = "macos"))]
+    {
+        let mut cmd = Command::new(sys::curl());
+        cmd.args([
+            "--silent",
+            "--show-error",
+            "--location",
+            "--proto",
+            "=https",
+        ])
+        .arg("--max-time")
+        .arg(timeout.as_secs().max(1).to_string());
+        for (name, value) in headers {
+            cmd.arg("--header").arg(format!("{name}: {value}"));
+        }
+        cmd.args(["--write-out", "\n%{http_code}"])
+            .arg(url)
+            .stdin(Stdio::null());
+        sys::prepare_command(&mut cmd);
+        let out = cmd.output()?;
+        if !out.status.success() {
+            let message = String::from_utf8_lossy(&out.stderr).trim().to_string();
+            return Err(io::Error::other(message));
+        }
+        let text = String::from_utf8_lossy(&out.stdout);
+        let (body, code) = text
+            .rsplit_once('\n')
+            .ok_or_else(|| io::Error::other("no HTTP status"))?;
+        let status = code.trim().parse::<u16>().map_err(io::Error::other)?;
+        Ok((status, body.to_string()))
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        let _ = (url, headers, timeout);
+        Err(io::Error::new(io::ErrorKind::Unsupported, "http"))
     }
 }
 
