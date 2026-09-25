@@ -12,6 +12,8 @@
     "back": "戻る",
     "retry": "再試行",
     "showDetails": "詳細を表示",
-    "hideDetails": "詳細を隠す"
+    "hideDetails": "詳細を隠す",
+    "copy": "コピー",
+    "copied": "コピーしました"
   }
 }

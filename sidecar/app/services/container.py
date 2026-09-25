@@ -7,10 +7,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from fastapi import FastAPI
+
+from app.compat.server import create_external_app
 from app.config import SidecarConfig
 from app.engine.base import BackendFactory
 from app.engine.host import EngineHost, runtime_options
 from app.engine.registry import Registry, load_registry
+from app.services.api_server import ApiServerManager, ApiServerStore
 from app.services.clips import ClipStore
 from app.services.history import HistoryStore
 from app.services.job_manager import Job, JobManager
@@ -50,6 +54,7 @@ class Services:
     library: LibraryService
     presets: PresetService
     projects: ProjectService
+    api_server: ApiServerManager
     autoload: bool = True
 
     def start(self) -> None:
@@ -158,7 +163,12 @@ def build_services(
         history=history,
         app_version=config.app_version,
     )
-    return Services(
+
+    def external_app(manager: ApiServerManager) -> FastAPI:
+        return create_external_app(built, manager)
+
+    api_server = ApiServerManager(ApiServerStore(db), external_app)
+    built = Services(
         config=config,
         registry=registry,
         layout=layout,
@@ -178,5 +188,7 @@ def build_services(
         library=library,
         presets=presets,
         projects=projects,
+        api_server=api_server,
         autoload=autoload,
     )
+    return built

@@ -243,6 +243,7 @@ class SynthesisService:
                 caption=prepared.caption,
                 reference_kind=prepared.request.reference.kind,
                 voice_id=getattr(prepared.request.reference, "voice_id", None),
+                source="api" if job.source == "api" else "ui",
                 request=request_dump,
                 params={**prepared.params, "seed": done.used_seed},
                 used_seed=done.used_seed,

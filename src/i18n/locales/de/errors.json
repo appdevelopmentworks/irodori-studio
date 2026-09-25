@@ -79,6 +79,8 @@
     "script_incomplete": "Einige Zeilen sind noch nicht erzeugt. Erzeugen Sie alle, bevor Sie zusammenfügen oder exportieren.",
     "naming_template_invalid": "Die Dateinamen-Vorlage enthält ein unbekanntes Feld. Verwenden Sie {index}, {n}, {speaker}, {text_head}, {title} oder {id}.",
     "preset_not_found": "Die Voreinstellung wurde nicht gefunden.",
-    "project_invalid": "Die Projektdatei konnte nicht gelesen werden. Prüfen Sie, ob es eine von irodori-studio gespeicherte .iroproj-Datei ist."
+    "project_invalid": "Die Projektdatei konnte nicht gelesen werden. Prüfen Sie, ob es eine von irodori-studio gespeicherte .iroproj-Datei ist.",
+    "api_key_required": "Legen Sie einen API-Schlüssel fest, um den API-Server im lokalen Netzwerk freizugeben.",
+    "api_port_in_use": "Dieser Port ist nicht verfügbar (eine andere App nutzt ihn oder das System reserviert ihn). Wählen Sie einen anderen Port."
   }
 }

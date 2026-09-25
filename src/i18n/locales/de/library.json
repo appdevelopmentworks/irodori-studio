@@ -57,7 +57,8 @@
     "deleteSelected_one": "{{count}} Eintrag löschen",
     "deleteSelected_other": "{{count}} Einträge löschen",
     "queued": "Wartet…",
-    "running": "Wird erzeugt…"
+    "running": "Wird erzeugt…",
+    "fromApi": "API"
   },
   "export": {
     "open": "Exportieren…",

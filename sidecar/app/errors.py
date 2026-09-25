@@ -76,6 +76,9 @@ class ErrorCode(str, Enum):
     # Library, presets and projects (Session 7).
     PRESET_NOT_FOUND = "preset_not_found"
     PROJECT_INVALID = "project_invalid"
+    # External API server (Session 8).
+    API_KEY_REQUIRED = "api_key_required"
+    API_PORT_IN_USE = "api_port_in_use"
     # Jobs and stored results.
     JOB_NOT_FOUND = "job_not_found"
     AUDIO_NOT_FOUND = "audio_not_found"

@@ -106,6 +106,11 @@ export function HistoryRow({
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
             <span className="tabular-nums">{formatDateTime(entry.created_at, locale)}</span>
+            {entry.source === 'api' ? (
+              <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[11px] font-medium text-violet-800 dark:bg-violet-950 dark:text-violet-200">
+                {t('library.history.fromApi')}
+              </span>
+            ) : null}
             <span>{voiceLabel}</span>
             <span className="tabular-nums">{t('library.history.seed', { seed: entry.used_seed })}</span>
             {busy ? (

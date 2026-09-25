@@ -23,6 +23,7 @@ from app.engine.base import BackendFactory
 from app.errors import register_error_handlers
 from app.lifecycle import exit_with_parent, force_utf8
 from app.routers import (
+    api_server,
     audio,
     clips,
     history,
@@ -52,9 +53,11 @@ def create_app(
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         services.start()
+        await services.api_server.apply()  # the external API, if it is enabled (D21)
         try:
             yield
         finally:
+            await services.api_server.stop()
             services.stop()
 
     app = FastAPI(title="irodori-studio sidecar", version=config.app_version, lifespan=lifespan)
@@ -83,6 +86,7 @@ def create_app(
         preferences,
         presets,
         projects,
+        api_server,
     ):
         app.include_router(module.router)
     return app

@@ -70,7 +70,9 @@ export type SidecarErrorCode =
   | 'script_incomplete'
   | 'naming_template_invalid'
   | 'preset_not_found'
-  | 'project_invalid';
+  | 'project_invalid'
+  | 'api_key_required'
+  | 'api_port_in_use';
 
 export type EngineState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -483,6 +485,8 @@ export interface HistorySummary {
   adopted_audio_id: string | null;
   /** The library voice of a `{kind: "voice"}` request. */
   voice_id: string | null;
+  /** Who asked: the app or the external API (D21). */
+  source: 'ui' | 'api';
 }
 
 export interface HistoryPatch {
@@ -901,6 +905,47 @@ export interface Preferences {
   history_max_entries: number;
   history_max_bytes: number;
   output: OutputOptions;
+}
+
+// External API server (requirements §6.10, D21).
+
+export interface ApiServerConfig {
+  enabled: boolean;
+  /** `local`: 127.0.0.1 only; `lan`: every interface (needs an API key). */
+  bind: 'local' | 'lan';
+  /** 1024–65535, default 50221. */
+  port: number;
+  /** 8–200 characters; required for `lan`. */
+  api_key: string | null;
+}
+
+export interface ApiRequestLog {
+  time: string;
+  client: string;
+  method: string;
+  path: string;
+  status: number;
+  duration_ms: number;
+  family: 'openai' | 'voicevox' | 'other';
+}
+
+export interface ApiServerStatus {
+  running: boolean;
+  /** Error code when the listener could not start (e.g. `api_port_in_use`). */
+  error: string | null;
+  urls: string[];
+  /** Newest first. */
+  requests: ApiRequestLog[];
+}
+
+/** A VOICEVOX style: a library voice as saved, or with a style preset. */
+export interface ApiStyle {
+  style_id: number;
+  speaker_uuid: string;
+  voice_id: string;
+  voice_name: string;
+  style: string;
+  name: string;
 }
 
 // Presets and projects (requirements §6.8, D23).

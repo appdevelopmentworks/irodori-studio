@@ -79,6 +79,8 @@
     "script_incomplete": "还有未生成的行。请全部生成后再合并或导出。",
     "naming_template_invalid": "文件名模板中有无法使用的项目。请使用 {index}、{n}、{speaker}、{text_head}、{title}、{id}。",
     "preset_not_found": "找不到该预设。",
-    "project_invalid": "无法读取项目文件。请确认它是由 irodori-studio 保存的 .iroproj 文件。"
+    "project_invalid": "无法读取项目文件。请确认它是由 irodori-studio 保存的 .iroproj 文件。",
+    "api_key_required": "要向局域网开放 API 服务器，请先设置 API 密钥。",
+    "api_port_in_use": "无法使用此端口（可能被其他应用占用或被系统保留）。请指定其他端口。"
   }
 }

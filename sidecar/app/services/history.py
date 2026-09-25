@@ -46,6 +46,7 @@ class NewEntry:
     device: str
     precision: str
     voice_id: str | None = None
+    source: str = "ui"
 
 
 @dataclass(frozen=True)
@@ -85,14 +86,14 @@ class HistoryStore:
                 conn.execute(
                     "INSERT INTO history (id, created_at, kind, model_id, text, caption,"
                     " reference_kind, request_json, params_json, used_seed, timings_json,"
-                    " messages_json, watermarked, device, precision, total_bytes, voice_id)"
-                    " VALUES (?, ?, 'tts', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    " messages_json, watermarked, device, precision, total_bytes, voice_id,"
+                    " source) VALUES (?, ?, 'tts', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         history_id, now_iso(), entry.model_id, entry.text, entry.caption,
                         entry.reference_kind, _dump(entry.request), _dump(entry.params),
                         entry.used_seed, _dump(entry.timings), _dump(entry.messages),
                         int(entry.watermarked), entry.device, entry.precision, total,
-                        entry.voice_id,
+                        entry.voice_id, entry.source,
                     ),
                 )  # fmt: skip
                 conn.executemany(
@@ -218,6 +219,7 @@ def _summary(row: Any, outputs: dict[str, list[AudioOutput]]) -> HistorySummary:
         outputs=outputs.get(row["id"], []),
         adopted_audio_id=row["adopted_audio_id"],
         voice_id=row["voice_id"],
+        source=row["source"],
     )
 
 

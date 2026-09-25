@@ -1,6 +1,9 @@
 // ALL internal-API (sidecar) calls go through this module. The port comes from the
 // `get_sidecar_port` Tauri command via the app store (D10); never write a port literal.
 import type {
+  ApiServerConfig,
+  ApiServerStatus,
+  ApiStyle,
   AssembledNarration,
   AssembledScript,
   AudioFormat,
@@ -250,6 +253,13 @@ export function createApi(port: number) {
     /** A new narration or script from a project file. */
     openProject: (path: string) =>
       send<ProjectOpened>(`${base}/projects/open`, json('POST', { path })),
+
+    getApiServerConfig: () => send<ApiServerConfig>(`${base}/api-server/config`),
+    /** Save and apply: starts, restarts or stops the external listener. */
+    putApiServerConfig: (config: ApiServerConfig) =>
+      send<ApiServerStatus>(`${base}/api-server/config`, json('PUT', config)),
+    getApiServerStatus: () => send<ApiServerStatus>(`${base}/api-server/status`),
+    getApiServerStyles: () => send<ApiStyle[]>(`${base}/api-server/styles`),
 
     getPreferences: () => send<Preferences>(`${base}/preferences`),
     updatePreferences: (patch: Partial<Preferences>) =>

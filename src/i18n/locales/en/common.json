@@ -12,6 +12,8 @@
     "back": "Back",
     "retry": "Retry",
     "showDetails": "Show details",
-    "hideDetails": "Hide details"
+    "hideDetails": "Hide details",
+    "copy": "Copy",
+    "copied": "Copied"
   }
 }

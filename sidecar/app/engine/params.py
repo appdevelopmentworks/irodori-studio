@@ -398,6 +398,14 @@ def default_for(spec: ParamSpec, caps: Capabilities) -> object:
     return caps.param_defaults.get(spec.name, spec.default)
 
 
+def bounds(name: str, caps: Capabilities) -> tuple[float | None, float | None] | None:
+    """(minimum, maximum) of a parameter for a model, or None when it does not apply."""
+    spec = next((spec for spec in PARAMS if spec.name == name), None)
+    if spec is None or not applicable(spec, caps):
+        return None
+    return _bound(spec.minimum, caps), _bound(spec.maximum, caps)
+
+
 def schema(caps: Capabilities) -> list[dict[str, object]]:
     """The parameter schema the UI renders for a model (GET /models/active/capabilities)."""
     return [

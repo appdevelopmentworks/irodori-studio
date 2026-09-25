@@ -53,7 +53,8 @@
     "deleteConfirm": "削除する",
     "deleteSelected_other": "{{count}} 件を削除する",
     "queued": "順番待ち…",
-    "running": "生成しています…"
+    "running": "生成しています…",
+    "fromApi": "API"
   },
   "export": {
     "open": "書き出し…",

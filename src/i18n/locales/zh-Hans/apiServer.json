@@ -1,0 +1,75 @@
+{
+  "title": "API 服务器",
+  "intro": "让其他应用和程序通过兼容 OpenAI 和 VOICEVOX 的 API 使用本应用的语音合成。这些请求与应用本身共用同一个队列，逐个处理。",
+  "config": {
+    "title": "设置",
+    "enabled": "启用 API 服务器",
+    "bind": "访问范围",
+    "bindLocal": "仅本机",
+    "bindLocalHint": "在 127.0.0.1 上监听，其他设备无法连接。",
+    "bindLan": "局域网（LAN）",
+    "bindLanHint": "同一网络中的其他设备可以连接。需要 API 密钥。",
+    "port": "端口",
+    "portHint": "1024–65535（默认 50221）",
+    "apiKey": "API 密钥",
+    "apiKeyHint": "设置后，每个请求都需要请求头 Authorization: Bearer <密钥> 或 X-API-Key: <密钥>。",
+    "apiKeyPlaceholder": "未设置",
+    "generate": "生成",
+    "show": "显示",
+    "hide": "隐藏",
+    "save": "保存并应用",
+    "saved": "已保存。",
+    "unsaved": "有尚未保存的更改。",
+    "invalidPort": "端口必须是 1024 到 65535 之间的整数。",
+    "invalidKey": "API 密钥须由 8–200 个半角英文字母、数字或符号组成，且不含空格。",
+    "keyRequired": "要向局域网开放，请先设置 API 密钥。",
+    "lanWarning": "向局域网开放后，持有 API 密钥的设备都可以生成语音。请仅在可信的网络中使用。首次开放时，系统防火墙可能会询问是否允许传入连接。"
+  },
+  "status": {
+    "title": "状态",
+    "running": "运行中",
+    "stopped": "已停止",
+    "failed": "无法启动",
+    "openaiBase": "兼容 OpenAI 的基础 URL",
+    "voicevoxBase": "兼容 VOICEVOX 的引擎 URL",
+    "stoppedHint": "启用并保存后即会启动。退出应用时会停止。"
+  },
+  "usage": {
+    "title": "使用方法",
+    "tabs": {
+      "openai": "兼容 OpenAI",
+      "voicevox": "兼容 VOICEVOX"
+    },
+    "openaiIntro": "可以按照 OpenAI 语音合成 API（/v1/audio/speech）的格式调用。model 设为 irodori-tts，voice 设为声音库中声音的名称或 ID（不使用声音时设为 none）。",
+    "openaiOptions": "风格描述、种子、步数等参数通过 irodori 扩展字段指定。会使用声音的默认值（风格描述、参数、LoRA），请求中指定的值优先。格式支持 wav、mp3、flac、opus、aac、pcm，语速用 speed（0.25–4）指定。长文本会自动分段生成。",
+    "example": "Python 示例（OpenAI SDK）",
+    "exampleKey": "如果设置了 API 密钥，请将 YOUR_API_KEY 替换为实际的密钥。",
+    "voicevoxIntro": "在支持 VOICEVOX 引擎 API 的应用中，将引擎 URL 设置为以下地址：",
+    "voicevoxMapping": "声音库中的声音显示为“角色”，“普通”（保持声音原有的设置）和风格预设显示为它的“风格”。",
+    "voicevoxLimits": "语速、音量、前后静音、采样率和立体声会生效；音高、抑扬、停顿长度和重音编辑不会生效。",
+    "voicevoxKey": "设置 API 密钥后，每个请求都需要带上密钥请求头，无法自定义请求头的应用将无法连接。",
+    "styles_other": "角色与风格 ID（{{count}} 个声音）",
+    "stylesEmpty": "声音库中还没有声音。在声音工作室中创建的声音会成为角色。",
+    "voice": "声音",
+    "style": "风格",
+    "styleId": "风格 ID",
+    "normal": "普通"
+  },
+  "log": {
+    "title": "请求日志",
+    "hint": "按从新到旧显示最近 200 条请求。退出应用后清除。",
+    "empty": "还没有请求。",
+    "time": "时间",
+    "family": "类型",
+    "request": "请求",
+    "status": "结果",
+    "duration": "耗时",
+    "client": "来源",
+    "ms": "{{ms}} 毫秒",
+    "families": {
+      "openai": "OpenAI",
+      "voicevox": "VOICEVOX",
+      "other": "其他"
+    }
+  }
+}

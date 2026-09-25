@@ -47,6 +47,11 @@ export function formatDateTime(iso: string, locale: string): string {
   );
 }
 
+/** A timestamp (ISO 8601) as a time with seconds in the active locale. */
+export function formatTime(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { timeStyle: 'medium' }).format(new Date(iso));
+}
+
 /** A duration as a clock: "3:05", or "1:02:03" from an hour on. */
 export function formatClock(seconds: number): string {
   const total = Math.max(0, Math.round(seconds));

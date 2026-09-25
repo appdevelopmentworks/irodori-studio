@@ -53,11 +53,12 @@ irodori-studio/
 │  │  │                           (play, adopt, again, reuse, save, details), LimitsPanel, PresetsPanel, actions.ts
 │  │  ├─ output/                  OutputSettings (shared export settings) + output.ts
 │  │  ├─ projects/                ProjectBar (save / open `.iroproj`)
-│  │  ├─ api-server/              config, status, request log
+│  │  ├─ api-server/              ApiServerScreen: ConfigSection (enable, bind, port, API key), StatusSection (URLs),
+│  │  │                           UsageSection (OpenAI SDK example, VOICEVOX URL, style ids), RequestLog, snippets.ts
 │  │  └─ settings/                language, paths, model mgmt, device/precision, watermark, output defaults, logs, licenses
 │  ├─ components/                 AppRoot (boot + routing by status), Startup/Error screens, AppShell (Sidebar + screen + StatusBar),
 │  │                              ComingSoon, ErrorNotice, LanguageSwitcher, EmojiPalette, CandidateGrid, ProgressBar,
-│  │                              usePlayer (one shared audio player);
+│  │                              usePlayer (one shared audio player), CopyButton;
 │  │                              later WaveformEditor, JobProgress, QueueBadge, UpdateBanner …
 │  ├─ i18n/
 │  │  ├─ index.ts                 react-i18next init (bundled resources, sync); locale from settings
@@ -75,8 +76,10 @@ irodori-studio/
 │  │  ├─ jobs.ts                  client job state advanced by SSE events (shared by screens)
 │  │  ├─ wav.ts                   WAV writer for recordings
 │  │  ├─ textFile.ts              text files the user picks (UTF-8, else Shift_JIS)
+│  │  ├─ clipboard.ts             copy to the clipboard
 │  │  └─ format.ts                Intl formatting (bytes, memory, seconds, dates, percent)
-│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration, script, library, presets, projects
+│  └─ store/                      zustand: app, nav, sidecar, quick, voices, narration, script, library, presets, projects,
+│                                 apiServer
 ├─ src-tauri/
 │  ├─ tauri.conf.json             bundle targets, resources, macOS signingIdentity "-", entitlements, localized plist strings
 │  ├─ Info.plist                  merged into the macOS Info.plist (NSMicrophoneUsageDescription)
@@ -108,9 +111,9 @@ irodori-studio/
    │  ├─ schemas.py               pydantic, mirrors api-spec.md
    │  ├─ errors.py                stable error codes
    │  ├─ routers/                 system, models (+ /emoji), tts, jobs (+ SSE, /queue), audio, clips, history, preferences, deps;
-   │  │                           voices, text (dictionary, reading), narration, script, presets, projects;
-   │  │                           later api_server
-   │  ├─ compat/                  openai.py, voicevox.py (external API)
+   │  │                           voices, text (dictionary, reading), narration, script, presets, projects, api_server
+   │  ├─ compat/                  external API: server.py (app, API key, request log), openai.py, voicevox.py,
+   │  │                           speech.py (voices, speed, chunking, queue, encoding), styles.py, assets/icon.png
    │  ├─ engine/
    │  │  ├─ base.py               TtsBackend protocol (D6)
    │  │  ├─ registry.py           models.json loader + capabilities
@@ -121,7 +124,7 @@ irodori-studio/
    │  │                           clips, voices (library, encode jobs, packages), takes (chunk / line audio rows),
    │  │                           narration (split, render jobs, assemble, export), script (lines, speaker map, render
    │  │                           jobs, assemble, export, tables), history, library (regenerate, export), presets,
-   │  │                           projects (.iroproj), preferences, system_info
+   │  │                           projects (.iroproj), preferences, system_info, api_server (the external listener)
    │  ├─ text/                    dictionary.py (user dictionary), reading.py (pyopenjtalk-plus readings, length
    │  │                           estimates), chunker.py (D18, Markdown to text), srt.py (SRT/WebVTT in and out),
    │  │                           script_parser.py ("話者：セリフ" text, CSV / TSV in and out), naming.py (file-name templates)

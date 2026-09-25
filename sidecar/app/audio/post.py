@@ -73,9 +73,7 @@ def retimed(ms: int, post: Post | None) -> int:
 
 def filter_chain(ffmpeg: Path, source: Path, post: Post) -> list[str]:
     """The `-af` filters for `post` (measuring the source first for loudness)."""
-    chain: list[str] = []
-    if post.tempo != 1.0:
-        chain.append(f"atempo={post.tempo:.4f}")
+    chain: list[str] = [f"atempo={factor:.4f}" for factor in _tempo_steps(post.tempo)]
     if post.loudness is not None:
         measured = measure(ffmpeg, source, post.loudness, chain)
         if measured is not None:  # silence cannot be normalized
@@ -136,6 +134,20 @@ def run(ffmpeg: Path | None, args: list[str], *, verbose: bool = False) -> str:
     if result.returncode != 0:
         raise PostError("save_failed", stderr.strip()[-500:] or "ffmpeg failed")
     return stderr
+
+
+def _tempo_steps(tempo: float) -> list[float]:
+    """`tempo` as `atempo` factors within 0.5–2.0 (the range every ffmpeg accepts)."""
+    steps: list[float] = []
+    while tempo > 2.0:
+        steps.append(2.0)
+        tempo /= 2.0
+    while tempo < 0.5:
+        steps.append(0.5)
+        tempo /= 0.5
+    if tempo != 1.0:
+        steps.append(tempo)
+    return steps
 
 
 def _loudnorm(target: float) -> str:

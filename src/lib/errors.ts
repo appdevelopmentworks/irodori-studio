@@ -85,6 +85,8 @@ const KNOWN_CODES = new Set<string>([
   'naming_template_invalid',
   'preset_not_found',
   'project_invalid',
+  'api_key_required',
+  'api_port_in_use',
 ] satisfies KnownErrorCode[]);
 
 /** Error code from a rejected command or thrown value; unknown values become `internal`. */

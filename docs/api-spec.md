@@ -4,9 +4,9 @@ Single source of truth for the sidecar HTTP contracts. Keep these three in sync 
 
 Two listeners (D21):
 - **Internal API** — `http://127.0.0.1:<random>`; used only by the app UI. No auth (localhost, random port).
-- **External API** — optional; `<bind>:<port>` (default `127.0.0.1:50221`); OpenAI- and VOICEVOX-compatible routes for other apps. Bearer API key required when bound to a non-loopback address.
+- **External API** — optional; `<bind>:<port>` (default `127.0.0.1:50221`); OpenAI- and VOICEVOX-compatible routes for other apps. An API key (`Authorization: Bearer` or `X-API-Key`) is required for a LAN bind and optional on this computer.
 
-Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4); the user dictionary, reading preview and narrations (S5).
+Status of this document: **v0 draft**. Shapes below are the intended contract; refine field-by-field during the session that implements each router and update this file in the same change. Implemented so far: system (S1); models, generation & jobs, clips, basic history and preferences (S2); engine runtime in `/health`, adopting a candidate and saving a copy (S3); clip editing and the voice library with encode jobs and `.irovoice` packages (S4); the user dictionary, reading preview and narrations (S5); scripts (S6); output post-processing, the library, presets and projects (S7); the API server with its OpenAI- and VOICEVOX-compatible routes (S8).
 
 ---
 
@@ -272,6 +272,7 @@ type HistorySummary = {
   used_seed: number; watermarked: boolean; outputs: AudioOutput[];
   adopted_audio_id: string | null;     // the candidate the user adopted (requirements §6.3)
   voice_id: string | null;             // the library voice of a {kind: "voice"} request
+  source: "ui" | "api";                // who asked: the app or the external API (D21)
 };
 type HistoryEntry = HistorySummary & {
   request: SynthesisRequest;           // as submitted (unset fields absent)
@@ -522,37 +523,114 @@ type ProjectOpened = {
 
 `.iroproj` is a zip: `project.json` (`format: "iroproj"`, `version: 1`, `kind`, `app_version`, `model_id`, `saved_at`, `voices: {id: name}`, and `narration` — title, format, source, rules, settings, warnings, chunks `{text, pause_after, estimated_seconds, cue, take}` — or `script` — title, speakers, settings, lines `{speaker, text, caption, num_candidates, seed, pause_ms, file_name, take}`) and each adopted take as 16-bit FLAC `audio/NNNN.flac` (`take: {file, seed, truncated}`), so the takes come back bit for bit. Only adopted takes are saved; the assembled file is made again. Projects are saved in `<data-root>/projects/` by default.
 
-### External API control
+### External API control (D21)
+
+The optional second listener, configured and watched from the API Server screen. Its configuration is kept in the preferences table (key `api_server`); when enabled, the listener starts with the sidecar and stops with it. The port is bound before uvicorn starts, so a port in use becomes a status instead of a sidecar exit.
+
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET / PUT | `/api-server/config` | `{enabled, bind: "127.0.0.1"|"0.0.0.0", port, api_key?, families: ["openai","voicevox"]}` |
-| GET | `/api-server/status` | running, url, recent requests |
+| GET | `/api-server/config` | `ApiServerConfig` |
+| PUT | `/api-server/config` | `ApiServerConfig` → `ApiServerStatus`: saved and applied at once (the listener starts, restarts or stops); `422 api_key_required` for a LAN bind without a key |
+| GET | `/api-server/status` | `ApiServerStatus` (the screen polls it every 2 s) |
+| GET | `/api-server/styles` | `ApiStyle[]`: the VOICEVOX speakers and styles on offer, in order |
+
+```ts
+type ApiServerConfig = {
+  enabled: boolean;                    // default false
+  bind: "local" | "lan";               // 127.0.0.1, or every IPv4 interface (0.0.0.0)
+  port: number;                        // 1024–65535, default 50221
+  api_key: string | null;              // 8–200 visible ASCII characters, no spaces; required for "lan"
+};
+type ApiServerStatus = {
+  running: boolean;
+  error: string | null;                // why it is not running: api_port_in_use | api_key_required | internal_error
+  urls: string[];                      // http://127.0.0.1:<port>, plus this computer's LAN addresses for "lan"
+  requests: ApiRequestLog[];           // the last 200, newest first; memory only
+};
+type ApiRequestLog = {
+  time: string; client: string; method: string; path: string; status: number;
+  duration_ms: number; family: "openai" | "voicevox" | "other";
+};
+type ApiStyle = {
+  style_id: number; speaker_uuid: string; voice_id: string; voice_name: string;
+  style: string;                       // "normal" or a style preset id ("calm", "bright", …)
+  name: string;                        // the VOICEVOX style name (Japanese protocol data)
+};
+```
 
 ---
 
+## External API
+
+Served on `<bind>:<port>` by the second listener, which shares the sidecar's services: one resident model and one synthesis queue with the UI (D4, D24). Its jobs have `source: "api"` and are kept in the history like the UI's (`HistorySummary.source`); the user dictionary applies as in the app. A client that disconnects cancels its queued or running job. No OpenAPI docs are served on this listener.
+
+- **API key:** when one is set (always for a LAN bind), every request needs `Authorization: Bearer <key>` or `X-API-Key: <key>`, compared in constant time; otherwise `401` — `{"error": {"message": "Invalid API key.", "type": "invalid_request_error", "param": null, "code": "invalid_api_key"}}` under `/v1`, `{"detail": "Invalid API key."}` elsewhere. CORS preflights pass without it.
+- **CORS:** pages served from this computer (`http(s)://localhost`, `127.0.0.1` or `[::1]`, any port) may call the API, like the VOICEVOX engine's default policy.
+- **Request log:** every request, refused ones included, is recorded for the API Server screen.
+- **Voices:** library voices from a real person's audio are offered only with recorded consent (D13).
+
 ## External API — OpenAI compatible
 
-Modeled on upstream `Aratako/Irodori-TTS-Server` so its clients work unchanged.
+Shaped like upstream `Aratako/Irodori-TTS-Server`, so its clients and the OpenAI SDKs work unchanged (`OpenAI(base_url="http://127.0.0.1:50221/v1", api_key=...)`).
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/v1/models` | `[{id: "irodori-tts"}]` |
-| POST | `/v1/audio/speech` | `{model, input, voice?, response_format?: wav|mp3|flac|opus|aac|pcm, speed?: 0.25–4.0, stream_format?: "sse", irodori?: {...SamplingParams, caption?, chunking_enabled?, chunk_min_chars?}}` |
-| GET | `/v1/audio/voices` | library voices (id = voice slug); `none` = no reference |
+| GET | `/v1/models` | `{object: "list", data: [{id: "irodori-tts", object: "model", created: 0, owned_by: "irodori-tts"}]}` |
+| GET | `/v1/audio/voices` | `{object: "list", data: [{id, object: "voice", name, source, caption, no_ref}]}`: the library voices |
+| GET | `/v1/audio/voices/{id}` | one voice by id or name; `404 voice_not_found` |
+| POST | `/v1/audio/speech` | `SpeechRequest` → the audio, or an SSE stream with `stream_format: "sse"` |
 
-`speed` maps to `duration_scale = 1/speed` (clamped to the capability range; beyond it, apply post time-stretch). Long input is chunked (D18) and concatenated; `stream_format: "sse"` emits one `audio_chunk` event per chunk then `done`.
+```ts
+type SpeechRequest = {
+  model: string;                       // "irodori-tts" (tts-1, tts-1-hd and gpt-4o-mini-tts are accepted too)
+  input: string;                       // 1–20000 characters
+  voice?: string | { id: string };     // a library voice id, or a name (the first in library order); "none" (or absent) = no reference
+  response_format?: "wav" | "mp3" | "flac" | "opus" | "aac" | "pcm";  // default wav; pcm = raw s16le mono, 48 kHz
+  speed?: number;                      // 0.25–4.0, default 1
+  stream_format?: "sse";
+  irodori?: {                          // the extension; its keys are also read at the top level
+    ...SamplingParams;                 // num_steps, seed, cfg_scale_*, seconds, duration_scale, …
+    caption?: string;
+    lora_adapter?: string;             // an adapter folder on this computer
+    chunking_enabled?: boolean;        // default true (alias: chunking)
+    chunk_min_chars?: number;          // default 80
+    first_sentence_chunk_min_chars?: number;
+    ref_wav?: string; ref_wavs?: string[];  // audio files on this computer, as ad-hoc reference clips
+    ref_embed?: string;                // a .speaker.safetensors on this computer
+    no_ref?: boolean;                  // no reference, even with a voice
+  };
+};
+```
+
+- **Voice defaults:** a library voice brings its caption, parameters, seed and LoRA; the request's values take precedence. `ref_wav(s)`, `ref_embed` and `no_ref` replace the voice's reference; `ref_latent(s)` (upstream's latent files) are refused with `reference_unsupported`.
+- **File paths** (`ref_wav`, `ref_wavs`, `ref_embed`, `lora_adapter`) are accepted only from this computer (a loopback client), so a LAN client cannot make the app read arbitrary files; otherwise `403 path_not_allowed`.
+- **Speed:** `duration_scale = base / speed` within the model's range (base: the request's or voice's `duration_scale`, else 1); the rest is an `atempo` time stretch (needs ffmpeg). With `seconds`, `seconds / speed` instead.
+- **Chunking** (as upstream): a chunk ends at the first of `。、，,．.!！?？` or a line break once it has `chunk_min_chars` characters (`first_sentence_chunk_min_chars` for the first); a chunk still estimated over the model's limit is split again by sentences. No chunking with `seconds`. The chunks are spoken in order on the queue and joined.
+- **Response:** the audio with the format's `Content-Type`, `Content-Disposition: attachment; filename="speech.<ext>"`, `X-Irodori-Seed` (the first chunk's seed) and `X-Irodori-Total-To-Decode` (seconds). mp3, flac, opus and aac need ffmpeg (`ffmpeg_unavailable`).
+- **SSE:** one `audio_chunk` event per chunk, `{index, text, format, media_type, audio_base64, seed, total_to_decode}` (each a complete file), then `done` with `{chunks}`; a failure ends the stream with an `error` event carrying an OpenAI error body.
+- **Errors:** OpenAI's shape `{"error": {message, type, param, code}}` with this app's error codes: `400` for the request's faults (unknown model or voice, parameters, text too long, …), `503` while the model is not loaded, `500` otherwise, `422` for a malformed body.
 
 ## External API — VOICEVOX compatible
 
-Goal: tools that speak the VOICEVOX Engine API (e.g. YMM4, AITuber tools, bots) can use the app by pointing at its URL. Verify each route against the VOICEVOX Engine OpenAPI during Session 8 and record deviations here.
+Tools that speak the VOICEVOX Engine API (e.g. YMM4, AITuber tools, bots) use the app by pointing at its URL. Checked against the VOICEVOX Engine 0.25 OpenAPI; the deviations follow the table. Speaker names, style names and the policy text are Japanese protocol data, not UI copy.
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| GET | `/version` | app version |
-| GET | `/engine_manifest` | name, brand, supported features (minimal) |
-| GET | `/speakers` | one speaker per voice; styles = the voice's caption presets (style ids stable ints) |
-| GET | `/speaker_info` | icon/portrait placeholders, policy text incl. ethical restrictions |
-| POST | `/initialize_speaker` · GET `/is_initialized_speaker` | ensure cached latent exists |
-| POST | `/audio_query` | returns an AudioQuery; Irodori does not use accent phrases → `accent_phrases: []`, original text kept in `kana`; `speedScale`→`duration_scale`, `volumeScale`→gain, `prePhonemeLength`/`postPhonemeLength`→silence padding, `outputSamplingRate` honored; `pitchScale`/`intonationScale` ignored |
-| POST | `/synthesis?speaker=<style_id>` | body AudioQuery → wav |
-| GET | `/supported_devices` | reflects actual device |
+| GET | `/speakers` | one speaker per library voice (`speaker_uuid`: a UUIDv5 of the voice id); styles `ノーマル` (the voice as saved) and, when the model takes captions, the ten style presets (a caption for manner and mood, as on the Quick screen) |
+| GET | `/speaker_info?speaker_uuid=&resource_format=base64\|url` | the policy (incl. upstream's ethical restrictions), the app icon as portrait and style icons, no voice samples; `404` for an unknown speaker |
+| POST | `/initialize_speaker?speaker=` | encodes the voice's clips for the model if they are not yet, and waits; `204` |
+| GET | `/is_initialized_speaker?speaker=` | whether the voice's clips are encoded |
+| POST | `/audio_query?text=&speaker=` | an AudioQuery with `accent_phrases: []` and the text in `kana` |
+| POST | `/accent_phrases?text=&speaker=` | `[]` |
+| POST | `/synthesis?speaker=` · `/cancellable_synthesis?speaker=` | body AudioQuery → WAV (16-bit) |
+| POST | `/multi_synthesis?speaker=` | AudioQuery[] → zip of `001.wav`, `002.wav`, … |
+| POST | `/connect_waves` | base64 WAVs of the same rate and channels → one WAV |
+| GET | `/version` · `/core_versions` | the app version |
+| GET | `/engine_manifest` | name `irodori-studio`, brand `Irodori`, 48 kHz; supported features: speed and volume only, `return_resource_url` |
+| GET | `/supported_devices` | `{cpu: true, cuda: <running on CUDA>, dml: false}` |
+| GET | `/presets` · `/user_dict` · `/singers` | empty (`[]`, `{}`, `[]`) |
+
+- **Style ids** are stable 31-bit integers: the first 4 bytes of SHA-1 of `<voice id>:<style>` (a collision moves on to the next free id). They survive restarts and do not change when other voices come or go. An unknown style id is `422`.
+- **AudioQuery:** Irodori reads text, not accent phrases. `/audio_query` keeps the text in `kana`; a query from another engine without `kana` is spoken from its moras' text. `speedScale` becomes `duration_scale` (as `speed` above), `volumeScale` a gain, `prePhonemeLength` / `postPhonemeLength` silence before and after, `outputSamplingRate` a resample (ffmpeg) and `outputStereo` two identical channels. `pitchScale`, `intonationScale`, `pauseLength`, `pauseLengthScale` and mora or accent edits are ignored.
+- **Long text** is chunked as on the OpenAI route (80 characters).
+- **Not provided:** editing the user dictionary or presets, morphing, singing, library management and the engine settings page. Errors are FastAPI's `{"detail": ...}`; this app's errors read `"<code>: <message>"`.

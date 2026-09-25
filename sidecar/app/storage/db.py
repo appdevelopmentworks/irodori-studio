@@ -194,6 +194,10 @@ MIGRATIONS: tuple[str, ...] = (
         updated_at  TEXT NOT NULL
     );
     """,
+    # 7 — Session 8: who asked for a generation, the app or the external API (D21).
+    """
+    ALTER TABLE history ADD COLUMN source TEXT NOT NULL DEFAULT 'ui';
+    """,
 )
 
 

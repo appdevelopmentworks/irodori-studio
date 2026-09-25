@@ -79,6 +79,8 @@
     "script_incomplete": "Some lines are not rendered yet. Render them all before joining or exporting.",
     "naming_template_invalid": "The file name template has an unknown field. Use {index}, {n}, {speaker}, {text_head}, {title} or {id}.",
     "preset_not_found": "The preset was not found.",
-    "project_invalid": "The project file could not be read. Check that it is an .iroproj file saved by irodori-studio."
+    "project_invalid": "The project file could not be read. Check that it is an .iroproj file saved by irodori-studio.",
+    "api_key_required": "Set an API key to open the API server to the local network.",
+    "api_port_in_use": "This port is not available (another app is using it, or the system reserves it). Choose a different port."
   }
 }

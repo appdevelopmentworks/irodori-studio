@@ -3,6 +3,7 @@
 // Register every new file for all four locales; scripts/check-i18n.mjs fails if a locale
 // file is not registered here.
 import type { Locale } from './config';
+import deApiServer from './locales/de/apiServer.json';
 import deCommon from './locales/de/common.json';
 import deDictionary from './locales/de/dictionary.json';
 import deEmoji from './locales/de/emoji.json';
@@ -18,6 +19,7 @@ import deScript from './locales/de/script.json';
 import deSetup from './locales/de/setup.json';
 import deShell from './locales/de/shell.json';
 import deVoiceStudio from './locales/de/voiceStudio.json';
+import enApiServer from './locales/en/apiServer.json';
 import enCommon from './locales/en/common.json';
 import enDictionary from './locales/en/dictionary.json';
 import enEmoji from './locales/en/emoji.json';
@@ -33,6 +35,7 @@ import enScript from './locales/en/script.json';
 import enSetup from './locales/en/setup.json';
 import enShell from './locales/en/shell.json';
 import enVoiceStudio from './locales/en/voiceStudio.json';
+import jaApiServer from './locales/ja/apiServer.json';
 import jaCommon from './locales/ja/common.json';
 import jaDictionary from './locales/ja/dictionary.json';
 import jaEmoji from './locales/ja/emoji.json';
@@ -48,6 +51,7 @@ import jaScript from './locales/ja/script.json';
 import jaSetup from './locales/ja/setup.json';
 import jaShell from './locales/ja/shell.json';
 import jaVoiceStudio from './locales/ja/voiceStudio.json';
+import zhHansApiServer from './locales/zh-Hans/apiServer.json';
 import zhHansCommon from './locales/zh-Hans/common.json';
 import zhHansDictionary from './locales/zh-Hans/dictionary.json';
 import zhHansEmoji from './locales/zh-Hans/emoji.json';
@@ -67,6 +71,7 @@ import zhHansVoiceStudio from './locales/zh-Hans/voiceStudio.json';
 export const resources = {
   ja: {
     translation: {
+      apiServer: jaApiServer,
       common: jaCommon,
       dictionary: jaDictionary,
       emoji: jaEmoji,
@@ -86,6 +91,7 @@ export const resources = {
   },
   en: {
     translation: {
+      apiServer: enApiServer,
       common: enCommon,
       dictionary: enDictionary,
       emoji: enEmoji,
@@ -105,6 +111,7 @@ export const resources = {
   },
   'zh-Hans': {
     translation: {
+      apiServer: zhHansApiServer,
       common: zhHansCommon,
       dictionary: zhHansDictionary,
       emoji: zhHansEmoji,
@@ -124,6 +131,7 @@ export const resources = {
   },
   de: {
     translation: {
+      apiServer: deApiServer,
       common: deCommon,
       dictionary: deDictionary,
       emoji: deEmoji,

@@ -1,0 +1,75 @@
+{
+  "title": "API サーバー",
+  "intro": "ほかのアプリやプログラムから、このアプリの音声合成を使えるようにします。OpenAI 互換と VOICEVOX 互換の API を提供し、リクエストはアプリの画面と同じ順番待ちで 1 件ずつ処理されます。",
+  "config": {
+    "title": "設定",
+    "enabled": "API サーバーを有効にする",
+    "bind": "公開範囲",
+    "bindLocal": "このパソコンのみ",
+    "bindLocalHint": "127.0.0.1 で待ち受けます。ほかの端末からは接続できません。",
+    "bindLan": "LAN に公開",
+    "bindLanHint": "同じネットワークのほかの端末から接続できます。API キーが必要です。",
+    "port": "ポート",
+    "portHint": "1024〜65535（既定は 50221）",
+    "apiKey": "API キー",
+    "apiKeyHint": "設定すると、すべてのリクエストに Authorization: Bearer <キー> か X-API-Key: <キー> のヘッダーが必要になります。",
+    "apiKeyPlaceholder": "未設定",
+    "generate": "生成",
+    "show": "表示",
+    "hide": "隠す",
+    "save": "保存して適用",
+    "saved": "保存しました。",
+    "unsaved": "未保存の変更があります。",
+    "invalidPort": "ポートは 1024〜65535 の整数にしてください。",
+    "invalidKey": "API キーは空白を含まない半角の英数字・記号で、8〜200 文字にしてください。",
+    "keyRequired": "LAN に公開するには API キーを設定してください。",
+    "lanWarning": "LAN に公開すると、同じネットワークの端末から API キーを使って音声を生成できます。信頼できるネットワークでのみ使ってください。初めて公開するときに、OS のファイアウォールが接続の許可を求めることがあります。"
+  },
+  "status": {
+    "title": "状態",
+    "running": "実行中",
+    "stopped": "停止中",
+    "failed": "起動できませんでした",
+    "openaiBase": "OpenAI 互換のベース URL",
+    "voicevoxBase": "VOICEVOX 互換のエンジン URL",
+    "stoppedHint": "有効にして保存すると起動します。アプリを終了すると停止します。"
+  },
+  "usage": {
+    "title": "使い方",
+    "tabs": {
+      "openai": "OpenAI 互換",
+      "voicevox": "VOICEVOX 互換"
+    },
+    "openaiIntro": "OpenAI の音声合成 API（/v1/audio/speech）と同じ形式で呼び出せます。model には irodori-tts を、voice にはライブラリの声の名前か ID（声を使わないときは none）を指定します。",
+    "openaiOptions": "キャプションやシード、ステップ数などは irodori 拡張フィールドで指定します。声の既定値（キャプション・パラメータ・LoRA）が使われ、リクエストで指定した値が優先されます。形式は wav・mp3・flac・opus・aac・pcm、話速は speed（0.25〜4）で指定できます。長い文章は自動で分割して生成します。",
+    "example": "Python（OpenAI SDK）の例",
+    "exampleKey": "API キーを設定しているときは、YOUR_API_KEY を実際のキーに置き換えてください。",
+    "voicevoxIntro": "VOICEVOX のエンジン API に対応したアプリで、エンジンの URL に次のアドレスを指定します。",
+    "voicevoxMapping": "ライブラリの声が「話者」になり、声の設定そのままの「ノーマル」とスタイルプリセットがその「スタイル」になります。",
+    "voicevoxLimits": "話速・音量・前後の無音・サンプリングレート・ステレオは反映されます。音高・抑揚・間の長さやアクセントの編集は反映されません。",
+    "voicevoxKey": "API キーを設定しているときは、すべてのリクエストにキーのヘッダーが必要です。ヘッダーを設定できないアプリからは接続できません。",
+    "styles_other": "話者とスタイル ID（{{count}} 声）",
+    "stylesEmpty": "ライブラリに声がありません。ボイススタジオで作った声が話者になります。",
+    "voice": "声",
+    "style": "スタイル",
+    "styleId": "スタイル ID",
+    "normal": "ノーマル"
+  },
+  "log": {
+    "title": "リクエストログ",
+    "hint": "直近 200 件を新しい順に表示します。アプリを終了すると消えます。",
+    "empty": "まだリクエストはありません。",
+    "time": "時刻",
+    "family": "種類",
+    "request": "リクエスト",
+    "status": "結果",
+    "duration": "時間",
+    "client": "接続元",
+    "ms": "{{ms}} ms",
+    "families": {
+      "openai": "OpenAI",
+      "voicevox": "VOICEVOX",
+      "other": "その他"
+    }
+  }
+}

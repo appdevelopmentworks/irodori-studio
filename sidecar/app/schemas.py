@@ -466,6 +466,8 @@ class HistorySummary(BaseModel):
     adopted_audio_id: str | None = None
     # The library voice of a `{kind: "voice"}` request.
     voice_id: str | None = None
+    # Who asked: the app ("ui") or the external API ("api", D21).
+    source: Literal["ui", "api"] = "ui"
 
 
 class HistoryPatch(BaseModel):
@@ -949,6 +951,51 @@ class PreferencesPatch(BaseModel):
     history_max_entries: int | None = Field(default=None, ge=1, le=100_000)
     history_max_bytes: int | None = Field(default=None, ge=10_000_000)
     output: OutputOptions | None = None
+
+
+# --- External API server (Session 8, D21) ------------------------------------------------
+
+
+class ApiServerConfig(BaseModel):
+    """The OpenAI / VOICEVOX-compatible listener. `lan` binds every network interface
+    and needs an API key."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+    bind: Literal["local", "lan"] = "local"
+    port: int = Field(default=50221, ge=1024, le=65535)
+    # Visible ASCII without spaces: the key travels in an HTTP header.
+    api_key: str | None = Field(default=None, min_length=8, max_length=200, pattern=r"^[!-~]+$")
+
+
+class ApiRequestLog(BaseModel):
+    time: str
+    client: str
+    method: str
+    path: str
+    status: int
+    duration_ms: int
+    family: Literal["openai", "voicevox", "other"]
+
+
+class ApiServerStatus(BaseModel):
+    running: bool
+    # Error code when the listener could not start (e.g. `api_port_in_use`).
+    error: str | None = None
+    urls: list[str] = []
+    requests: list[ApiRequestLog] = []
+
+
+class ApiStyle(BaseModel):
+    """A VOICEVOX style: a library voice with its own caption or a style preset."""
+
+    style_id: int
+    speaker_uuid: str
+    voice_id: str
+    voice_name: str
+    style: str  # "normal" or a style preset id
+    name: str
 
 
 # --- Presets (Session 7) -----------------------------------------------------------------

@@ -36,6 +36,8 @@ _ENCODERS: dict[str, tuple[tuple[str, ...], str]] = {
     "m4a": (("-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart"), "ipod"),
     "flac": (("-c:a", "flac"), "flac"),
     "opus": (("-c:a", "libopus", "-b:a", "128k"), "opus"),
+    # For the external API only (D21): raw AAC in ADTS.
+    "aac": (("-c:a", "aac", "-b:a", "192k"), "adts"),
 }
 
 # Files exported at once (one ffmpeg process each).

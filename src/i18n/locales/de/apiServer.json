@@ -1,0 +1,76 @@
+{
+  "title": "API-Server",
+  "intro": "Macht die Sprachsynthese dieser App für andere Apps und Programme nutzbar – über OpenAI- und VOICEVOX-kompatible APIs. Ihre Anfragen teilen sich die Warteschlange der App und werden nacheinander verarbeitet.",
+  "config": {
+    "title": "Einstellungen",
+    "enabled": "API-Server aktivieren",
+    "bind": "Zugriff",
+    "bindLocal": "Nur dieser Computer",
+    "bindLocalHint": "Lauscht auf 127.0.0.1; andere Geräte können sich nicht verbinden.",
+    "bindLan": "Lokales Netzwerk (LAN)",
+    "bindLanHint": "Andere Geräte im selben Netzwerk können sich verbinden. Erfordert einen API-Schlüssel.",
+    "port": "Port",
+    "portHint": "1024–65535 (Standard: 50221)",
+    "apiKey": "API-Schlüssel",
+    "apiKeyHint": "Wenn gesetzt, braucht jede Anfrage den Header Authorization: Bearer <Schlüssel> oder X-API-Key: <Schlüssel>.",
+    "apiKeyPlaceholder": "Nicht gesetzt",
+    "generate": "Erzeugen",
+    "show": "Anzeigen",
+    "hide": "Verbergen",
+    "save": "Speichern und anwenden",
+    "saved": "Gespeichert.",
+    "unsaved": "Es gibt ungespeicherte Änderungen.",
+    "invalidPort": "Der Port muss eine ganze Zahl von 1024 bis 65535 sein.",
+    "invalidKey": "Der API-Schlüssel muss aus 8–200 ASCII-Buchstaben, -Ziffern oder -Sonderzeichen ohne Leerzeichen bestehen.",
+    "keyRequired": "Legen Sie einen API-Schlüssel fest, um den Server im lokalen Netzwerk freizugeben.",
+    "lanWarning": "Im lokalen Netzwerk kann jedes Gerät mit dem API-Schlüssel Sprache erzeugen. Nutzen Sie dies nur in vertrauenswürdigen Netzwerken. Beim ersten Mal fragt die Firewall eventuell, ob eingehende Verbindungen erlaubt werden sollen."
+  },
+  "status": {
+    "title": "Status",
+    "running": "Läuft",
+    "stopped": "Gestoppt",
+    "failed": "Konnte nicht starten",
+    "openaiBase": "OpenAI-kompatible Basis-URL",
+    "voicevoxBase": "VOICEVOX-kompatible Engine-URL",
+    "stoppedHint": "Aktivieren und speichern, um ihn zu starten. Er stoppt, wenn die App beendet wird."
+  },
+  "usage": {
+    "title": "Verwendung",
+    "tabs": {
+      "openai": "OpenAI-kompatibel",
+      "voicevox": "VOICEVOX-kompatibel"
+    },
+    "openaiIntro": "Aufruf wie bei der Sprach-API von OpenAI (/v1/audio/speech). Setzen Sie model auf irodori-tts und voice auf den Namen oder die ID einer Bibliotheksstimme (none für keine Stimme).",
+    "openaiOptions": "Stilbeschreibung, Seed, Schritte und weitere Parameter gehören in das Erweiterungsfeld irodori. Eine Stimme bringt ihre Vorgaben mit (Stilbeschreibung, Parameter, LoRA); Werte aus der Anfrage haben Vorrang. Formate: wav, mp3, flac, opus, aac, pcm; speed von 0,25 bis 4. Lange Texte werden automatisch aufgeteilt und in Teilen erzeugt.",
+    "example": "Python-Beispiel (OpenAI SDK)",
+    "exampleKey": "Wenn Sie einen API-Schlüssel gesetzt haben, ersetzen Sie YOUR_API_KEY durch ihn.",
+    "voicevoxIntro": "Setzen Sie in einer App, die die VOICEVOX-Engine-API unterstützt, die Engine-URL auf:",
+    "voicevoxMapping": "Bibliotheksstimmen erscheinen als Sprecher; Normal (die Stimme wie gespeichert) und die Stilvorlagen erscheinen als ihre Stile.",
+    "voicevoxLimits": "Tempo, Lautstärke, Stille am Anfang und Ende, Abtastrate und Stereo werden angewendet. Tonhöhe, Intonation, Pausenlängen und Akzentbearbeitungen nicht.",
+    "voicevoxKey": "Mit gesetztem API-Schlüssel braucht jede Anfrage den Schlüssel-Header; Apps, die keine eigenen Header senden können, können sich nicht verbinden.",
+    "styles_one": "Sprecher und Stil-IDs ({{count}} Stimme)",
+    "styles_other": "Sprecher und Stil-IDs ({{count}} Stimmen)",
+    "stylesEmpty": "Noch keine Stimmen in der Bibliothek. Stimmen, die Sie im Stimmstudio anlegen, werden zu Sprechern.",
+    "voice": "Stimme",
+    "style": "Stil",
+    "styleId": "Stil-ID",
+    "normal": "Normal"
+  },
+  "log": {
+    "title": "Anfrageprotokoll",
+    "hint": "Die letzten 200 Anfragen, neueste zuerst. Wird beim Beenden der App geleert.",
+    "empty": "Noch keine Anfragen.",
+    "time": "Zeit",
+    "family": "API",
+    "request": "Anfrage",
+    "status": "Status",
+    "duration": "Dauer",
+    "client": "Client",
+    "ms": "{{ms}} ms",
+    "families": {
+      "openai": "OpenAI",
+      "voicevox": "VOICEVOX",
+      "other": "Andere"
+    }
+  }
+}

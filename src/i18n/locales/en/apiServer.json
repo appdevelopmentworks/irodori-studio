@@ -1,0 +1,76 @@
+{
+  "title": "API server",
+  "intro": "Lets other apps and programs use this app's speech synthesis through OpenAI-compatible and VOICEVOX-compatible APIs. Their requests share the app's queue and run one at a time.",
+  "config": {
+    "title": "Settings",
+    "enabled": "Enable the API server",
+    "bind": "Access",
+    "bindLocal": "This computer only",
+    "bindLocalHint": "Listens on 127.0.0.1; other devices cannot connect.",
+    "bindLan": "Local network (LAN)",
+    "bindLanHint": "Other devices on the same network can connect. Requires an API key.",
+    "port": "Port",
+    "portHint": "1024–65535 (default 50221)",
+    "apiKey": "API key",
+    "apiKeyHint": "When set, every request needs the header Authorization: Bearer <key> or X-API-Key: <key>.",
+    "apiKeyPlaceholder": "Not set",
+    "generate": "Generate",
+    "show": "Show",
+    "hide": "Hide",
+    "save": "Save and apply",
+    "saved": "Saved.",
+    "unsaved": "You have unsaved changes.",
+    "invalidPort": "The port must be a whole number from 1024 to 65535.",
+    "invalidKey": "The API key must be 8–200 ASCII letters, digits or symbols, without spaces.",
+    "keyRequired": "Set an API key to open the server to the local network.",
+    "lanWarning": "On the local network, any device with the API key can generate speech. Only use this on networks you trust. Your firewall may ask you to allow incoming connections the first time."
+  },
+  "status": {
+    "title": "Status",
+    "running": "Running",
+    "stopped": "Stopped",
+    "failed": "Could not start",
+    "openaiBase": "OpenAI-compatible base URL",
+    "voicevoxBase": "VOICEVOX-compatible engine URL",
+    "stoppedHint": "Enable it and save to start it. It stops when the app quits."
+  },
+  "usage": {
+    "title": "How to use",
+    "tabs": {
+      "openai": "OpenAI-compatible",
+      "voicevox": "VOICEVOX-compatible"
+    },
+    "openaiIntro": "Call it like OpenAI's speech API (/v1/audio/speech). Set model to irodori-tts and voice to the name or ID of a library voice (none for no voice).",
+    "openaiOptions": "Pass the caption, seed, steps and other parameters in the irodori extension field. A voice brings its defaults (caption, parameters, LoRA); values in the request take precedence. Formats: wav, mp3, flac, opus, aac, pcm; speed from 0.25 to 4. Long text is split and generated in parts automatically.",
+    "example": "Python example (OpenAI SDK)",
+    "exampleKey": "If you set an API key, replace YOUR_API_KEY with it.",
+    "voicevoxIntro": "In an app that supports the VOICEVOX engine API, set the engine URL to:",
+    "voicevoxMapping": "Library voices appear as speakers; Normal (the voice as saved) and the style presets appear as their styles.",
+    "voicevoxLimits": "Speed, volume, leading and trailing silence, sampling rate and stereo are applied. Pitch, intonation, pause lengths and accent edits are not.",
+    "voicevoxKey": "With an API key set, every request needs the key header, so apps that cannot send custom headers cannot connect.",
+    "styles_one": "Speakers and style IDs ({{count}} voice)",
+    "styles_other": "Speakers and style IDs ({{count}} voices)",
+    "stylesEmpty": "No voices in the library yet. Voices you create in Voice Studio become speakers.",
+    "voice": "Voice",
+    "style": "Style",
+    "styleId": "Style ID",
+    "normal": "Normal"
+  },
+  "log": {
+    "title": "Request log",
+    "hint": "The last 200 requests, newest first. Cleared when the app quits.",
+    "empty": "No requests yet.",
+    "time": "Time",
+    "family": "API",
+    "request": "Request",
+    "status": "Status",
+    "duration": "Duration",
+    "client": "Client",
+    "ms": "{{ms}} ms",
+    "families": {
+      "openai": "OpenAI",
+      "voicevox": "VOICEVOX",
+      "other": "Other"
+    }
+  }
+}

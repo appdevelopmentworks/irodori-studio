@@ -79,6 +79,8 @@
     "script_incomplete": "未生成の行があります。すべて生成してから結合・書き出ししてください。",
     "naming_template_invalid": "ファイル名のテンプレートに使えない項目があります。{index}・{n}・{speaker}・{text_head}・{title}・{id} を使ってください。",
     "preset_not_found": "プリセットが見つかりません。",
-    "project_invalid": "プロジェクトファイルを読み込めませんでした。irodori-studio で保存した .iroproj ファイルか確認してください。"
+    "project_invalid": "プロジェクトファイルを読み込めませんでした。irodori-studio で保存した .iroproj ファイルか確認してください。",
+    "api_key_required": "LAN に公開するには API キーを設定してください。",
+    "api_port_in_use": "このポートを使えませんでした（ほかのアプリが使用中か、OS に予約されています）。別のポート番号を指定してください。"
   }
 }
