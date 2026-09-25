@@ -128,6 +128,7 @@ To remove everything, also delete the storage folder and the settings file above
 | Other devices cannot reach the API server | Choose **Local network (LAN)**, set an API key, and allow the connection in your firewall. |
 | The disk is full | Free up space, or move the storage folder to another drive (**Settings → Storage**). |
 | macOS says the app is damaged | Run the `xattr` command from [Installation](#macos-apple-silicon). |
+| Security software blocks or removes the installer or the app | The installer and the app are not code-signed, so behavior-based protection may flag them, most likely while installing or uninstalling. If you downloaded the installer from this project's [Releases](https://github.com/appdevelopmentworks/irodori-studio/releases) page, restore the files from your security software's quarantine and report the detection to its vendor as a false positive. |
 
 Logs are in **Settings → Logs** (`sidecar.log` for the engine, `setup.log` for setup) and in the `logs` folder of the storage folder. Please attach them when you [report a problem](https://github.com/appdevelopmentworks/irodori-studio/issues).
 
@@ -152,7 +153,7 @@ The app sends no telemetry. It connects to the internet only to:
 
 ## Building from source
 
-Prerequisites: [Node.js](https://nodejs.org/) 24, [Rust](https://rustup.rs/) (stable), [uv](https://docs.astral.sh/uv/) 0.12.5, Git, and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform. In development, formats other than WAV need `ffmpeg` on your `PATH`.
+Prerequisites: [Node.js](https://nodejs.org/) 24, [Rust](https://rustup.rs/) (stable), [uv](https://docs.astral.sh/uv/) 0.12.5, Git, and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform. In development, formats other than WAV need `ffmpeg` on your `PATH`, or the one staged for [installers](#installers).
 
 ```bash
 git clone --recurse-submodules https://github.com/appdevelopmentworks/irodori-studio.git
@@ -174,7 +175,23 @@ uv run ruff check .
 uv run pytest -m "not gpu"
 ```
 
-Release builds (`npm run tauri build` after staging uv, ffmpeg and the sidecar into `resources/`) are being prepared. Contributors: start with [`CLAUDE.md`](CLAUDE.md) and the documents in [`docs/`](docs/).
+Contributors: start with [`CLAUDE.md`](CLAUDE.md) and the documents in [`docs/`](docs/).
+
+### Installers
+
+An installer bundles the sidecar with the pinned `irodori_tts`, uv and an LGPL ffmpeg. Stage them into `resources/` first, then build:
+
+```bash
+# Windows (PowerShell): downloads uv and BtbN's LGPL ffmpeg build, checked against their checksums
+powershell -ExecutionPolicy Bypass -File scripts\stage-runtime.ps1
+# macOS: downloads uv and builds ffmpeg with LAME and Opus from source
+# (needs the Xcode command line tools and pkg-config)
+scripts/stage-runtime.sh
+
+npm run tauri build
+```
+
+The installer is written to `src-tauri/target/release/bundle/` (`nsis/` on Windows, `dmg/` on macOS). Before bundling, the build generates `resources/licenses/rust-crates.md` (the Rust crates in the app, with their licenses) and stops if `resources/` is not staged. Pushing a `v*` tag runs the same steps for both platforms on GitHub Actions ([`release.yml`](.github/workflows/release.yml)) and attaches the installers to a draft release.
 
 ## License
 

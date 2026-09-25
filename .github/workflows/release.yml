@@ -1,0 +1,81 @@
+name: release
+
+# Builds the installers (D14): a Windows x64 NSIS installer and a macOS arm64 dmg
+# signed ad hoc. A pushed `v*` tag attaches them to a draft GitHub Release to review and
+# publish; a manual run keeps them as workflow artifacts.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64 (NSIS)
+            os: windows-latest
+            bundles: nsis
+            artifacts: src-tauri/target/release/bundle/nsis/*.exe
+          - name: macOS arm64 (dmg)
+            os: macos-latest
+            bundles: dmg
+            artifacts: src-tauri/target/release/bundle/dmg/*.dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Installed builds bundle the pinned irodori_tts from the submodule.
+          submodules: recursive
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+
+      # resources/: the sidecar with irodori_tts, uv and an LGPL ffmpeg (scripts/).
+      - name: Stage the runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          # The ffmpeg build is looked up through the GitHub API.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/stage-runtime.ps1
+      - name: Stage the runtime (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # configure finds Opus through pkg-config; ffmpeg is built from source.
+          brew install pkgconf
+          ./scripts/stage-runtime.sh
+
+      # beforeBundleCommand (scripts/check-staged.mjs) refuses an unstaged bundle.
+      - name: Build the installer
+        run: npm run tauri build -- --bundles ${{ matrix.bundles }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.bundles }}
+          path: ${{ matrix.artifacts }}
+          if-no-files-found: error
+
+      - name: Attach to the draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: ${{ matrix.artifacts }}
+          fail_on_unmatched_files: true

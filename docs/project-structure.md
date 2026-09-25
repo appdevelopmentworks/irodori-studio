@@ -6,9 +6,10 @@ Target tree. Create directories when the session that needs them starts (Session
 irodori-studio/
 ├─ CLAUDE.md                      Claude Code operating context
 ├─ AGENTS.md                      Codex operating context (same rules)
-├─ README.md                      user-facing install + first-launch approval steps
+├─ README.md, README.ja.md        user-facing install + first-launch approval steps (en / ja)
 ├─ LICENSE                        MIT (D25, confirm)
-├─ THIRD_PARTY_NOTICES.md         upstream, ffmpeg (LGPL), uv, SilentCipher, analyzer, fonts
+├─ THIRD_PARTY_NOTICES.md         models, upstream, SilentCipher, analyzer, runtime, frontend + Rust summaries,
+│                                 uv, ffmpeg (LGPL); bundled into installers
 ├─ assets/
 │  ├─ icon.png                    app icon SOURCE (1024×1024, transparent, no wordmark) → `tauri icon`
 │  ├─ icon-with-text.png          alternative with the "Irodori-TTS" wordmark (not used by default)
@@ -16,17 +17,23 @@ irodori-studio/
 ├─ docs/                          specs (.md only)
 ├─ .github/workflows/
 │  ├─ ci.yml                      lint + typecheck + i18n missing-key check + sidecar unit tests
-│  └─ release.yml                 Windows NSIS + macOS arm64 dmg (ad-hoc signed)
+│  ├─ release.yml                 Windows NSIS + macOS arm64 dmg (ad-hoc signed) → artifacts, draft release on v* tags
+│  └─ ffmpeg.yml                  by hand: audio-only ffmpeg for both platforms + its sources → a prerelease
 ├─ scripts/
 │  ├─ stage-runtime.ps1           stage uv.exe + ffmpeg.exe + sidecar + irodori_tts into resources (Windows)
-│  ├─ stage-runtime.sh            same for macOS arm64
+│  ├─ stage-runtime.sh            same for macOS arm64 (ffmpeg built from source with LAME + Opus)
+│  ├─ build-ffmpeg.sh             the audio-only LGPL ffmpeg (FFmpeg + LAME + Opus, static; macOS / MSYS2 UCRT64)
+│  ├─ gen-licenses.mjs            before bundling: resources/licenses/rust-crates.md from cargo metadata
+│  ├─ check-staged.mjs            before bundling: refuses an unstaged resources/
 │  └─ check-i18n.mjs              fails on missing/unused keys
 ├─ third_party/
 │  └─ Irodori-TTS/                git submodule, pinned commit, NEVER edited (D3)
-├─ resources/                     staged at build time (gitignored contents)
+├─ .stage/                        downloads and builds of the stage scripts (gitignored)
+├─ resources/                     staged at build time (gitignored contents); bundled as the resource folder
 │  ├─ uv/                         uv binary per platform
-│  ├─ ffmpeg/                     LGPL ffmpeg per platform
-│  └─ sidecar/                    copied sidecar + irodori_tts package
+│  ├─ ffmpeg/                     LGPL ffmpeg per platform + LICENSE.txt + BUILD.txt (build, checksum, source)
+│  ├─ sidecar/                    copied sidecar + irodori_tts package (with its LICENSE)
+│  └─ licenses/                   rust-crates.md, generated per build
 ├─ src/                           Next.js (App Router, static export)
 │  ├─ app/
 │  │  ├─ layout.tsx

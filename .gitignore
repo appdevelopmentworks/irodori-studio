@@ -27,6 +27,8 @@ __pycache__/
 # commit the staged contents (uv, LGPL ffmpeg, sidecar copy + irodori_tts).
 /resources/*/*
 !/resources/*/.gitkeep
+# Downloads and builds of the staging scripts.
+/.stage/
 
 # ---- Model weights / caches / runtime data ----
 # Models and the runtime venv live under the user-selected data root at runtime

@@ -2,7 +2,7 @@
 
 irodori-studio is released under the [MIT License](LICENSE). It builds on the works listed below. Licenses were checked against each source (model cards, LICENSE files, package metadata); the texts of the MIT and BSD licenses follow at the end.
 
-> **Release builds:** the exact FFmpeg and uv builds bundled with each installer, and generated lists of every npm package and Rust crate compiled into the app, are added to this file when release packaging is finished (`docs/session-plan.md`, Session 10). The complete list of Python packages the app installs, with their licenses, is shown in the app under **Settings → About**.
+> **In each installation**, next to this file: `licenses/rust-crates.md` lists every Rust crate compiled into the app, generated when the installer is built, and `ffmpeg/BUILD.txt` records the FFmpeg build bundled (version, checksum, configuration and where its source is), with its license texts. The complete list of Python packages the app installs, with their licenses, is shown in the app under **Settings → About**.
 
 ## Models and inference code
 
@@ -43,9 +43,12 @@ During setup, uv downloads these into the storage folder from their original sou
 | Package | License | Copyright |
 | --- | --- | --- |
 | Next.js | MIT | Copyright (c) 2025 Vercel, Inc. |
-| React, React DOM | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. |
+| React, React DOM, scheduler, use-sync-external-store | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. |
 | i18next | MIT | Copyright (c) 2011-present i18next |
 | react-i18next | MIT | Copyright (c) 2015-present i18next |
+| html-parse-stringify (used by react-i18next) | MIT | Copyright (c) 2025 Henrik Joreteg; Copyright (c) 2026-present i18next |
+| @babel/runtime (used by react-i18next) | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors |
+| @swc/helpers (used by Next.js) | Apache-2.0 | The SWC project |
 | Zustand | MIT | Copyright (c) 2019 Paul Henschel |
 | wavesurfer.js | BSD-3-Clause | Copyright (c) 2012-2023, katspaugh and contributors |
 | Tailwind CSS | MIT | Copyright (c) Tailwind Labs, Inc. |
@@ -53,14 +56,17 @@ During setup, uv downloads these into the storage folder from their original sou
 
 ### Rust
 
-[Tauri](https://tauri.app/) (Apache-2.0 OR MIT) and 265 crates on Windows. Their licenses: MIT and/or Apache-2.0 (most), Unicode-3.0 (the ICU crates), MPL-2.0 (`cssparser`, `cssparser-macros`, `dtoa-short`, `selectors`, `option-ext`), BSD-3-Clause (the `brotli` family), Zlib, Unlicense and CC0 alternatives. The MPL-2.0 crates are used unmodified; their source code is available on [crates.io](https://crates.io/).
+[Tauri](https://tauri.app/) (Apache-2.0 OR MIT) and, on Windows, 246 crates in all (the app's dependencies, transitively). Their licenses: MIT and/or Apache-2.0 (217, some also offering Unlicense, 0BSD, BSD-3-Clause, Zlib, CC0 or MIT-0), Unicode-3.0 (18 ICU crates; `unicode-ident` adds it to MIT OR Apache-2.0), MPL-2.0 (`cssparser`, `cssparser-macros`, `dtoa-short`, `selectors`, `option-ext`), BSD-3-Clause (`alloc-no-stdlib`, `alloc-stdlib`, and `brotli` with MIT), Zlib (`foldhash`, `zlib-rs`). The MPL-2.0 crates are used unmodified; their source code is available on [crates.io](https://crates.io/).
+
+The complete list for each platform — every crate with its version, license and copyright lines, and the license files of the crates not used under MIT or Apache-2.0 — is generated from `cargo metadata` when an installer is built (`scripts/gen-licenses.mjs`) and installed as `licenses/rust-crates.md`.
 
 ## Bundled programs (release builds)
 
 | Program | Role in the app | License | Source |
 | --- | --- | --- | --- |
-| uv — Astral Software Inc. | Installs Python and the runtime during setup | MIT OR Apache-2.0 | [github.com/astral-sh/uv](https://github.com/astral-sh/uv) |
-| FFmpeg | Audio conversion and post-processing | LGPL-2.1-or-later (a build without GPL components). The build used and where to get its source are recorded here for each release. | [ffmpeg.org](https://ffmpeg.org/) |
+| uv 0.12.5 — Copyright (c) 2025 Astral Software Inc. | Installs Python and the runtime during setup; the official release binary, unmodified | MIT OR Apache-2.0 | [github.com/astral-sh/uv](https://github.com/astral-sh/uv) |
+| FFmpeg 9.0 (Windows x64) — BtbN's `win64-lgpl` build of the 9.0 branch, unmodified | Audio conversion and post-processing | LGPL-3.0-or-later (built with `--enable-version3`, without GPL or non-free components; `ffmpeg/LICENSE.txt`). It statically includes the external libraries named in its configuration (for example LAME, Opus, Vorbis, dav1d, libvpx), each under its own license. | FFmpeg at the revision in `ffmpeg/BUILD.txt`: [github.com/FFmpeg/FFmpeg](https://github.com/FFmpeg/FFmpeg); build scripts: [github.com/BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds) |
+| FFmpeg 9.0.2 (macOS arm64) — built by `scripts/stage-runtime.sh` from the release sources, static, with LAME 4.0 and Opus 1.6.1 and no other external library | Audio conversion and post-processing | LGPL-2.1-or-later (FFmpeg, `ffmpeg/LICENSE.txt`); LAME: LGPL-2.0-or-later; Opus: BSD-3-Clause. | [ffmpeg.org](https://ffmpeg.org/), [lame.sourceforge.io](https://lame.sourceforge.io/), [opus-codec.org](https://opus-codec.org/); the exact source archives and checksums are in `ffmpeg/BUILD.txt` |
 
 ## Names
 
@@ -78,8 +84,11 @@ Applies to the MIT-licensed components above, with these copyright notices:
 - Copyright (c) 2024 Sony Research Inc. (SilentCipher)
 - Copyright (c) 2018 Ryuichi Yamamoto (pyopenjtalk)
 - Copyright (c) 2025 Vercel, Inc. (Next.js)
-- Copyright (c) Meta Platforms, Inc. and affiliates. (React, React DOM)
+- Copyright (c) Meta Platforms, Inc. and affiliates. (React, React DOM, scheduler, use-sync-external-store)
 - Copyright (c) 2011-present i18next (i18next); Copyright (c) 2015-present i18next (react-i18next)
+- Copyright (c) 2025 Henrik Joreteg; Copyright (c) 2026-present i18next (html-parse-stringify)
+- Copyright (c) 2014-present Sebastian McKenzie and other contributors (@babel/runtime)
+- Copyright (c) 2025 Astral Software Inc. (uv, under the MIT option)
 - Copyright (c) 2019 Paul Henschel (Zustand)
 - Copyright (c) Tailwind Labs, Inc. (Tailwind CSS)
 - Copyright (c) 2017 - Present Tauri Apps Contributors (Tauri, under the MIT option)

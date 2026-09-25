@@ -128,6 +128,7 @@ with client.audio.speech.with_streaming_response.create(
 | ほかの端末から API サーバーにつながらない | 「LAN に公開」を選んで API キーを設定し、ファイアウォールで接続を許可してください。 |
 | ディスクがいっぱい | 空きを増やすか、保存先フォルダーを別のドライブに移してください（「設定」→「保存先」）。 |
 | macOS で「壊れている」と表示される | [インストール](#macosapple-silicon) の `xattr` コマンドを実行してください。 |
+| セキュリティソフトがインストーラーやアプリをブロック・隔離する | インストーラーとアプリにはコード署名がないため、挙動を監視する保護機能に検知されることがあります（特にインストール中・アンインストール中）。このプロジェクトの [Releases](https://github.com/appdevelopmentworks/irodori-studio/releases) ページから入手したインストーラーであれば、セキュリティソフトの隔離から復元し、誤検知としてメーカーに報告してください。 |
 
 ログは「設定」→「ログ」（エンジンは `sidecar.log`、セットアップは `setup.log`）と、保存先フォルダーの `logs` にあります。[不具合を報告する](https://github.com/appdevelopmentworks/irodori-studio/issues)ときは、ログを添えてください。
 
@@ -152,7 +153,7 @@ Irodori-TTS は MIT ライセンスで公開されており、あわせて[モ�
 
 ## ソースからのビルド
 
-必要なもの: [Node.js](https://nodejs.org/) 24、[Rust](https://rustup.rs/)（stable）、[uv](https://docs.astral.sh/uv/) 0.12.5、Git、お使いの OS 向けの [Tauri の前提ソフト](https://v2.tauri.app/start/prerequisites/)。開発時に WAV 以外の形式を扱うには、`PATH` に `ffmpeg` が必要です。
+必要なもの: [Node.js](https://nodejs.org/) 24、[Rust](https://rustup.rs/)（stable）、[uv](https://docs.astral.sh/uv/) 0.12.5、Git、お使いの OS 向けの [Tauri の前提ソフト](https://v2.tauri.app/start/prerequisites/)。開発時に WAV 以外の形式を扱うには、`PATH` 上の `ffmpeg` か、[インストーラー](#インストーラー)用に配置した ffmpeg が必要です。
 
 ```bash
 git clone --recurse-submodules https://github.com/appdevelopmentworks/irodori-studio.git
@@ -174,7 +175,23 @@ uv run ruff check .
 uv run pytest -m "not gpu"
 ```
 
-リリース用のビルド（uv・ffmpeg・サイドカーを `resources/` に配置してから `npm run tauri build`）は準備中です。開発に参加する方は [`CLAUDE.md`](CLAUDE.md) と [`docs/`](docs/) の資料（要件定義書以外は英語）から読み始めてください。
+開発に参加する方は [`CLAUDE.md`](CLAUDE.md) と [`docs/`](docs/) の資料（要件定義書以外は英語）から読み始めてください。
+
+### インストーラー
+
+インストーラーには、サイドカー（固定したバージョンの `irodori_tts` を含む）、uv、LGPL の ffmpeg を同梱します。先にこれらを `resources/` に配置してから、ビルドします。
+
+```bash
+# Windows（PowerShell）: uv と BtbN の LGPL 版 ffmpeg をダウンロードし、チェックサムを確認
+powershell -ExecutionPolicy Bypass -File scripts\stage-runtime.ps1
+# macOS: uv をダウンロードし、ffmpeg を LAME・Opus とともにソースからビルド
+# （Xcode コマンドラインツールと pkg-config が必要）
+scripts/stage-runtime.sh
+
+npm run tauri build
+```
+
+インストーラーは `src-tauri/target/release/bundle/`（Windows は `nsis/`、macOS は `dmg/`）に出力されます。ビルドは同梱の前に `resources/licenses/rust-crates.md`（アプリに含まれる Rust クレートとそのライセンスの一覧）を生成し、`resources/` が未配置なら止まります。`v*` タグを push すると、GitHub Actions（[`release.yml`](.github/workflows/release.yml)）が両プラットフォームで同じ手順を実行し、インストーラーを下書きのリリースに添付します。
 
 ## ライセンス
 

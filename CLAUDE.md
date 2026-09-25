@@ -62,7 +62,7 @@ It follows the architecture of the owner's earlier app `C:\Dev\qwen-tts-desktop`
 
 ## Common commands
 
-> Scaffolded in Session 0 and verified on Windows, except `npm run tauri build` (bundling, first exercised in Session 10).
+> Verified on Windows. `npm run tauri build` needs `resources/` staged first (Session 10); the macOS stage script is untested without a Mac.
 
 ```bash
 # Submodule
@@ -76,8 +76,12 @@ node scripts/check-i18n.mjs   # missing/unused translation keys
 
 # Tauri (repo root)
 npm run tauri dev
-npm run tauri build
 npm run tauri icon assets/icon.png
+
+# Installers: stage resources/ (sidecar + irodori_tts, uv, LGPL ffmpeg), then build
+powershell -ExecutionPolicy Bypass -File scripts\stage-runtime.ps1   # Windows
+scripts/stage-runtime.sh                                             # macOS
+npm run tauri build           # then gen-licenses + check-staged run before bundling
 
 # Sidecar (from sidecar/, uv-managed; NO torch here — first-run setup installs it)
 uv sync

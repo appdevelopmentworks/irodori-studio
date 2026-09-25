@@ -1,0 +1,93 @@
+name: ffmpeg
+
+# Builds the audio-only LGPL ffmpeg that installers bundle (D20) with scripts/build-ffmpeg.sh
+# — FFmpeg with LAME and Opus, static — for Windows x64 (MSYS2 UCRT64) and macOS arm64, and
+# publishes both, with the exact source archives, on a prerelease (never "latest", so the
+# app's update check ignores it). scripts/stage-runtime.* download the zips from there by
+# checksum. Run by hand when the versions in build-ffmpeg.sh change.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of the prerelease to create, for example ffmpeg-9.0.2-1
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/${{ inputs.tag }}
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            asset: ffmpeg-windows-x64.zip
+          - name: macOS arm64
+            os: macos-latest
+            asset: ffmpeg-macos-arm64.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          update: true
+          install: make diffutils tar xz zip curl
+          pacboy: gcc:p nasm:p pkgconf:p
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        env:
+          FFMPEG_RELEASE_URL: ${{ env.RELEASE_URL }}
+        run: |
+          scripts/build-ffmpeg.sh out
+          (cd out && zip -X -r "../${{ matrix.asset }}" .)
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        env:
+          FFMPEG_RELEASE_URL: ${{ env.RELEASE_URL }}
+        run: |
+          # configure finds Opus through pkg-config.
+          brew install pkgconf
+          scripts/build-ffmpeg.sh out
+          (cd out && zip -X -r "../${{ matrix.asset }}" .)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Sources and checksums
+        run: |
+          scripts/build-ffmpeg.sh --sources dist
+          (cd dist && sha256sum * | tee SHA256SUMS.txt)
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: 'Build dependency: FFmpeg, audio only (${{ inputs.tag }})'
+          prerelease: true
+          make_latest: false
+          body: |
+            Not an app release. The audio-only LGPL ffmpeg that irodori-studio's installers bundle — FFmpeg with LAME and Opus, statically linked, without GPL or non-free components — built by `scripts/build-ffmpeg.sh` at ${{ github.sha }}, with the exact source archives it was built from. Each zip holds the binary, its license files and `BUILD.txt`.
+          files: dist/*
+          fail_on_unmatched_files: true
