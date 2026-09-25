@@ -61,7 +61,7 @@ jobs:
           scripts/build-ffmpeg.sh out
           (cd out && zip -X -r "../${{ matrix.asset }}" .)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
@@ -80,7 +80,7 @@ jobs:
         run: |
           scripts/build-ffmpeg.sh --sources dist
           (cd dist && sha256sum * | tee SHA256SUMS.txt)
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag }}
           target_commitish: ${{ github.sha }}
