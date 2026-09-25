@@ -179,19 +179,20 @@ Contributors: start with [`CLAUDE.md`](CLAUDE.md) and the documents in [`docs/`]
 
 ### Installers
 
-An installer bundles the sidecar with the pinned `irodori_tts`, uv and an LGPL ffmpeg. Stage them into `resources/` first, then build:
+An installer bundles the sidecar with the pinned `irodori_tts`, uv and an audio-only LGPL ffmpeg. Stage them into `resources/` first — the scripts download uv and the ffmpeg build and check them against their checksums — then build:
 
 ```bash
-# Windows (PowerShell): downloads uv and BtbN's LGPL ffmpeg build, checked against their checksums
+# Windows (PowerShell)
 powershell -ExecutionPolicy Bypass -File scripts\stage-runtime.ps1
-# macOS: downloads uv and builds ffmpeg with LAME and Opus from source
-# (needs the Xcode command line tools and pkg-config)
+# macOS
 scripts/stage-runtime.sh
 
 npm run tauri build
 ```
 
 The installer is written to `src-tauri/target/release/bundle/` (`nsis/` on Windows, `dmg/` on macOS). Before bundling, the build generates `resources/licenses/rust-crates.md` (the Rust crates in the app, with their licenses) and stops if `resources/` is not staged. Pushing a `v*` tag runs the same steps for both platforms on GitHub Actions ([`release.yml`](.github/workflows/release.yml)) and attaches the installers to a draft release.
+
+The ffmpeg (FFmpeg with LAME and Opus, statically linked) is built by [`scripts/build-ffmpeg.sh`](scripts/build-ffmpeg.sh) on GitHub Actions ([`ffmpeg.yml`](.github/workflows/ffmpeg.yml), run by hand when its versions change), which publishes it with its source archives on a prerelease; the stage scripts pin that release and its checksums.
 
 ## License
 

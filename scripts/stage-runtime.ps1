@@ -1,8 +1,9 @@
 # Stage what the Windows app bundles into resources\ (docs/architecture.md, "Packaging"):
 #   resources\sidecar   the sidecar source, with the pinned irodori_tts next to app\ (D1, D3)
 #   resources\uv        uv.exe, pinned and checksum-verified
-#   resources\ffmpeg    ffmpeg.exe from BtbN's LGPL build of the FFmpeg 9.0 branch (D20),
-#                       with its license and BUILD.txt (the build used and its source)
+#   resources\ffmpeg    the audio-only LGPL ffmpeg (FFmpeg + LAME + Opus) that
+#                       .github/workflows/ffmpeg.yml builds and publishes with its sources
+#                       (D20), with its license files and BUILD.txt, checksum-verified
 # tauri.conf.json bundles resources\ as the app's resource folder.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\stage-runtime.ps1 [-SidecarOnly]
@@ -22,9 +23,10 @@ $ProgressPreference = 'SilentlyContinue'
 
 $UvVersion = '0.12.5'
 $UvSha256 = '4c4d49d8738847d9b71ba319e49a5688c93eac0fe6204b1df24e98528dddf39a'
-# BtbN rebuilds the release branches daily; the digest is read from the release itself.
-$FfmpegAsset = 'ffmpeg-n9.0-latest-win64-lgpl-9.0.zip'
-$FfmpegRelease = 'https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest'
+# Built by scripts/build-ffmpeg.sh; bump with a new run of ffmpeg.yml.
+$FfmpegTag = 'ffmpeg-9.0.2-1'
+$FfmpegSha256 = 'cd836051d545b705410623cf472bfefe66487da3e620b29a3ff2ab82752dcac2'
+$FfmpegUrl = "https://github.com/appdevelopmentworks/irodori-studio/releases/download/$FfmpegTag/ffmpeg-windows-x64.zip"
 
 $Root = Split-Path -Parent $PSScriptRoot
 $Resources = Join-Path $Root 'resources'
@@ -91,25 +93,15 @@ function Stage-Uv {
 
 function Stage-Ffmpeg {
     $dest = Clear-Staged 'ffmpeg'
-    $headers = @{ 'User-Agent' = 'irodori-studio-stage' }
-    if ($env:GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $env:GITHUB_TOKEN" }
-    $release = Invoke-RestMethod -Uri $FfmpegRelease -Headers $headers
-    $asset = $release.assets | Where-Object { $_.name -eq $FfmpegAsset } | Select-Object -First 1
-    if (-not $asset) { throw "asset not found in $($release.tag_name): $FfmpegAsset" }
-    if ($asset.digest -notmatch '^sha256:([0-9a-f]{64})$') { throw "no sha256 digest for $FfmpegAsset" }
-    $sha256 = $Matches[1]
-    $archive = Join-Path $Work $FfmpegAsset
-    Get-Verified $asset.browser_download_url $sha256 $archive
-
+    $archive = Join-Path $Work "$FfmpegTag-windows-x64.zip"
+    Get-Verified $FfmpegUrl $FfmpegSha256 $archive
     $unpacked = Join-Path $Work 'ffmpeg'
     if (Test-Path $unpacked) { Remove-Item -Recurse -Force $unpacked }
     Expand-Archive -Path $archive -DestinationPath $unpacked
-    $exe = Get-ChildItem -Path $unpacked -Recurse -Filter 'ffmpeg.exe' | Select-Object -First 1
-    $license = Get-ChildItem -Path $unpacked -Recurse -Filter 'LICENSE.txt' | Select-Object -First 1
-    Copy-Item -Path $exe.FullName -Destination (Join-Path $dest 'ffmpeg.exe')
-    Copy-Item -Path $license.FullName -Destination (Join-Path $dest 'LICENSE.txt')
+    # ffmpeg.exe, LICENSE.txt, LICENSE-lame.txt, LICENSE-opus.txt and BUILD.txt, as published.
+    Copy-Item -Path (Join-Path $unpacked '*') -Destination $dest
 
-    # The build must be LGPL: no --enable-gpl / --enable-nonfree.
+    # The build must be LGPL (no --enable-gpl / --enable-nonfree) with the encoders the app uses.
     $ffmpeg = Join-Path $dest 'ffmpeg.exe'
     $info = (& $ffmpeg -hide_banner -version) -join "`n"
     if ($info -match '--enable-(gpl|nonfree)') { throw 'the ffmpeg build is not LGPL' }
@@ -117,26 +109,7 @@ function Stage-Ffmpeg {
         $found = & $ffmpeg -hide_banner -encoders | Select-String -SimpleMatch " $encoder "
         if (-not $found) { throw "ffmpeg lacks the $encoder encoder" }
     }
-
-    $versionLine = ($info -split "`n")[0]
-    $configuration = ($info -split "`n" | Where-Object { $_ -like 'configuration:*' }) -join ''
-    # --enable-version3 (BtbN's builds) makes it LGPL 3; otherwise LGPL 2.1.
-    $lgpl = if ($configuration -match '--enable-version3') { '3' } else { '2.1' }
-    $build = @(
-        'FFmpeg bundled with irodori-studio (Windows x64)',
-        '',
-        "Build:   $FfmpegAsset from https://github.com/BtbN/FFmpeg-Builds ($($release.tag_name), $($asset.updated_at))",
-        "SHA-256: $sha256",
-        "Version: $versionLine",
-        $configuration,
-        '',
-        "License: GNU Lesser General Public License $lgpl or later (LICENSE.txt); built without",
-        'GPL or non-free components. Source: the FFmpeg revision in the version line, at',
-        'https://github.com/FFmpeg/FFmpeg, and the build scripts at',
-        'https://github.com/BtbN/FFmpeg-Builds.'
-    )
-    Set-Content -Path (Join-Path $dest 'BUILD.txt') -Value $build -Encoding ASCII
-    Write-Host "ffmpeg -> $dest ($versionLine)"
+    Write-Host "ffmpeg -> $dest ($(($info -split "`n")[0]))"
 }
 
 Stage-Sidecar

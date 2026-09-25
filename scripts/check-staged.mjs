@@ -26,6 +26,8 @@ const required = [
   `uv/${exe('uv')}`,
   `ffmpeg/${exe('ffmpeg')}`,
   'ffmpeg/LICENSE.txt',
+  'ffmpeg/LICENSE-lame.txt',
+  'ffmpeg/LICENSE-opus.txt',
   'ffmpeg/BUILD.txt',
 ];
 

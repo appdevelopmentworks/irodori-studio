@@ -179,19 +179,20 @@ uv run pytest -m "not gpu"
 
 ### インストーラー
 
-インストーラーには、サイドカー（固定したバージョンの `irodori_tts` を含む）、uv、LGPL の ffmpeg を同梱します。先にこれらを `resources/` に配置してから、ビルドします。
+インストーラーには、サイドカー（固定したバージョンの `irodori_tts` を含む）、uv、音声専用の LGPL 版 ffmpeg を同梱します。先にこれらを `resources/` に配置してから、ビルドします。配置スクリプトは uv と ffmpeg をダウンロードし、チェックサムを確認します。
 
 ```bash
-# Windows（PowerShell）: uv と BtbN の LGPL 版 ffmpeg をダウンロードし、チェックサムを確認
+# Windows（PowerShell）
 powershell -ExecutionPolicy Bypass -File scripts\stage-runtime.ps1
-# macOS: uv をダウンロードし、ffmpeg を LAME・Opus とともにソースからビルド
-# （Xcode コマンドラインツールと pkg-config が必要）
+# macOS
 scripts/stage-runtime.sh
 
 npm run tauri build
 ```
 
 インストーラーは `src-tauri/target/release/bundle/`（Windows は `nsis/`、macOS は `dmg/`）に出力されます。ビルドは同梱の前に `resources/licenses/rust-crates.md`（アプリに含まれる Rust クレートとそのライセンスの一覧）を生成し、`resources/` が未配置なら止まります。`v*` タグを push すると、GitHub Actions（[`release.yml`](.github/workflows/release.yml)）が両プラットフォームで同じ手順を実行し、インストーラーを下書きのリリースに添付します。
+
+ffmpeg（FFmpeg に LAME と Opus だけを静的リンクしたもの）は、[`scripts/build-ffmpeg.sh`](scripts/build-ffmpeg.sh) を使って GitHub Actions（[`ffmpeg.yml`](.github/workflows/ffmpeg.yml)。バージョンを上げるときに手動で実行）でビルドし、元のソースとともにプレリリースとして公開しています。配置スクリプトは、そのリリースとチェックサムを固定して使います。
 
 ## ライセンス
 

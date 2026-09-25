@@ -21,7 +21,7 @@ irodori-studio/
 │  └─ ffmpeg.yml                  by hand: audio-only ffmpeg for both platforms + its sources → a prerelease
 ├─ scripts/
 │  ├─ stage-runtime.ps1           stage uv.exe + ffmpeg.exe + sidecar + irodori_tts into resources (Windows)
-│  ├─ stage-runtime.sh            same for macOS arm64 (ffmpeg built from source with LAME + Opus)
+│  ├─ stage-runtime.sh            same for macOS arm64
 │  ├─ build-ffmpeg.sh             the audio-only LGPL ffmpeg (FFmpeg + LAME + Opus, static; macOS / MSYS2 UCRT64)
 │  ├─ gen-licenses.mjs            before bundling: resources/licenses/rust-crates.md from cargo metadata
 │  ├─ check-staged.mjs            before bundling: refuses an unstaged resources/
@@ -31,7 +31,7 @@ irodori-studio/
 ├─ .stage/                        downloads and builds of the stage scripts (gitignored)
 ├─ resources/                     staged at build time (gitignored contents); bundled as the resource folder
 │  ├─ uv/                         uv binary per platform
-│  ├─ ffmpeg/                     LGPL ffmpeg per platform + LICENSE.txt + BUILD.txt (build, checksum, source)
+│  ├─ ffmpeg/                     audio-only LGPL ffmpeg per platform + LICENSE*.txt (FFmpeg, LAME, Opus) + BUILD.txt
 │  ├─ sidecar/                    copied sidecar + irodori_tts package (with its LICENSE)
 │  └─ licenses/                   rust-crates.md, generated per build
 ├─ src/                           Next.js (App Router, static export)

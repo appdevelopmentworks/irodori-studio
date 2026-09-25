@@ -47,20 +47,15 @@ jobs:
           workspaces: src-tauri
       - run: npm ci
 
-      # resources/: the sidecar with irodori_tts, uv and an LGPL ffmpeg (scripts/).
+      # resources/: the sidecar with irodori_tts, uv and the audio-only LGPL ffmpeg that
+      # ffmpeg.yml published, all checksum-verified (scripts/stage-runtime.*).
       - name: Stage the runtime (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        env:
-          # The ffmpeg build is looked up through the GitHub API.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/stage-runtime.ps1
       - name: Stage the runtime (macOS)
         if: runner.os == 'macOS'
-        run: |
-          # configure finds Opus through pkg-config; ffmpeg is built from source.
-          brew install pkgconf
-          ./scripts/stage-runtime.sh
+        run: ./scripts/stage-runtime.sh
 
       # beforeBundleCommand (scripts/check-staged.mjs) refuses an unstaged bundle.
       - name: Build the installer
