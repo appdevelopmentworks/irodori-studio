@@ -4,7 +4,7 @@ Aratako 氏の日本語音声合成モデル [Irodori-TTS](https://github.com/Ar
 
 [English README](README.md)
 
-> **状況:** v0.1.0。機能はそろっており、公開前のテスト中です。インストーラーは [Releases](https://github.com/appdevelopmentworks/irodori-studio/releases) で公開します。Windows は Windows 11 と RTX 50 シリーズで動作を確認済みです。macOS 版は実機での確認がまだです。
+> **状況:** v0.1.1。インストーラーは [Releases](https://github.com/appdevelopmentworks/irodori-studio/releases) で公開しています。Windows は Windows 11 と RTX 50 シリーズで動作を確認済みです。macOS 版は実機での確認がまだです。
 >
 > 「irodori-studio」は仮の名前です。Irodori-TTS の**公式アプリではありません**。
 

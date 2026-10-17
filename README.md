@@ -4,7 +4,7 @@ An unofficial desktop app for the Japanese text-to-speech model [Irodori-TTS](ht
 
 [日本語版 README はこちら](README.ja.md)
 
-> **Status:** v0.1.0, feature-complete and in pre-release testing. Installers will be published on the [Releases](https://github.com/appdevelopmentworks/irodori-studio/releases) page. Windows has been tested on Windows 11 with an RTX 50-series GPU; macOS builds have not yet been verified on real hardware.
+> **Status:** v0.1.1. Installers are on the [Releases](https://github.com/appdevelopmentworks/irodori-studio/releases) page. Windows has been tested on Windows 11 with an RTX 50-series GPU; macOS builds have not yet been verified on real hardware.
 >
 > "irodori-studio" is a working name. This is **not** the official Irodori-TTS app.
 
