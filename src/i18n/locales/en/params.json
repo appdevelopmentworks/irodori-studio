@@ -9,7 +9,7 @@
   },
   "seed": {
     "label": "Seed",
-    "help": "The same seed with the same settings reproduces the same audio. Leave empty for a random seed.",
+    "help": "The same seed with the same settings reproduces the same audio. Leave empty for a random seed. Seeds of up to 19 digits from the official demo work as they are.",
     "null": "Random"
   },
   "t_schedule_mode": {

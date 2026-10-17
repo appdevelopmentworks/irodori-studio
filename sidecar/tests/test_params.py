@@ -82,7 +82,9 @@ def test_explicit_null_turns_nullable_parameters_off() -> None:
         ({"decode_mode": "turbo"}, "decode_mode", "choice"),
         ({"seconds": 31.0}, "seconds", "above_maximum"),
         ({"seed": -1}, "seed", "below_minimum"),
-        ({"seed": 2**53}, "seed", "above_maximum"),
+        ({"seed": 2**63}, "seed", "above_maximum"),
+        ({"seed": "12a"}, "seed", "type"),
+        ({"seed": True}, "seed", "type"),
         ({"cfg_scale_text": float("nan")}, "cfg_scale_text", "type"),
         ({"rescale_k": 1.0}, "rescale_sigma", "requires_pair"),
         ({"cfg_min_t": 0.9, "cfg_max_t": 0.5}, "cfg_min_t", "above_cfg_max_t"),
@@ -96,6 +98,19 @@ def test_invalid_values(provided: dict, name: str, reason: str) -> None:
 
 def test_integral_floats_are_accepted_for_ints() -> None:
     assert _resolve({"num_steps": 12.0})["num_steps"] == 12
+
+
+def test_seeds_up_to_2_63_as_numbers_or_text() -> None:
+    # Upstream draws random seeds below 2**63; the UI sends seeds as decimal text.
+    assert _resolve({"seed": "9223372036854775807"})["seed"] == 2**63 - 1
+    assert _resolve({"seed": 2**63 - 1})["seed"] == 2**63 - 1
+    assert _resolve({"seed": "0"})["seed"] == 0
+    schema = {entry["name"]: entry for entry in params.schema(CAPS)}
+    assert (schema["seed"]["type"], schema["seed"]["min"], schema["seed"]["max"]) == (
+        "seed",
+        "0",
+        "9223372036854775807",
+    )
 
 
 def test_joint_guidance_needs_equal_enabled_scales() -> None:

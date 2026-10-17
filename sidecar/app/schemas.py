@@ -9,13 +9,44 @@ from typing import Annotated, Any, Literal
 
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
+    PlainSerializer,
     SerializerFunctionWrapHandler,
+    field_serializer,
     model_serializer,
 )
 
+from app.engine.params import ParamError, parse_seed
+
 Device = Literal["cuda", "mps", "cpu"]
+
+
+def _seed(value: object) -> int:
+    try:
+        return parse_seed(value)
+    except ParamError as exc:
+        raise ValueError(f"seed: {exc.reason}") from None
+
+
+# A sampling seed (0 to 2**63 - 1). Read from an integer or its decimal text; written to
+# JSON as text, since JavaScript numbers are exact only up to 2**53.
+Seed = Annotated[
+    int, BeforeValidator(_seed), PlainSerializer(str, return_type=str, when_used="json")
+]
+
+
+def _seeds_as_text(data: dict[str, object]) -> dict[str, object]:
+    """A stored request or parameter set for JSON: its `seed` (also under `params`) as text."""
+    out = dict(data)
+    seed = out.get("seed")
+    if isinstance(seed, int) and not isinstance(seed, bool):
+        out["seed"] = str(seed)
+    params = out.get("params")
+    if isinstance(params, dict):
+        out["params"] = _seeds_as_text(params)
+    return out
 Precision = Literal["fp32", "bf16"]
 
 
@@ -131,11 +162,12 @@ class ModelInfo(BaseModel):
 
 class ParamSchema(BaseModel):
     name: str
-    type: Literal["int", "float", "bool", "enum"]
+    type: Literal["int", "float", "bool", "enum", "seed"]
     default: int | float | bool | str | None
     nullable: bool
-    min: float | None = None
-    max: float | None = None
+    # Numbers; text for `seed` (its bounds pass 2**53).
+    min: float | str | None = None
+    max: float | str | None = None
     step: float | None = None
     choices: list[str] | None = None
     group: Literal["sampling", "duration", "cfg", "speaker", "reference", "advanced"]
@@ -210,7 +242,7 @@ class SamplingParams(BaseModel):
 
     num_steps: int | None = None
     num_candidates: int | None = None
-    seed: int | None = None
+    seed: Seed | None = None
     t_schedule_mode: str | None = None
     sway_coeff: float | None = None
     truncation_factor: float | None = None
@@ -277,7 +309,7 @@ class AudioOutput(BaseModel):
 
 class TtsResult(BaseModel):
     history_id: str
-    used_seed: int
+    used_seed: Seed
     timings: dict[str, float]
     outputs: list[AudioOutput]
     watermarked: bool
@@ -404,7 +436,7 @@ class Voice(BaseModel):
     model_id: str
     caption_default: str | None = None
     params_default: dict[str, ParamValue] = {}
-    seed_default: int | None = None
+    seed_default: Seed | None = None
     lora_path: str | None = None
     test_text: str | None = None
     design_caption: str | None = None
@@ -431,7 +463,7 @@ class VoiceCreate(BaseModel):
     consent: ConsentInput | None = None
     caption_default: str | None = Field(default=None, max_length=1000)
     params_default: SamplingParams = Field(default_factory=SamplingParams)
-    seed_default: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    seed_default: Seed | None = None
     lora_path: str | None = None
     test_text: str | None = Field(default=None, max_length=2000)
     design_caption: str | None = Field(default=None, max_length=1000)
@@ -448,7 +480,7 @@ class VoicePatch(BaseModel):
     consent: ConsentInput | None = None
     caption_default: str | None = Field(default=None, max_length=1000)
     params_default: SamplingParams | None = None
-    seed_default: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    seed_default: Seed | None = None
     lora_path: str | None = None
     test_text: str | None = Field(default=None, max_length=2000)
 
@@ -480,7 +512,7 @@ class HistorySummary(BaseModel):
     text: str
     caption: str | None = None
     reference_kind: str
-    used_seed: int
+    used_seed: Seed
     watermarked: bool
     outputs: list[AudioOutput]
     # The candidate the user adopted (requirements §6.3), if any.
@@ -542,6 +574,10 @@ class HistoryEntry(HistorySummary):
     device: str
     precision: str
 
+    @field_serializer("request", "params", when_used="json")
+    def _seed_text(self, value: dict[str, object]) -> dict[str, object]:
+        return _seeds_as_text(value)
+
 
 class HistoryPage(BaseModel):
     items: list[HistorySummary]
@@ -559,7 +595,7 @@ class RegenerateRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    seed: Seed | None = None
     num_candidates: int | None = Field(default=None, ge=1, le=32)
 
 
@@ -668,7 +704,7 @@ class Take(BaseModel):
 
     audio_id: str
     duration_s: float
-    seed: int
+    seed: Seed
     truncated: bool  # the take hit the output limit; the chunk text may be cut off
     created_at: str
 
@@ -812,7 +848,7 @@ class ScriptLineInput(BaseModel):
     text: str = Field(min_length=1, max_length=1000)
     caption: str | None = Field(default=None, max_length=1000)
     num_candidates: int | None = Field(default=None, ge=1, le=32)
-    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    seed: Seed | None = None
     pause_ms: int | None = Field(default=None, ge=0, le=10_000)
     file_name: str | None = Field(default=None, max_length=120)  # instead of the template
 
@@ -895,7 +931,7 @@ class LinePatch(BaseModel):
     text: str | None = Field(default=None, min_length=1, max_length=1000)
     caption: str | None = Field(default=None, max_length=1000)
     num_candidates: int | None = Field(default=None, ge=1, le=32)
-    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    seed: Seed | None = None
     pause_ms: int | None = Field(default=None, ge=0, le=10_000)
     file_name: str | None = Field(default=None, max_length=120)
     adopted_audio_id: str | None = None

@@ -215,7 +215,7 @@ class SynthesisService:
             return
         for output in result.outputs:
             job.emit("candidate", **output.model_dump())
-        job.mark_completed(result.model_dump())
+        job.mark_completed(result.model_dump(mode="json"))  # the seed as text (schemas.Seed)
 
     def _run(self, job: Job, prepared: PreparedSynthesis) -> TtsResult | None:
         def on_log(line: str) -> None:

@@ -18,7 +18,7 @@ from typing import Literal
 
 from app.engine.registry import Capabilities
 
-ParamType = Literal["int", "float", "bool", "enum"]
+ParamType = Literal["int", "float", "bool", "enum", "seed"]
 Group = Literal["sampling", "duration", "cfg", "speaker", "reference", "advanced"]
 Tier = Literal["simple", "advanced"]
 
@@ -27,9 +27,10 @@ SPEAKER_REFERENCES = ("voice", "clips", "embedding")
 AUDIO_REFERENCES = ("voice", "clips")
 EMBEDDING_REFERENCES = ("voice", "embedding")
 
-# Seeds travel as JSON numbers to the WebView: stay within Number.MAX_SAFE_INTEGER so a
-# stored seed reproduces exactly (decisions.md, S2).
-MAX_SEED = 2**53 - 1
+# Upstream draws random seeds below 2**63 (`secrets.randbits(63)`), so any seed from its
+# tools fits. They pass the WebView boundary as decimal strings: JSON numbers above
+# 2**53 lose precision in JavaScript (decisions.md, S2 "Seeds").
+MAX_SEED = 2**63 - 1
 MAX_CANDIDATES = 32
 
 
@@ -75,7 +76,7 @@ PARAMS: tuple[ParamSpec, ...] = (
     ),
     ParamSpec(
         "seed",
-        "int",
+        "seed",
         None,
         "sampling",
         tier="simple",
@@ -414,8 +415,8 @@ def schema(caps: Capabilities) -> list[dict[str, object]]:
             "type": spec.type,
             "default": default_for(spec, caps),
             "nullable": spec.nullable,
-            "min": _bound(spec.minimum, caps),
-            "max": _bound(spec.maximum, caps),
+            "min": _schema_bound(spec, spec.minimum, caps),
+            "max": _schema_bound(spec, spec.maximum, caps),
             "step": spec.step,
             "choices": list(spec.choices) or None,
             "group": spec.group,
@@ -453,6 +454,30 @@ def resolve(
     return values
 
 
+def parse_seed(value: object, name: str = "seed") -> int:
+    """A seed from a request: an integer, or its decimal text (how the UI sends it)."""
+    if isinstance(value, str):
+        text = value.strip()
+        if not text.isascii() or not text.isdigit():
+            raise ParamError(name, "type")
+        value = int(text)
+    elif isinstance(value, float) and value.is_integer():
+        value = int(value)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ParamError(name, "type")
+    if value < 0:
+        raise ParamError(name, "below_minimum")
+    if value > MAX_SEED:
+        raise ParamError(name, "above_maximum")
+    return value
+
+
+def _schema_bound(spec: ParamSpec, value: float | str | None, caps: Capabilities) -> object:
+    bound = _bound(value, caps)
+    # Seed bounds as text, like seeds themselves (2**63 - 1 is no exact JSON number in JS).
+    return str(int(bound)) if spec.type == "seed" and bound is not None else bound
+
+
 def _bound(value: float | str | None, caps: Capabilities) -> float | None:
     if isinstance(value, str):
         return float(getattr(caps, value))
@@ -472,6 +497,8 @@ def _coerce(spec: ParamSpec, value: object, caps: Capabilities) -> object:
         if not isinstance(value, str) or value not in spec.choices:
             raise ParamError(spec.name, "choice")
         return value
+    if spec.type == "seed":
+        return parse_seed(value, spec.name)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ParamError(spec.name, "type")
     if spec.type == "int":

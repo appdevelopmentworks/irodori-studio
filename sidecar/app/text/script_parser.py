@@ -10,6 +10,8 @@ import io
 import re
 from dataclasses import dataclass
 
+from app.engine.params import MAX_SEED
+
 _BOM = chr(0xFEFF)
 MAX_SPEAKER_CHARS = 32
 
@@ -170,7 +172,7 @@ def _number(value: str, row: int, column: str) -> int | None:
         number = int(value)
     except ValueError as exc:
         raise ScriptError("value", row=row, column=column) from exc
-    if number < 0:
+    if number < 0 or (column == "seed" and number > MAX_SEED):
         raise ScriptError("value", row=row, column=column)
     return number
 

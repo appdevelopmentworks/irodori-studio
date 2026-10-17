@@ -32,10 +32,13 @@ type ReferenceInput =
 // default (HF Space values, D26); `null` = auto/off where nullable. Ranges, groups, tiers
 // and visibility are served by GET /models/active/capabilities (engine/params.py).
 // Responses carry only the fields that were given: an omitted field never comes back as `null`.
+// Seeds are 0–2^63−1 (upstream's range) and travel as decimal text, since JSON numbers lose
+// precision above 2^53 in JavaScript; requests may also send them as numbers.
+type Seed = string;
 type SamplingParams = {
   num_steps?: number;               // 1–120, default 40
   num_candidates?: number;          // 1–32, default 1
-  seed?: number | null;             // 0–2^53−1; null = random (the used seed is reported)
+  seed?: Seed | null;               // 0–2^63−1; null = random (the used seed is reported)
   t_schedule_mode?: "linear" | "sway";
   sway_coeff?: number;              // -1.0–1.5, default -1.0 (only when sway)
   truncation_factor?: number | null; // 0.05–2.0
@@ -173,10 +176,10 @@ type ModelInfo = {
 
 type ParamSchema = {
   name: keyof SamplingParams;
-  type: "int" | "float" | "bool" | "enum";
+  type: "int" | "float" | "bool" | "enum" | "seed"; // "seed": a decimal-text field (Seed)
   default: number | boolean | string | null; // the model's default (Space values, D26)
   nullable: boolean;                   // null = auto/off is allowed
-  min: number | null; max: number | null; step: number | null;
+  min: number | string | null; max: number | string | null; step: number | null; // text for "seed"
   choices: string[] | null;
   group: "sampling" | "duration" | "cfg" | "speaker" | "reference" | "advanced";
   tier: "simple" | "advanced";
@@ -213,7 +216,7 @@ type EmojiItem = {
 ```ts
 type JobAccepted = { job_id: string; queue_position: number }; // jobs ahead of this one
 type AudioOutput = { index: number; audio_id: string; duration_s: number };
-type TtsResult = { history_id: string; used_seed: number; timings: Timings; outputs: AudioOutput[]; watermarked: boolean };
+type TtsResult = { history_id: string; used_seed: Seed; timings: Timings; outputs: AudioOutput[]; watermarked: boolean };
 type EncodeResult = { voice_id: string; encoded: number }; // clips encoded by an "encode" job
 type NarrationResult = { narration_id: string; rendered: number }; // chunks rendered by a "narration" job
 type ScriptResult = { script_id: string; rendered: number };        // lines rendered by a "script" job
@@ -282,7 +285,7 @@ type ClipInfo = {
 type HistorySummary = {
   id: string; created_at: string; model_id: string; text: string; caption: string | null;
   reference_kind: "none" | "voice" | "clips" | "embedding";
-  used_seed: number; watermarked: boolean; outputs: AudioOutput[];
+  used_seed: Seed; watermarked: boolean; outputs: AudioOutput[];
   adopted_audio_id: string | null;     // the candidate the user adopted (requirements §6.3)
   voice_id: string | null;             // the library voice of a {kind: "voice"} request
   source: "ui" | "api";                // who asked: the app or the external API (D21)
@@ -300,7 +303,7 @@ type Preferences = {
   history_max_bytes: number;           // default 5 GB
   output: OutputOptions;               // the export settings every screen shares (D20)
 };
-type RegenerateRequest = { seed?: number | null; num_candidates?: number | null };
+type RegenerateRequest = { seed?: Seed | null; num_candidates?: number | null };
 type HistoryExportRequest = {
   history_ids: string[];               // 1–1000
   folder: string;                      // absolute, from the native folder dialog
@@ -352,7 +355,7 @@ type Consent = ConsentInput & { confirmed_at: string; version: number };
 type Voice = {
   id: string; name: string; source: VoiceSource; created_at: string; updated_at: string;
   model_id: string;                    // the model it was created with
-  caption_default: string | null; params_default: SamplingParams; seed_default: number | null;
+  caption_default: string | null; params_default: SamplingParams; seed_default: Seed | null;
   lora_path: string | null; test_text: string | null;
   design_caption: string | null;       // designed voices: the caption they were designed from
   clips: ClipInfo[]; total_seconds: number;
@@ -368,7 +371,7 @@ type VoiceCreate = {
   embedding_path?: string | null;      // embedding: absolute path of a Speaker Inversion file, copied in
   consent?: ConsentInput | null;
   caption_default?: string | null; params_default?: SamplingParams; // seed goes in seed_default
-  seed_default?: number | null; lora_path?: string | null; test_text?: string | null;
+  seed_default?: Seed | null; lora_path?: string | null; test_text?: string | null;
   design_caption?: string | null;
 };
 type VoicePatch = Partial<Omit<VoiceCreate, "source" | "from_audio_id" | "design_caption">>;
@@ -406,7 +409,7 @@ type NarrationSettings = {
   apply_dictionary: boolean;           // default true
 };
 // A narration chunk's or a script line's generated audio; `truncated`: within 50 ms of the output limit.
-type Take = { audio_id: string; duration_s: number; seed: number; truncated: boolean; created_at: string };
+type Take = { audio_id: string; duration_s: number; seed: Seed; truncated: boolean; created_at: string };
 type NarrationChunk = {
   index: number; text: string; pause_after: PauseKind; estimated_seconds: number;
   cue: { start_ms: number; end_ms: number } | null;   // SRT input: generated at the cue's length
@@ -462,7 +465,7 @@ type ScriptSettings = {
 };
 type ScriptLineInput = {
   speaker: string; text: string;       // text 1–1000 chars
-  caption?: string | null; num_candidates?: number | null; seed?: number | null;
+  caption?: string | null; num_candidates?: number | null; seed?: Seed | null;
   pause_ms?: number | null;
   file_name?: string | null;           // instead of the naming template
 };
@@ -615,6 +618,7 @@ type SpeechRequest = {
 };
 ```
 
+- **Seeds:** `seed` (in `irodori` or at the top level) is a number or its decimal text, 0–2^63−1, so seeds from upstream's tools work as they are; the SSE `seed` stays a number (as in Irodori-TTS-Server) and `X-Irodori-Seed` is text.
 - **Voice defaults:** a library voice brings its caption, parameters, seed and LoRA; the request's values take precedence. `ref_wav(s)`, `ref_embed` and `no_ref` replace the voice's reference; `ref_latent(s)` (upstream's latent files) are refused with `reference_unsupported`.
 - **File paths** (`ref_wav`, `ref_wavs`, `ref_embed`, `lora_adapter`) are accepted only from this computer (a loopback client), so a LAN client cannot make the app read arbitrary files; otherwise `403 path_not_allowed`.
 - **Speed:** `duration_scale = base / speed` within the model's range (base: the request's or voice's `duration_scale`, else 1); the rest is an `atempo` time stretch (needs ffmpeg). With `seconds`, `seconds / speed` instead.

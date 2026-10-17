@@ -38,7 +38,7 @@ def test_generate_streams_events_and_stores_history(make_client) -> None:
     assert ("log", {"line": "fake: synthesized"}) in events
 
     completed = events[-1][1]
-    assert completed["used_seed"] == 1234
+    assert completed["used_seed"] == "1234"  # seeds reach the UI as text
     assert completed["watermarked"] is True
     assert {"sample_rf", "silentcipher_watermark", "write_audio"} <= set(completed["timings"])
     assert [o["index"] for o in completed["outputs"]] == [0, 1, 2, 3]
@@ -49,8 +49,9 @@ def test_generate_streams_events_and_stores_history(make_client) -> None:
     assert rate == 48000 and len(data) == 4800
 
     entry = client.get(f"/history/{completed['history_id']}").json()
-    assert entry["used_seed"] == 1234
-    assert entry["request"]["params"] == {"num_candidates": 4, "seed": 1234, "num_steps": 8}
+    assert entry["used_seed"] == "1234"
+    assert entry["request"]["params"] == {"num_candidates": 4, "seed": "1234", "num_steps": 8}
+    assert entry["params"]["seed"] == "1234"
     assert entry["params"]["cfg_scale_caption"] == 4.0  # defaults are recorded too
     assert len(entry["outputs"]) == 4
 
@@ -61,8 +62,8 @@ def test_generate_streams_events_and_stores_history(make_client) -> None:
     assert sent.seed == 1234 and sent.params["num_steps"] == 8 and "seed" not in sent.params
 
 
-def test_same_seed_same_audio_and_random_seeds_are_js_safe(make_client) -> None:
-    client, _ = make_client()
+def test_same_seed_same_audio_and_seeds_up_to_2_63(make_client) -> None:
+    client, backend = make_client()
     wait_ready(client)
     outputs = []
     for _ in range(2):
@@ -70,8 +71,19 @@ def test_same_seed_same_audio_and_random_seeds_are_js_safe(make_client) -> None:
         outputs.append(client.get(f"/audio/{completed['outputs'][0]['audio_id']}").content)
     assert outputs[0] == outputs[1]
 
+    # Upstream's 19-digit seeds, sent as text (as the UI does) or as a number.
+    for sent in (str(MAX_SEED), MAX_SEED):
+        completed = read_events(client, generate(client, params={"seed": sent}))[-1][1]
+        assert completed["used_seed"] == str(MAX_SEED)
+        assert backend.requests[-1].seed == MAX_SEED == 2**63 - 1
+        entry = client.get(f"/history/{completed['history_id']}").json()
+        assert entry["used_seed"] == entry["params"]["seed"] == str(MAX_SEED)
+
     completed = read_events(client, generate(client))[-1][1]
-    assert 0 <= completed["used_seed"] <= MAX_SEED
+    assert isinstance(completed["used_seed"], str) and 0 <= int(completed["used_seed"]) <= MAX_SEED
+    for bad in ("12a", "-1", str(MAX_SEED + 1)):
+        response = client.post("/tts/generate", json={"text": "テスト", "params": {"seed": bad}})
+        assert response.status_code in (400, 422), (bad, response.text)
 
 
 def test_watermark_toggle(make_client) -> None:

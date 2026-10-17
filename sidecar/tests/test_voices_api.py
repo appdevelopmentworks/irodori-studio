@@ -313,7 +313,7 @@ def test_packages_round_trip_with_consent(make_client, tmp_path: Path) -> None:
     assert copy["id"] != original["id"] and copy["name"] == "パッケージ"
     assert copy["consent"] == original["consent"]  # provenance kept, incl. confirmed_at
     assert [round(c["duration_s"], 2) for c in copy["clips"]] == [1.0, 1.5]
-    assert copy["params_default"] == {"num_steps": 24} and copy["seed_default"] == 42
+    assert copy["params_default"] == {"num_steps": 24} and copy["seed_default"] == "42"
 
     # A package whose consent record was removed is refused.
     tampered = io.BytesIO()

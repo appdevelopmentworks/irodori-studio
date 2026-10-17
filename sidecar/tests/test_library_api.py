@@ -170,12 +170,12 @@ def test_presets(make_client) -> None:
     )
     assert created.status_code == 201, created.text
     preset = created.json()
-    assert preset["params"] == {"num_steps": 60, "seed": 5}  # only what was given
+    assert preset["params"] == {"num_steps": 60, "seed": "5"}  # only what was given; seeds as text
     client.post("/presets", json={"name": "あっさり", "params": {"num_steps": 20}})
     assert [p["name"] for p in client.get("/presets").json()] == ["あっさり", "ゆっくり"]
 
     renamed = client.patch(f"/presets/{preset['id']}", json={"name": "丁寧"}).json()
-    assert renamed["name"] == "丁寧" and renamed["params"] == {"num_steps": 60, "seed": 5}
+    assert renamed["name"] == "丁寧" and renamed["params"] == {"num_steps": 60, "seed": "5"}
     changed = client.patch(
         f"/presets/{preset['id']}", json={"params": {"speaker_kv_min_t": None}}
     ).json()

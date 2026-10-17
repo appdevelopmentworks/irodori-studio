@@ -6,6 +6,7 @@ import type {
   ParamSchema,
   ReferenceInput,
   SamplingParams,
+  Seed,
   Voice,
 } from '@/lib/types';
 
@@ -47,8 +48,8 @@ export function isVisible(
 
 export type ParamIssue =
   | { reason: 'type' | 'integer' | 'required' }
-  | { reason: 'below_minimum'; min: number }
-  | { reason: 'above_maximum'; max: number };
+  | { reason: 'below_minimum'; min: number | string }
+  | { reason: 'above_maximum'; max: number | string };
 
 /** Parses a numeric text field; blank means null for nullable parameters. */
 export function parseNumber(
@@ -62,13 +63,40 @@ export function parseNumber(
   const value = Number(trimmed);
   if (!Number.isFinite(value)) return { issue: { reason: 'type' } };
   if (param.type === 'int' && !Number.isInteger(value)) return { issue: { reason: 'integer' } };
-  if (param.min !== null && value < param.min) {
+  if (typeof param.min === 'number' && value < param.min) {
     return { issue: { reason: 'below_minimum', min: param.min } };
   }
-  if (param.max !== null && value > param.max) {
+  if (typeof param.max === 'number' && value > param.max) {
     return { issue: { reason: 'above_maximum', max: param.max } };
   }
   return { value };
+}
+
+/** Parses seed text: digits only, compared as BigInt since seeds reach 2^63 − 1 (beyond
+ * exact JavaScript numbers). Blank means null (a random seed) when allowed. */
+export function parseSeedText(
+  text: string,
+  min: number | string | null,
+  max: number | string | null,
+  nullable = true,
+): { value: Seed | null } | { issue: ParamIssue } {
+  const trimmed = text.trim();
+  if (trimmed === '') return nullable ? { value: null } : { issue: { reason: 'required' } };
+  if (!/^[0-9]+$/.test(trimmed)) return { issue: { reason: 'integer' } };
+  const seed = BigInt(trimmed);
+  if (min !== null && seed < BigInt(min)) return { issue: { reason: 'below_minimum', min } };
+  if (max !== null && seed > BigInt(max)) return { issue: { reason: 'above_maximum', max } };
+  return { value: seed.toString() };
+}
+
+/** A schema field's text: a seed, or a number. */
+export function parseField(
+  param: ParamSchema,
+  text: string,
+): { value: number | Seed | null } | { issue: ParamIssue } {
+  return param.type === 'seed'
+    ? parseSeedText(text, param.min, param.max, param.nullable)
+    : parseNumber(param, text);
 }
 
 /** Only the values that differ from the schema default go into the request. */

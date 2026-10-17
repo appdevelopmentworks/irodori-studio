@@ -14,6 +14,7 @@ import {
   WarningIcon,
 } from '@/components/icons';
 import { button, iconButton, primaryButton } from '@/components/ui';
+import { parseSeedText } from '@/features/params/schema';
 import { formatSeconds } from '@/lib/format';
 import type { LinePatch, ModelCapabilities, ScriptLine } from '@/lib/types';
 import { useSidecarStore } from '@/store/sidecar';
@@ -22,7 +23,6 @@ import { edit, render } from './actions';
 
 export type LineStatus = 'rendering' | 'waiting' | null;
 
-const MAX_SEED = 2 ** 53 - 1;
 const cell = 'px-2 py-2 align-top';
 const field =
   'w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900';
@@ -100,7 +100,7 @@ export function LineRow({
   const [text, setText] = useSynced(line.text);
   const [caption, setCaption] = useSynced(line.caption ?? '');
   const [candidates, setCandidates] = useSynced(numberText(line.num_candidates));
-  const [seed, setSeed] = useSynced(numberText(line.seed));
+  const [seed, setSeed] = useSynced(line.seed ?? '');
   const [pause, setPause] = useSynced(numberText(line.pause_ms));
   const [name, setName] = useSynced(line.file_name ?? '');
   const [confirm, setConfirm] = useState<LinePatch | null>(null);
@@ -139,8 +139,14 @@ export function LineRow({
     const next = value.trim() || null;
     if (next !== line[key]) void patch(key === 'caption' ? { caption: next } : { file_name: next });
   };
+  const seedParam = model.params.find((param) => param.name === 'seed');
+  const commitSeed = () => {
+    const parsed = parseSeedText(seed, seedParam?.min ?? 0, seedParam?.max ?? null);
+    if ('issue' in parsed) setSeed(line.seed ?? '');
+    else if (parsed.value !== line.seed) void patch({ seed: parsed.value });
+  };
   const commitCount = (
-    key: 'num_candidates' | 'seed' | 'pause_ms',
+    key: 'num_candidates' | 'pause_ms',
     value: string,
     reset: (text: string) => void,
     min: number,
@@ -233,13 +239,13 @@ export function LineRow({
             />
             <span>{t('script.lines.seed')}</span>
             <input
-              type="number"
-              min={0}
+              type="text"
+              inputMode="numeric"
               value={seed}
               placeholder={t('script.lines.inherit')}
               aria-label={t('script.lines.seedOf', { number: lineNumber })}
               onChange={(event) => setSeed(event.target.value)}
-              onBlur={() => commitCount('seed', seed, setSeed, 0, MAX_SEED)}
+              onBlur={commitSeed}
               className={small}
             />
             <span>{t('script.lines.pause')}</span>

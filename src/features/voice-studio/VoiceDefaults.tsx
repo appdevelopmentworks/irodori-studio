@@ -106,7 +106,7 @@ export function VoiceDefaults({ voice, model }: { voice: Voice; model: ModelCapa
     if (!sameValues(values, initial)) {
       const { seed, ...rest } = values;
       patch.params_default = requestParams(model.params, rest);
-      patch.seed_default = typeof seed === 'number' ? seed : null;
+      patch.seed_default = typeof seed === 'string' ? seed : null;
     }
     if (loraPath !== voice.lora_path) patch.lora_path = loraPath;
     if (testText.trim() !== (voice.test_text ?? '')) patch.test_text = testText.trim() || null;

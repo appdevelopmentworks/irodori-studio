@@ -21,6 +21,7 @@ import soundfile as sf
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.engine.host import EngineHost
+from app.engine.params import MAX_SEED
 from app.errors import ApiError, ErrorCode, save_error_code
 from app.schemas import (
     Cue,
@@ -90,7 +91,7 @@ class _Line(BaseModel):
     text: str = Field(min_length=1, max_length=1000)
     caption: str | None = Field(default=None, max_length=1000)
     num_candidates: int | None = Field(default=None, ge=1, le=32)
-    seed: int | None = Field(default=None, ge=0, le=2**53 - 1)
+    seed: int | None = Field(default=None, ge=0, le=MAX_SEED)
     pause_ms: int | None = Field(default=None, ge=0, le=10_000)
     file_name: str | None = Field(default=None, max_length=120)
     take: _Take | None = None

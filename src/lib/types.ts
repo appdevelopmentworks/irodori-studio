@@ -184,13 +184,18 @@ export interface ModelInfo {
 
 export type ParamGroup = 'sampling' | 'duration' | 'cfg' | 'speaker' | 'reference' | 'advanced';
 
+/** A sampling seed, 0 to 2^63 − 1, as decimal text: JSON numbers above 2^53 lose precision
+ * in JavaScript, and upstream's random seeds reach 19 digits. */
+export type Seed = string;
+
 export interface ParamSchema {
   name: keyof SamplingParams;
-  type: 'int' | 'float' | 'bool' | 'enum';
+  type: 'int' | 'float' | 'bool' | 'enum' | 'seed';
   default: number | boolean | string | null;
   nullable: boolean;
-  min: number | null;
-  max: number | null;
+  /** Numbers; decimal text for `seed`. */
+  min: number | string | null;
+  max: number | string | null;
   step: number | null;
   choices: string[] | null;
   group: ParamGroup;
@@ -236,7 +241,7 @@ export type ReferenceInput =
 export interface SamplingParams {
   num_steps?: number;
   num_candidates?: number;
-  seed?: number | null;
+  seed?: Seed | null;
   t_schedule_mode?: 'linear' | 'sway';
   sway_coeff?: number;
   truncation_factor?: number | null;
@@ -296,7 +301,7 @@ export type Timings = Record<string, number>;
 
 export interface TtsResult {
   history_id: string;
-  used_seed: number;
+  used_seed: Seed;
   timings: Timings;
   outputs: AudioOutput[];
   watermarked: boolean;
@@ -436,7 +441,7 @@ export interface Voice {
   model_id: string;
   caption_default: string | null;
   params_default: SamplingParams;
-  seed_default: number | null;
+  seed_default: Seed | null;
   lora_path: string | null;
   test_text: string | null;
   design_caption: string | null;
@@ -461,7 +466,7 @@ export interface VoiceCreate {
   consent?: ConsentInput | null;
   caption_default?: string | null;
   params_default?: SamplingParams;
-  seed_default?: number | null;
+  seed_default?: Seed | null;
   lora_path?: string | null;
   test_text?: string | null;
   design_caption?: string | null;
@@ -476,7 +481,7 @@ export interface VoicePatch {
   consent?: ConsentInput;
   caption_default?: string | null;
   params_default?: SamplingParams;
-  seed_default?: number | null;
+  seed_default?: Seed | null;
   lora_path?: string | null;
   test_text?: string | null;
 }
@@ -499,7 +504,7 @@ export interface HistorySummary {
   text: string;
   caption: string | null;
   reference_kind: ReferenceInput['kind'];
-  used_seed: number;
+  used_seed: Seed;
   watermarked: boolean;
   outputs: AudioOutput[];
   /** The candidate the user adopted, if any. */
@@ -576,7 +581,7 @@ export interface HistoryUsage {
 
 export interface RegenerateRequest {
   /** Omitted: the entry's used seed (the same request); null: a new random seed. */
-  seed?: number | null;
+  seed?: Seed | null;
   num_candidates?: number | null;
 }
 
@@ -665,7 +670,7 @@ export interface SubtitleCue extends Cue {
 export interface Take {
   audio_id: string;
   duration_s: number;
-  seed: number;
+  seed: Seed;
   /** Hit the output limit: the chunk text may be cut off. */
   truncated: boolean;
   created_at: string;
@@ -795,7 +800,7 @@ export interface ScriptLineInput {
   text: string;
   caption?: string | null;
   num_candidates?: number | null;
-  seed?: number | null;
+  seed?: Seed | null;
   pause_ms?: number | null;
   /** Instead of the naming template. */
   file_name?: string | null;
@@ -808,7 +813,7 @@ export interface ScriptLine {
   text: string;
   caption: string | null;
   num_candidates: number | null;
-  seed: number | null;
+  seed: Seed | null;
   pause_ms: number | null;
   file_name: string | null;
   takes: Take[];
@@ -876,7 +881,7 @@ export interface LinePatch {
   text?: string;
   caption?: string | null;
   num_candidates?: number | null;
-  seed?: number | null;
+  seed?: Seed | null;
   pause_ms?: number | null;
   file_name?: string | null;
   adopted_audio_id?: string | null;

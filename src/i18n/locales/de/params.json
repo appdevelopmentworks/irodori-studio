@@ -9,7 +9,7 @@
   },
   "seed": {
     "label": "Seed",
-    "help": "Derselbe Seed mit denselben Einstellungen erzeugt dasselbe Audio. Leer lassen für einen zufälligen Seed.",
+    "help": "Derselbe Seed mit denselben Einstellungen erzeugt dasselbe Audio. Leer lassen für einen zufälligen Seed. Bis zu 19-stellige Seeds aus der offiziellen Demo funktionieren unverändert.",
     "null": "Zufällig"
   },
   "t_schedule_mode": {

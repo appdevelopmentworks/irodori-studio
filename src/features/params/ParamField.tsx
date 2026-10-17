@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { ParamSchema } from '@/lib/types';
 
-import { type ParamIssue, type ParamName, type ParamValue, parseNumber } from './schema';
+import { type ParamIssue, type ParamName, type ParamValue, parseField } from './schema';
 import { useParamText } from './text';
 
 interface ParamFieldProps {
@@ -74,7 +74,7 @@ export function ParamField({ param, value, onChange, onValidity }: ParamFieldPro
         <NumberField
           id={id}
           param={param}
-          value={value as number | null}
+          value={value as number | string | null}
           onChange={onChange}
           onValidity={onValidity}
         />
@@ -86,12 +86,13 @@ export function ParamField({ param, value, onChange, onValidity }: ParamFieldPro
 interface NumberFieldProps {
   id: string;
   param: ParamSchema;
-  value: number | null;
-  onChange: (value: number | null) => void;
+  /** A number, or a seed's decimal text. */
+  value: number | string | null;
+  onChange: (value: number | string | null) => void;
   onValidity: (name: ParamName, valid: boolean) => void;
 }
 
-const formatNumber = (value: number | null) => (value === null ? '' : String(value));
+const formatNumber = (value: number | string | null) => (value === null ? '' : String(value));
 
 function NumberField({ id, param, value, onChange, onValidity }: NumberFieldProps) {
   const text = useParamText();
@@ -101,7 +102,7 @@ function NumberField({ id, param, value, onChange, onValidity }: NumberFieldProp
   const [shown, setShown] = useState(value);
   if (!Object.is(value, shown)) {
     setShown(value);
-    const parsed = parseNumber(param, draft);
+    const parsed = parseField(param, draft);
     if (!('value' in parsed) || parsed.value !== value) {
       setDraft(formatNumber(value));
       setIssue(null);
@@ -115,7 +116,7 @@ function NumberField({ id, param, value, onChange, onValidity }: NumberFieldProp
 
   const commit = (next: string) => {
     setDraft(next);
-    const parsed = parseNumber(param, next);
+    const parsed = parseField(param, next);
     if ('issue' in parsed) {
       setIssue(parsed.issue);
       return;
@@ -124,7 +125,7 @@ function NumberField({ id, param, value, onChange, onValidity }: NumberFieldProp
     onChange(parsed.value);
   };
 
-  const slider = !param.nullable && param.min !== null && param.max !== null;
+  const slider = !param.nullable && typeof param.min === 'number' && typeof param.max === 'number';
   const inputClass = `rounded-md border bg-white px-2 py-1.5 text-sm tabular-nums dark:bg-zinc-900 ${
     issue ? 'border-red-500' : 'border-zinc-300 dark:border-zinc-700'
   }`;
@@ -147,7 +148,7 @@ function NumberField({ id, param, value, onChange, onValidity }: NumberFieldProp
         <input
           id={id}
           type="text"
-          inputMode={param.type === 'int' ? 'numeric' : 'decimal'}
+          inputMode={param.type === 'float' ? 'decimal' : 'numeric'}
           value={draft}
           placeholder={param.nullable ? text.nullLabel(param.name) : undefined}
           onChange={(event) => commit(event.target.value)}
